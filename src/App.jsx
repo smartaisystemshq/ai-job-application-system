@@ -4,13 +4,7 @@ import Dashboard from './components/Dashboard';
 import CVOptimizer from './components/CVOptimizer';
 import CoverLetterGenerator from './components/CoverLetterGenerator';
 import InterviewPrep from './components/InterviewPrep';
-
-export const PAGES = {
-  DASHBOARD: 'dashboard',
-  CV_OPTIMIZER: 'cv-optimizer',
-  COVER_LETTER: 'cover-letter',
-  INTERVIEW_PREP: 'interview-prep',
-};
+import { PAGES } from './constants';
 
 export default function App() {
   const [activePage, setActivePage] = useState(PAGES.DASHBOARD);

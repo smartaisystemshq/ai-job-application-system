@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PAGES } from '../App';
+import { PAGES } from '../constants';
 
 const NAV_ITEMS = [
   { id: PAGES.DASHBOARD, label: 'Dashboard', icon: '▦' },
