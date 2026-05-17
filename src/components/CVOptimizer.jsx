@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import FileUploadField from './FileUploadField';
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
@@ -16,24 +17,72 @@ function CopyButton({ text }) {
 
 export default function CVOptimizer() {
   const [cv, setCv] = useState('');
+  const [cvFile, setCvFile] = useState(null);
+  const [cvPdfBase64, setCvPdfBase64] = useState('');
+
   const [jobDescription, setJobDescription] = useState('');
+  const [jdFile, setJdFile] = useState(null);
+  const [jdPdfBase64, setJdPdfBase64] = useState('');
+
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const handleCvFileSelect = (fileInfo, content) => {
+    setCvFile(fileInfo);
+    if (fileInfo.type === 'pdf') {
+      setCvPdfBase64(content);
+      setCv('');
+    } else {
+      setCv(content);
+      setCvPdfBase64('');
+    }
+  };
+
+  const handleCvFileRemove = () => {
+    setCvFile(null);
+    setCvPdfBase64('');
+    setCv('');
+  };
+
+  const handleJdFileSelect = (fileInfo, content) => {
+    setJdFile(fileInfo);
+    if (fileInfo.type === 'pdf') {
+      setJdPdfBase64(content);
+      setJobDescription('');
+    } else {
+      setJobDescription(content);
+      setJdPdfBase64('');
+    }
+  };
+
+  const handleJdFileRemove = () => {
+    setJdFile(null);
+    setJdPdfBase64('');
+    setJobDescription('');
+  };
+
+  const canSubmit = (cv.trim() || cvPdfBase64) && (jobDescription.trim() || jdPdfBase64);
+
   const handleOptimize = async () => {
-    if (!cv.trim() || !jobDescription.trim()) {
-      setError('Please fill in both your CV and the job description.');
+    if (!canSubmit) {
+      setError('Please provide both your CV and the job description.');
       return;
     }
     setLoading(true);
     setError('');
     setResult('');
     try {
+      const body = {
+        jobDescription: jobDescription.trim() || undefined,
+        cv: cv.trim() || undefined,
+        cvPdf: cvPdfBase64 || undefined,
+        jdPdf: jdPdfBase64 || undefined,
+      };
       const res = await fetch('/api/optimize-cv', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cv: cv.trim(), jobDescription: jobDescription.trim() }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to optimize CV');
@@ -46,48 +95,43 @@ export default function CVOptimizer() {
   };
 
   const handleClear = () => {
-    setCv('');
-    setJobDescription('');
-    setResult('');
-    setError('');
+    setCv(''); setCvFile(null); setCvPdfBase64('');
+    setJobDescription(''); setJdFile(null); setJdPdfBase64('');
+    setResult(''); setError('');
   };
 
   return (
     <div className="page">
       <div className="page-header">
         <h1>CV Optimizer</h1>
-        <p>Paste your CV and the job description — AI tailors your CV to maximise ATS score and recruiter impact</p>
+        <p>Paste or upload your CV and job description — Claude tailors your CV to maximise ATS score and recruiter impact</p>
+      </div>
+
+      <div className="section-desc">
+        <strong>How it works:</strong> Provide your CV and the target job description (text or PDF/DOCX). Claude rewrites your CV with keyword alignment, quantified achievements, and ATS-friendly formatting tailored to the specific role.
       </div>
 
       <div className="two-col" style={{ marginBottom: 20 }}>
-        <div className="form-group">
-          <label className="label">Your CV</label>
-          <textarea
-            className="textarea"
-            rows={18}
-            placeholder="Paste your full CV here..."
-            value={cv}
-            onChange={e => setCv(e.target.value)}
-            style={{ minHeight: 320 }}
-          />
-          <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)', textAlign: 'right' }}>
-            {cv.length > 0 && `${cv.split(/\s+/).filter(Boolean).length} words`}
-          </div>
-        </div>
-        <div className="form-group">
-          <label className="label">Job Description</label>
-          <textarea
-            className="textarea"
-            rows={18}
-            placeholder="Paste the full job description here..."
-            value={jobDescription}
-            onChange={e => setJobDescription(e.target.value)}
-            style={{ minHeight: 320 }}
-          />
-          <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)', textAlign: 'right' }}>
-            {jobDescription.length > 0 && `${jobDescription.split(/\s+/).filter(Boolean).length} words`}
-          </div>
-        </div>
+        <FileUploadField
+          label="Your CV"
+          value={cv}
+          onChange={setCv}
+          onFileSelect={handleCvFileSelect}
+          onFileRemove={handleCvFileRemove}
+          file={cvFile}
+          placeholder="Paste your full CV here..."
+          rows={16}
+        />
+        <FileUploadField
+          label="Job Description"
+          value={jobDescription}
+          onChange={setJobDescription}
+          onFileSelect={handleJdFileSelect}
+          onFileRemove={handleJdFileRemove}
+          file={jdFile}
+          placeholder="Paste the full job description here..."
+          rows={16}
+        />
       </div>
 
       {error && (
@@ -108,19 +152,13 @@ export default function CVOptimizer() {
         <button
           className="btn btn-primary"
           onClick={handleOptimize}
-          disabled={loading || !cv.trim() || !jobDescription.trim()}
+          disabled={loading || !canSubmit}
           style={{ minWidth: 160 }}
         >
-          {loading ? (
-            <><span className="spinner"></span> Optimizing...</>
-          ) : (
-            '✦ Optimize CV'
-          )}
+          {loading ? <><span className="spinner"></span> Optimizing...</> : '✦ Optimize CV'}
         </button>
-        {(cv || jobDescription || result) && (
-          <button className="btn btn-secondary" onClick={handleClear} disabled={loading}>
-            Clear All
-          </button>
+        {(cv || cvFile || jobDescription || jdFile || result) && (
+          <button className="btn btn-secondary" onClick={handleClear} disabled={loading}>Clear All</button>
         )}
       </div>
 
@@ -135,8 +173,7 @@ export default function CVOptimizer() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600 }}>
-              <span style={{ color: 'var(--accent)', marginRight: 8 }}>✦</span>
-              Optimized CV
+              <span style={{ color: 'var(--accent)', marginRight: 8 }}>✦</span>Optimized CV
             </h2>
             <CopyButton text={result} />
           </div>

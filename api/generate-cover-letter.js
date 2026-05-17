@@ -1,7 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk')
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -10,26 +8,13 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { cv, jobDescription } = req.body || {}
-  if (!cv || !jobDescription) {
-    return res.status(400).json({ error: 'Both cv and jobDescription are required.' })
-  }
+  const { cv, jobDescription, cvPdf, jdPdf } = req.body || {}
+  if (!jobDescription) return res.status(400).json({ error: 'jobDescription is required.' })
+  if (!cv && !cvPdf) return res.status(400).json({ error: 'Either cv text or cvPdf is required.' })
 
-  try {
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: `You are an expert cover letter writer. Using the candidate's CV and the job description below, write a cover letter that gets interviews.
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-=== CANDIDATE CV ===
-${cv}
-
-=== JOB DESCRIPTION ===
-${jobDescription}
-
+  const rules = `
 === WRITING RULES (follow strictly) ===
 WORD LIMIT: Under 250 words. Absolute maximum.
 TONE: Conversational yet professional. Write like a confident human — not a robot, not a corporate drone.
@@ -51,8 +36,29 @@ REQUIREMENTS:
 - End with a confident, direct close
 
 Return ONLY the cover letter text. No subject line, no "Here is your cover letter:" preamble. Just the letter.`
-        }
+
+  try {
+    let userContent
+
+    if (cvPdf) {
+      const jdPart = jdPdf
+        ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: jdPdf } }
+        : { type: 'text', text: `=== JOB DESCRIPTION ===\n${jobDescription}` }
+
+      userContent = [
+        { type: 'text', text: 'You are an expert cover letter writer. The first document is the candidate\'s CV. Using it and the job description, write a cover letter that gets interviews.' },
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: cvPdf } },
+        jdPart,
+        { type: 'text', text: rules },
       ]
+    } else {
+      userContent = `You are an expert cover letter writer. Using the candidate's CV and the job description below, write a cover letter that gets interviews.\n\n=== CANDIDATE CV ===\n${cv}\n\n=== JOB DESCRIPTION ===\n${jobDescription}\n\n${rules}`
+    }
+
+    const message = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: userContent }],
     })
 
     return res.status(200).json({ result: message.content[0].text })
@@ -60,6 +66,6 @@ Return ONLY the cover letter text. No subject line, no "Here is your cover lette
     console.error('Claude API error:', err)
     if (err.status === 401) return res.status(500).json({ error: 'Invalid API key. Please contact support.' })
     if (err.status === 429) return res.status(429).json({ error: 'Rate limit exceeded. Please try again shortly.' })
-    return res.status(500).json({ error: 'Failed to generate cover letter. Please try again.' })
+    return res.status(500).json({ error: err.message || 'Failed to generate cover letter. Please try again.' })
   }
 }

@@ -88,6 +88,10 @@ export default function InterviewPrep() {
         <p>Paste the job description and get the 8 most likely interview questions with answer frameworks</p>
       </div>
 
+      <div className="section-desc">
+        <strong>How it works:</strong> Paste the job description and Claude generates the 8 most likely interview questions with specific answer frameworks — not generic tips, but role-tailored guidance on what interviewers are actually testing for.
+      </div>
+
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="form-group" style={{ marginBottom: 0 }}>
           <label className="label">Job Description</label>

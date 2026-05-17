@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import FileUploadField from './FileUploadField';
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
@@ -20,24 +21,68 @@ function wordCount(text) {
 
 export default function CoverLetterGenerator() {
   const [cv, setCv] = useState('');
+  const [cvFile, setCvFile] = useState(null);
+  const [cvPdfBase64, setCvPdfBase64] = useState('');
+
   const [jobDescription, setJobDescription] = useState('');
+  const [jdFile, setJdFile] = useState(null);
+  const [jdPdfBase64, setJdPdfBase64] = useState('');
+
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const handleCvFileSelect = (fileInfo, content) => {
+    setCvFile(fileInfo);
+    if (fileInfo.type === 'pdf') {
+      setCvPdfBase64(content);
+      setCv('');
+    } else {
+      setCv(content);
+      setCvPdfBase64('');
+    }
+  };
+
+  const handleCvFileRemove = () => {
+    setCvFile(null); setCvPdfBase64(''); setCv('');
+  };
+
+  const handleJdFileSelect = (fileInfo, content) => {
+    setJdFile(fileInfo);
+    if (fileInfo.type === 'pdf') {
+      setJdPdfBase64(content);
+      setJobDescription('');
+    } else {
+      setJobDescription(content);
+      setJdPdfBase64('');
+    }
+  };
+
+  const handleJdFileRemove = () => {
+    setJdFile(null); setJdPdfBase64(''); setJobDescription('');
+  };
+
+  const canSubmit = (cv.trim() || cvPdfBase64) && (jobDescription.trim() || jdPdfBase64);
+
   const handleGenerate = async () => {
-    if (!cv.trim() || !jobDescription.trim()) {
-      setError('Please fill in both your CV and the job description.');
+    if (!canSubmit) {
+      setError('Please provide both your CV and the job description.');
       return;
     }
     setLoading(true);
     setError('');
     setResult('');
     try {
+      const body = {
+        jobDescription: jobDescription.trim() || undefined,
+        cv: cv.trim() || undefined,
+        cvPdf: cvPdfBase64 || undefined,
+        jdPdf: jdPdfBase64 || undefined,
+      };
       const res = await fetch('/api/generate-cover-letter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cv: cv.trim(), jobDescription: jobDescription.trim() }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate cover letter');
@@ -50,10 +95,9 @@ export default function CoverLetterGenerator() {
   };
 
   const handleClear = () => {
-    setCv('');
-    setJobDescription('');
-    setResult('');
-    setError('');
+    setCv(''); setCvFile(null); setCvPdfBase64('');
+    setJobDescription(''); setJdFile(null); setJdPdfBase64('');
+    setResult(''); setError('');
   };
 
   const resultWordCount = wordCount(result);
@@ -65,35 +109,31 @@ export default function CoverLetterGenerator() {
         <p>Generate a concise, human-sounding cover letter under 250 words — no fluff, no clichés</p>
       </div>
 
+      <div className="section-desc">
+        <strong>How it works:</strong> Upload or paste your CV and the job description. Claude writes a compelling, specific cover letter that sounds like a real person — referencing the company's actual requirements with evidence from your background.
+      </div>
+
       <div className="two-col" style={{ marginBottom: 20 }}>
-        <div className="form-group">
-          <label className="label">Your CV</label>
-          <textarea
-            className="textarea"
-            rows={16}
-            placeholder="Paste your CV to give context about your background..."
-            value={cv}
-            onChange={e => setCv(e.target.value)}
-            style={{ minHeight: 300 }}
-          />
-          <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)', textAlign: 'right' }}>
-            {cv.length > 0 && `${wordCount(cv)} words`}
-          </div>
-        </div>
-        <div className="form-group">
-          <label className="label">Job Description</label>
-          <textarea
-            className="textarea"
-            rows={16}
-            placeholder="Paste the job description — the letter will reference specific requirements..."
-            value={jobDescription}
-            onChange={e => setJobDescription(e.target.value)}
-            style={{ minHeight: 300 }}
-          />
-          <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)', textAlign: 'right' }}>
-            {jobDescription.length > 0 && `${wordCount(jobDescription)} words`}
-          </div>
-        </div>
+        <FileUploadField
+          label="Your CV"
+          value={cv}
+          onChange={setCv}
+          onFileSelect={handleCvFileSelect}
+          onFileRemove={handleCvFileRemove}
+          file={cvFile}
+          placeholder="Paste your CV to give context about your background..."
+          rows={14}
+        />
+        <FileUploadField
+          label="Job Description"
+          value={jobDescription}
+          onChange={setJobDescription}
+          onFileSelect={handleJdFileSelect}
+          onFileRemove={handleJdFileRemove}
+          file={jdFile}
+          placeholder="Paste the job description — the letter will reference specific requirements..."
+          rows={14}
+        />
       </div>
 
       {error && (
@@ -114,19 +154,13 @@ export default function CoverLetterGenerator() {
         <button
           className="btn btn-primary"
           onClick={handleGenerate}
-          disabled={loading || !cv.trim() || !jobDescription.trim()}
+          disabled={loading || !canSubmit}
           style={{ minWidth: 200 }}
         >
-          {loading ? (
-            <><span className="spinner"></span> Generating...</>
-          ) : (
-            '✉ Generate Cover Letter'
-          )}
+          {loading ? <><span className="spinner"></span> Generating...</> : '✉ Generate Cover Letter'}
         </button>
-        {(cv || jobDescription || result) && (
-          <button className="btn btn-secondary" onClick={handleClear} disabled={loading}>
-            Clear All
-          </button>
+        {(cv || cvFile || jobDescription || jdFile || result) && (
+          <button className="btn btn-secondary" onClick={handleClear} disabled={loading}>Clear All</button>
         )}
       </div>
 
@@ -141,15 +175,10 @@ export default function CoverLetterGenerator() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600 }}>
-              <span style={{ color: 'var(--accent)', marginRight: 8 }}>✉</span>
-              Cover Letter
+              <span style={{ color: 'var(--accent)', marginRight: 8 }}>✉</span>Cover Letter
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{
-                fontSize: 12,
-                color: resultWordCount > 250 ? '#f87171' : 'var(--accent)',
-                fontWeight: 500,
-              }}>
+              <span style={{ fontSize: 12, color: resultWordCount > 250 ? '#f87171' : 'var(--accent)', fontWeight: 500 }}>
                 {resultWordCount} words
               </span>
               <CopyButton text={result} />
