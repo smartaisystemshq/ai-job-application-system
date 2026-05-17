@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FileUploadField from './FileUploadField';
+
+const LS = { cv: 'jas.cl.cv', jd: 'jas.cl.jd', result: 'jas.cl.result' };
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
@@ -20,69 +22,51 @@ function wordCount(text) {
 }
 
 export default function CoverLetterGenerator() {
-  const [cv, setCv] = useState('');
+  const [cv, setCv] = useState(() => localStorage.getItem(LS.cv) || '');
   const [cvFile, setCvFile] = useState(null);
   const [cvPdfBase64, setCvPdfBase64] = useState('');
 
-  const [jobDescription, setJobDescription] = useState('');
+  const [jobDescription, setJobDescription] = useState(() => localStorage.getItem(LS.jd) || '');
   const [jdFile, setJdFile] = useState(null);
   const [jdPdfBase64, setJdPdfBase64] = useState('');
 
-  const [result, setResult] = useState('');
+  const [result, setResult] = useState(() => localStorage.getItem(LS.result) || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => { localStorage.setItem(LS.cv, cv); }, [cv]);
+  useEffect(() => { localStorage.setItem(LS.jd, jobDescription); }, [jobDescription]);
+  useEffect(() => { if (result) localStorage.setItem(LS.result, result); }, [result]);
+
   const handleCvFileSelect = (fileInfo, content) => {
     setCvFile(fileInfo);
-    if (fileInfo.type === 'pdf') {
-      setCvPdfBase64(content);
-      setCv('');
-    } else {
-      setCv(content);
-      setCvPdfBase64('');
-    }
+    if (fileInfo.type === 'pdf') { setCvPdfBase64(content); setCv(''); }
+    else { setCv(content); setCvPdfBase64(''); }
   };
-
-  const handleCvFileRemove = () => {
-    setCvFile(null); setCvPdfBase64(''); setCv('');
-  };
+  const handleCvFileRemove = () => { setCvFile(null); setCvPdfBase64(''); setCv(''); };
 
   const handleJdFileSelect = (fileInfo, content) => {
     setJdFile(fileInfo);
-    if (fileInfo.type === 'pdf') {
-      setJdPdfBase64(content);
-      setJobDescription('');
-    } else {
-      setJobDescription(content);
-      setJdPdfBase64('');
-    }
+    if (fileInfo.type === 'pdf') { setJdPdfBase64(content); setJobDescription(''); }
+    else { setJobDescription(content); setJdPdfBase64(''); }
   };
-
-  const handleJdFileRemove = () => {
-    setJdFile(null); setJdPdfBase64(''); setJobDescription('');
-  };
+  const handleJdFileRemove = () => { setJdFile(null); setJdPdfBase64(''); setJobDescription(''); };
 
   const canSubmit = (cv.trim() || cvPdfBase64) && (jobDescription.trim() || jdPdfBase64);
 
   const handleGenerate = async () => {
-    if (!canSubmit) {
-      setError('Please provide both your CV and the job description.');
-      return;
-    }
-    setLoading(true);
-    setError('');
-    setResult('');
+    if (!canSubmit) { setError('Please provide both your CV and the job description.'); return; }
+    setLoading(true); setError(''); setResult('');
     try {
-      const body = {
-        jobDescription: jobDescription.trim() || undefined,
-        cv: cv.trim() || undefined,
-        cvPdf: cvPdfBase64 || undefined,
-        jdPdf: jdPdfBase64 || undefined,
-      };
       const res = await fetch('/api/generate-cover-letter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          jobDescription: jobDescription.trim() || undefined,
+          cv: cv.trim() || undefined,
+          cvPdf: cvPdfBase64 || undefined,
+          jdPdf: jdPdfBase64 || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate cover letter');
@@ -98,6 +82,7 @@ export default function CoverLetterGenerator() {
     setCv(''); setCvFile(null); setCvPdfBase64('');
     setJobDescription(''); setJdFile(null); setJdPdfBase64('');
     setResult(''); setError('');
+    Object.values(LS).forEach(k => localStorage.removeItem(k));
   };
 
   const resultWordCount = wordCount(result);
@@ -137,26 +122,13 @@ export default function CoverLetterGenerator() {
       </div>
 
       {error && (
-        <div style={{
-          padding: '12px 16px',
-          background: 'rgba(239,68,68,0.1)',
-          border: '1px solid rgba(239,68,68,0.25)',
-          borderRadius: 'var(--radius-sm)',
-          color: '#f87171',
-          fontSize: 14,
-          marginBottom: 16,
-        }}>
+        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 'var(--radius-sm)', color: '#f87171', fontSize: 14, marginBottom: 16 }}>
           {error}
         </div>
       )}
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 28 }}>
-        <button
-          className="btn btn-primary"
-          onClick={handleGenerate}
-          disabled={loading || !canSubmit}
-          style={{ minWidth: 200 }}
-        >
+        <button className="btn btn-primary" onClick={handleGenerate} disabled={loading || !canSubmit} style={{ minWidth: 200 }}>
           {loading ? <><span className="spinner"></span> Generating...</> : '✉ Generate Cover Letter'}
         </button>
         {(cv || cvFile || jobDescription || jdFile || result) && (

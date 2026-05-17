@@ -1,5 +1,57 @@
 import React, { useState, useEffect } from 'react';
 
+function HealthScore({ applications }) {
+  const advanced = applications.filter(a => ['Interview', 'Offer'].includes(a.status)).length;
+  const appScore = Math.min(applications.length * 7, 35);
+  const advScore = Math.min(advanced * 20, 40);
+  const cvoUsed = !!localStorage.getItem('jas.cvo.result');
+  const clUsed  = !!localStorage.getItem('jas.cl.result');
+  const toolScore = (cvoUsed ? 13 : 0) + (clUsed ? 12 : 0);
+  const score = Math.min(appScore + advScore + toolScore, 100);
+
+  const getMessage = () => {
+    if (score === 0) return 'Add your first application and start using the AI tools to begin your score.';
+    if (score < 30) return 'Good start — keep adding applications and use the CV Optimizer for a quick boost.';
+    if (score < 60) return 'Solid progress. Aim for interviews by tailoring each application with the AI tools.';
+    if (score < 85) return 'Strong pipeline! Keep your applications moving — interview prep will help seal the deal.';
+    return 'Outstanding — your job search is well-organised and highly active. Keep the momentum going!';
+  };
+
+  const barColor = score < 40 ? '#60a5fa' : score < 70 ? '#fbbf24' : 'var(--accent)';
+
+  return (
+    <div className="health-score-card" style={{ marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12, gap: 16 }}>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Application Health Score</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{getMessage()}</div>
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <span style={{ fontSize: 30, fontWeight: 800, color: barColor }}>{score}</span>
+          <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>/100</span>
+        </div>
+      </div>
+      <div style={{ background: 'var(--bg-tertiary)', borderRadius: 100, height: 8, overflow: 'hidden' }}>
+        <div style={{ width: `${score}%`, height: '100%', background: barColor, borderRadius: 100, transition: 'width 0.8s ease' }} />
+      </div>
+      <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>
+        <span style={{ color: applications.length >= 5 ? 'var(--accent)' : 'var(--text-muted)' }}>
+          {applications.length >= 5 ? '✓' : '○'} 5+ applications tracked
+        </span>
+        <span style={{ color: cvoUsed ? 'var(--accent)' : 'var(--text-muted)' }}>
+          {cvoUsed ? '✓' : '○'} CV Optimizer used
+        </span>
+        <span style={{ color: clUsed ? 'var(--accent)' : 'var(--text-muted)' }}>
+          {clUsed ? '✓' : '○'} Cover Letter generated
+        </span>
+        <span style={{ color: advanced > 0 ? 'var(--accent)' : 'var(--text-muted)' }}>
+          {advanced > 0 ? '✓' : '○'} Interview stage reached
+        </span>
+      </div>
+    </div>
+  );
+}
+
 const STATUSES = ['Draft', 'Applied', 'Interview', 'Offer'];
 
 const STATUS_BADGE = {
@@ -131,6 +183,9 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {/* Health Score */}
+      <HealthScore applications={applications} />
 
       {/* Table */}
       {applications.length === 0 ? (

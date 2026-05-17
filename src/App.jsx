@@ -5,6 +5,8 @@ import Dashboard from './components/Dashboard';
 import CVOptimizer from './components/CVOptimizer';
 import CoverLetterGenerator from './components/CoverLetterGenerator';
 import InterviewPrep from './components/InterviewPrep';
+import CVBuilder from './components/CVBuilder';
+import HelpInfo from './components/HelpInfo';
 import { PAGES } from './constants';
 
 export default function App() {
@@ -58,10 +60,12 @@ export default function App() {
         </div>
 
         <main style={{ flex: 1, position: 'relative', zIndex: 1 }}>
-          {activePage === PAGES.DASHBOARD && <Dashboard key="dashboard" />}
+          {activePage === PAGES.DASHBOARD    && <Dashboard key="dashboard" />}
           {activePage === PAGES.CV_OPTIMIZER && <CVOptimizer key="cv-optimizer" />}
           {activePage === PAGES.COVER_LETTER && <CoverLetterGenerator key="cover-letter" />}
           {activePage === PAGES.INTERVIEW_PREP && <InterviewPrep key="interview-prep" />}
+          {activePage === PAGES.CV_BUILDER   && <CVBuilder key="cv-builder" />}
+          {activePage === PAGES.HELP_INFO    && <HelpInfo key="help-info" />}
         </main>
 
         <footer style={{

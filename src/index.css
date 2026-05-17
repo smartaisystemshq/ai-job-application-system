@@ -786,3 +786,216 @@ tbody td {
 .text-accent   { color: var(--accent); }
 .font-semibold { font-weight: 600; }
 .w-full        { width: 100%; }
+
+/* ─── More green: page heading accent bars ─── */
+.page-header h1 {
+  position: relative;
+  padding-left: 14px;
+}
+.page-header h1::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* ─── Stat card hover green border ─── */
+.stat-card:hover {
+  border-top: 2px solid var(--accent);
+}
+
+/* ─── Stronger primary button glow ─── */
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 4px 20px rgba(29, 158, 117, 0.45);
+}
+
+/* ─── Health Score card ─── */
+.health-score-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  transition: border-color var(--transition);
+}
+.health-score-card:hover {
+  border-color: rgba(29, 158, 117, 0.3);
+}
+
+/* ─── CV Templates ─── */
+.template-card {
+  cursor: default;
+  padding: 16px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.template-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 20px rgba(29, 158, 117, 0.12);
+}
+.template-preview {
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  font-size: 8.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  font-family: monospace;
+  max-height: 110px;
+  overflow: hidden;
+}
+
+/* ─── CV Builder step indicator ─── */
+.step-indicator {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+.step-circle.active,
+.step-circle.done {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+.step-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  margin: 13px 4px 18px;
+  transition: background 0.3s ease;
+  min-width: 12px;
+}
+.step-line.done { background: var(--accent); }
+@media (max-width: 640px) {
+  .step-label { display: none; }
+  .step-line { min-width: 6px; }
+}
+
+/* ─── CV Builder step headings ─── */
+.step-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+.step-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ─── Skills tags ─── */
+.skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(29, 158, 117, 0.25);
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.skill-tag.suggested {
+  background: var(--bg-tertiary);
+  border-color: var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition);
+}
+.skill-tag.suggested:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.skill-remove {
+  background: none;
+  border: none;
+  color: rgba(29, 158, 117, 0.6);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0;
+  line-height: 1;
+  transition: color var(--transition);
+  font-family: inherit;
+}
+.skill-remove:hover { color: var(--danger); }
+
+/* ─── FAQ section ─── */
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+.faq-item.open {
+  border-color: rgba(29, 158, 117, 0.35);
+}
+.faq-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition), color var(--transition);
+}
+.faq-question:hover { background: var(--bg-tertiary); }
+.faq-item.open .faq-question { color: var(--accent); }
+.faq-answer {
+  padding: 0 20px 16px;
+  background: var(--bg-card);
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}

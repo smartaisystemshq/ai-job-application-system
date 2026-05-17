@@ -1,29 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+const LS = { jd: 'jas.ip.jd', rawResult: 'jas.ip.rawResult' };
 
 function parseQuestions(raw) {
   const questions = [];
-  // Try to parse structured JSON first, fallback to regex parsing
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed;
   } catch {}
 
-  // Split by numbered patterns like "1.", "**1.**", "Question 1:"
   const blocks = raw.split(/\n(?=\d{1,2}[.)]\s|\*\*\d{1,2}[.)]\*\*|\bQuestion\s+\d)/i).filter(Boolean);
 
   if (blocks.length >= 4) {
     for (const block of blocks) {
       const lines = block.trim().split('\n').filter(Boolean);
       if (lines.length === 0) continue;
-      const firstLine = lines[0].replace(/^\*?\*?\d+[.)]\*?\*?\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '').trim();
-      const rest = lines.slice(1).join('\n').replace(/^\*?(answer framework|framework|how to answer|suggested approach)[:\s]*/i, '').trim();
+      const firstLine = lines[0]
+        .replace(/^\*?\*?\d+[.)]\*?\*?\s*/, '')
+        .replace(/^\*\*/, '').replace(/\*\*$/, '').trim();
+      const rest = lines.slice(1).join('\n')
+        .replace(/^\*?(answer framework|framework|how to answer|suggested approach)[:\s]*/i, '').trim();
       if (firstLine) questions.push({ question: firstLine, framework: rest });
     }
   }
 
   if (questions.length > 0) return questions;
-
-  // Fallback: return raw as single entry
   return [{ question: 'Interview Questions & Frameworks', framework: raw }];
 }
 
@@ -42,21 +43,21 @@ function CopyButton({ text }) {
 }
 
 export default function InterviewPrep() {
-  const [jobDescription, setJobDescription] = useState('');
-  const [rawResult, setRawResult] = useState('');
-  const [questions, setQuestions] = useState([]);
+  const [jobDescription, setJobDescription] = useState(() => localStorage.getItem(LS.jd) || '');
+  const [rawResult, setRawResult] = useState(() => localStorage.getItem(LS.rawResult) || '');
+  const [questions, setQuestions] = useState(() => {
+    const saved = localStorage.getItem(LS.rawResult);
+    return saved ? parseQuestions(saved) : [];
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => { localStorage.setItem(LS.jd, jobDescription); }, [jobDescription]);
+  useEffect(() => { if (rawResult) localStorage.setItem(LS.rawResult, rawResult); }, [rawResult]);
+
   const handleGenerate = async () => {
-    if (!jobDescription.trim()) {
-      setError('Please paste a job description first.');
-      return;
-    }
-    setLoading(true);
-    setError('');
-    setRawResult('');
-    setQuestions([]);
+    if (!jobDescription.trim()) { setError('Please paste a job description first.'); return; }
+    setLoading(true); setError(''); setRawResult(''); setQuestions([]);
     try {
       const res = await fetch('/api/interview-prep', {
         method: 'POST',
@@ -75,10 +76,8 @@ export default function InterviewPrep() {
   };
 
   const handleClear = () => {
-    setJobDescription('');
-    setRawResult('');
-    setQuestions([]);
-    setError('');
+    setJobDescription(''); setRawResult(''); setQuestions([]); setError('');
+    Object.values(LS).forEach(k => localStorage.removeItem(k));
   };
 
   return (
@@ -106,15 +105,7 @@ export default function InterviewPrep() {
       </div>
 
       {error && (
-        <div style={{
-          padding: '12px 16px',
-          background: 'rgba(239,68,68,0.1)',
-          border: '1px solid rgba(239,68,68,0.25)',
-          borderRadius: 'var(--radius-sm)',
-          color: '#f87171',
-          fontSize: 14,
-          marginBottom: 16,
-        }}>
+        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 'var(--radius-sm)', color: '#f87171', fontSize: 14, marginBottom: 16 }}>
           {error}
         </div>
       )}
@@ -126,25 +117,17 @@ export default function InterviewPrep() {
           disabled={loading || !jobDescription.trim()}
           style={{ minWidth: 180 }}
         >
-          {loading ? (
-            <><span className="spinner"></span> Generating...</>
-          ) : (
-            '◈ Generate Questions'
-          )}
+          {loading ? <><span className="spinner"></span> Generating...</> : '◈ Generate Questions'}
         </button>
         {(jobDescription || rawResult) && (
-          <button className="btn btn-secondary" onClick={handleClear} disabled={loading}>
-            Clear
-          </button>
+          <button className="btn btn-secondary" onClick={handleClear} disabled={loading}>Clear</button>
         )}
       </div>
 
       {loading && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 0', gap: 16 }}>
           <div className="spinner-lg"></div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
-            Analyzing the role and building your interview prep...
-          </p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Analyzing the role and building your interview prep...</p>
         </div>
       )}
 
@@ -162,9 +145,7 @@ export default function InterviewPrep() {
             <div key={i} className="question-item">
               <div className="question-number">Question {i + 1}</div>
               <div className="question-text">{q.question}</div>
-              {q.framework && (
-                <div className="question-framework">{q.framework}</div>
-              )}
+              {q.framework && <div className="question-framework">{q.framework}</div>}
             </div>
           ))}
 

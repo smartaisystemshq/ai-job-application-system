@@ -41,6 +41,25 @@ function ChatIcon() {
   );
 }
 
+function PencilIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+  );
+}
+
+function HelpIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+  );
+}
+
 function ChevronIcon({ collapsed }) {
   return (
     <svg
@@ -57,7 +76,9 @@ const NAV_ITEMS = [
   { id: PAGES.DASHBOARD,     label: 'Dashboard',     description: 'Track all your applications',   Icon: DashboardIcon },
   { id: PAGES.CV_OPTIMIZER,  label: 'CV Optimizer',  description: 'Tailor your CV for each role',   Icon: CVIcon },
   { id: PAGES.COVER_LETTER,  label: 'Cover Letter',  description: 'Write compelling cover letters', Icon: EnvelopeIcon },
-  { id: PAGES.INTERVIEW_PREP, label: 'Interview Prep', description: 'Prepare for your interviews',  Icon: ChatIcon },
+  { id: PAGES.INTERVIEW_PREP, label: 'Interview Prep', description: 'Prepare for your interviews', Icon: ChatIcon },
+  { id: PAGES.CV_BUILDER,    label: 'CV Builder',    description: 'Build a CV from scratch',        Icon: PencilIcon },
+  { id: PAGES.HELP_INFO,     label: 'Help & Info',   description: 'FAQ and contact support',        Icon: HelpIcon },
 ];
 
 export default function Sidebar({ activePage, onNavigate, collapsed, onToggleCollapse, mobileOpen }) {
@@ -68,19 +89,19 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggleCol
         <img
           src="/logo.png"
           alt="Smart AI Systems"
-          style={{ height: 36, width: 36, objectFit: 'contain', flexShrink: 0 }}
+          style={{ height: 44, width: 44, objectFit: 'contain', flexShrink: 0 }}
           onError={e => { e.target.style.display = 'none'; }}
         />
         {!collapsed && (
           <div style={{ overflow: 'hidden' }}>
-            <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.2, whiteSpace: 'nowrap' }}>Smart AI Systems</div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.2, whiteSpace: 'nowrap' }}>Job Application System</div>
+            <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.2, whiteSpace: 'nowrap' }}>Smart AI Systems</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.2, whiteSpace: 'nowrap', marginTop: 2 }}>Job Application System</div>
           </div>
         )}
       </div>
 
       {/* Nav items */}
-      <nav style={{ flex: 1, padding: '12px 10px', overflow: 'hidden' }}>
+      <nav style={{ flex: 1, padding: '10px 10px', overflow: 'hidden auto' }}>
         {NAV_ITEMS.map(({ id, label, description, Icon }) => {
           const isActive = activePage === id;
           return (
@@ -104,7 +125,7 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggleCol
       </nav>
 
       {/* Collapse toggle */}
-      <div style={{ padding: '12px 10px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+      <div style={{ padding: '10px 10px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
         <button
           onClick={onToggleCollapse}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
