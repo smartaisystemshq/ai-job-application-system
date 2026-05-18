@@ -13,34 +13,54 @@ module.exports = async function handler(req, res) {
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-  const prompt = `You are an expert interview coach with deep experience in hiring for the role described below. Based on the job description, identify and prepare the candidate for the 8 most likely interview questions.
+  const prompt = `You are an expert interview coach preparing a candidate for the role described in the job description.
 
-=== OUTPUT FORMAT ===
-Return exactly 8 questions. For each question use this format:
+LANGUAGE RULE: Detect the language of the job description. Write every question and every answer framework in that exact same language. If the job description is in German, respond entirely in German. If it is in English, respond entirely in English. Do not mix languages.
 
-1. [Question text]
-Answer Framework: [2-4 sentence practical guide on how to answer this specific question — what structure to use, what interviewers are really testing for, what to include/avoid. Be specific to this role.]
+OUTPUT FORMAT — follow this exactly:
 
-2. [Question text]
+1. [Write the actual interview question here — a real question the interviewer would ask out loud]
+Answer Framework: [2-4 sentences of specific, practical guidance for answering this exact question in this exact role. Say what content to include, what structure works, what the interviewer is really evaluating. Never say "use STAR method" without explaining what the S, T, A, R should contain for this specific question.]
+
+2. [Another actual interview question]
 Answer Framework: [...]
 
-... continue for all 8 questions.
+3. [Another actual interview question]
+Answer Framework: [...]
 
-=== QUESTION SELECTION CRITERIA ===
-Select questions that are actually likely to be asked, in this priority order:
-1. Role-specific technical or competency questions (based on the listed requirements and responsibilities)
-2. Behavioural questions that test the key competencies the role demands
-3. Situational/hypothetical questions relevant to the role's challenges
-4. One culture/motivation question relevant to this company type or sector
+4. [Another actual interview question]
+Answer Framework: [...]
 
-Make the answer frameworks genuinely useful — not generic advice like "use the STAR method." Explain WHAT to say for this specific question in this specific role.`
+5. [Another actual interview question]
+Answer Framework: [...]
+
+6. [Another actual interview question]
+Answer Framework: [...]
+
+7. [Another actual interview question]
+Answer Framework: [...]
+
+8. [Another actual interview question]
+Answer Framework: [...]
+
+CRITICAL RULES:
+- Items 1 through 8 must ALL be actual interview questions an interviewer would say out loud — never a category heading, section title, or label
+- Every single item starts directly with the question text (no heading before it)
+- Questions must be specific to the role described — not generic interview questions
+- Answer frameworks must be specific to the question and role — not generic advice
+
+SELECT the 8 most likely questions from these categories (pick the most relevant mix for this specific role):
+- Technical skill or tool questions based on requirements listed in the job description
+- Behavioural questions testing the key competencies the role demands
+- Situational or case questions relevant to this role's main challenges
+- One motivation or fit question relevant to this company type or sector`
 
   try {
     let userContent
 
     if (jdPdf) {
       userContent = [
-        { type: 'text', text: 'You are an expert interview coach. The document below is the job description. ' + prompt.replace('=== OUTPUT FORMAT ===', '=== JOB DESCRIPTION (see document above) ===\n\n=== OUTPUT FORMAT ===') },
+        { type: 'text', text: prompt + '\n\nThe job description is in the document attached below.' },
         { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: jdPdf } },
       ]
     } else {
@@ -49,7 +69,7 @@ Make the answer frameworks genuinely useful — not generic advice like "use the
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 3000,
+      max_tokens: 3500,
       messages: [{ role: 'user', content: userContent }],
     })
 

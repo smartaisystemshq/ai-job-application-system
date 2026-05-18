@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import DownloadButtons from '../utils/DownloadButtons';
 
 const LS_KEY = 'jas.cvb';
 
@@ -49,7 +50,6 @@ function StepIndicator({ step }) {
   );
 }
 
-// ── Copy Button ─────────────────────────────────────────────────
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
   return (
@@ -66,12 +66,75 @@ function CopyButton({ text }) {
   );
 }
 
-// ── Error box ───────────────────────────────────────────────────
 function ErrBox({ msg }) {
   if (!msg) return null;
   return (
     <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 'var(--radius-sm)', color: '#f87171', fontSize: 13, marginTop: 10 }}>
       {msg}
+    </div>
+  );
+}
+
+// ── Mini Chatbot ────────────────────────────────────────────────
+function MiniChatbot({ currentDocument, onUpdate }) {
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleAdjust = async () => {
+    if (!input.trim() || loading) return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/adjust-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentText: currentDocument,
+          instruction: input.trim(),
+          documentType: 'cv',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Adjustment failed');
+      onUpdate(data.result);
+      setInput('');
+    } catch (err) {
+      setError(err.message || 'Failed to apply adjustment. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mini-chatbot">
+      <div className="mini-chatbot-label">
+        <span className="mini-chatbot-icon">✦</span>
+        <span>Adjust with AI</span>
+        <span className="mini-chatbot-hint">Type a request — Claude updates the CV above</span>
+      </div>
+      <div className="mini-chatbot-row">
+        <input
+          className="input mini-chatbot-input"
+          placeholder={`"Make it shorter", "Stronger opening", "More formal tone", "Add keywords for software engineering"...`}
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && !loading && handleAdjust()}
+          disabled={loading}
+        />
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={handleAdjust}
+          disabled={loading || !input.trim()}
+          style={{ flexShrink: 0 }}
+        >
+          {loading
+            ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</>
+            : 'Apply →'}
+        </button>
+      </div>
+      {error && <p style={{ fontSize: 12, color: '#f87171', marginTop: 6 }}>{error}</p>}
+      {loading && <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Applying your adjustment…</p>}
     </div>
   );
 }
@@ -144,26 +207,32 @@ export default function CVBuilder() {
   const [skillsLoading, setSkillsLoading] = useState(false);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [apiError, setApiError] = useState('');
+  // Adjusted CV text from chatbot (separate from raw buildCVText output)
+  const [adjustedCvText, setAdjustedCvText] = useState(null);
+
+  const previewRef = useRef(null);
 
   useEffect(() => {
     localStorage.setItem(LS_KEY, JSON.stringify(state));
   }, [state]);
 
+  // Clear adjustedCvText when user goes back from preview
+  useEffect(() => {
+    if (state.step !== 6) setAdjustedCvText(null);
+  }, [state.step]);
+
   const set = (key, val) => setState(s => ({ ...s, [key]: val }));
   const setP = (key, val) => setState(s => ({ ...s, personal: { ...s.personal, [key]: val } }));
-  const setStep = (n) => { setState(s => ({ ...s, step: n })); setApiError(''); };
+  const setStep = (n) => { setState(s => ({ ...s, step: n })); setApiError(''); setSuggestedSkills([]); };
 
-  // Experience helpers
   const addExp = () => set('experience', [...state.experience, newExp()]);
   const updExp = (id, key, val) => set('experience', state.experience.map(e => e.id === id ? { ...e, [key]: val } : e));
   const delExp = (id) => set('experience', state.experience.filter(e => e.id !== id));
 
-  // Education helpers
   const addEdu = () => set('education', [...state.education, newEdu()]);
   const updEdu = (id, key, val) => set('education', state.education.map(e => e.id === id ? { ...e, [key]: val } : e));
   const delEdu = (id) => set('education', state.education.filter(e => e.id !== id));
 
-  // Skills helpers
   const addSkill = (sk) => {
     const t = sk.trim();
     if (!t || state.skills.includes(t)) return;
@@ -179,7 +248,6 @@ export default function CVBuilder() {
     }
   };
 
-  // API calls
   const generateBullets = async (expId) => {
     const exp = state.experience.find(e => e.id === expId);
     if (!exp?.description.trim()) { setApiError('Add a description first so Claude has something to work with.'); return; }
@@ -242,9 +310,11 @@ export default function CVBuilder() {
     setState(BLANK);
     localStorage.removeItem(LS_KEY);
     setSuggestedSkills([]);
+    setAdjustedCvText(null);
   };
 
-  const cvText = buildCVText(state);
+  const baseCvText = buildCVText(state);
+  const displayCvText = adjustedCvText ?? baseCvText;
 
   // ── Step renders ──────────────────────────────────────────────
 
@@ -274,12 +344,18 @@ export default function CVBuilder() {
           <input className="input" placeholder="London, UK" value={state.personal.location} onChange={e => setP('location', e.target.value)} />
         </div>
         <div className="form-group">
-          <label className="label">LinkedIn URL</label>
+          <label className="label">
+            LinkedIn URL
+            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>(optional)</span>
+          </label>
           <input className="input" placeholder="linkedin.com/in/janesmith" value={state.personal.linkedin} onChange={e => setP('linkedin', e.target.value)} />
         </div>
         <div className="form-group">
-          <label className="label">Portfolio / Website</label>
-          <input className="input" placeholder="janesmith.com (optional)" value={state.personal.portfolio} onChange={e => setP('portfolio', e.target.value)} />
+          <label className="label">
+            Portfolio / Website
+            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>(optional)</span>
+          </label>
+          <input className="input" placeholder="janesmith.com or github.com/janesmith" value={state.personal.portfolio} onChange={e => setP('portfolio', e.target.value)} />
         </div>
       </div>
     </div>
@@ -313,12 +389,12 @@ export default function CVBuilder() {
               <input className="input" placeholder="Acme Ltd" value={exp.company} onChange={e => updExp(exp.id, 'company', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="label">Start Date</label>
+              <label className="label">From <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', fontSize: 11 }}>(e.g. Jan 2022)</span></label>
               <input className="input" placeholder="Jan 2022" value={exp.startDate} onChange={e => updExp(exp.id, 'startDate', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="label">End Date</label>
-              <input className="input" placeholder={exp.isCurrent ? 'Present' : 'Dec 2024'} value={exp.isCurrent ? 'Present' : exp.endDate} onChange={e => updExp(exp.id, 'endDate', e.target.value)} disabled={exp.isCurrent} />
+              <label className="label">To <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', fontSize: 11 }}>(e.g. Dec 2023 or "Present")</span></label>
+              <input className="input" placeholder={exp.isCurrent ? 'Present' : 'Dec 2023'} value={exp.isCurrent ? 'Present' : exp.endDate} onChange={e => updExp(exp.id, 'endDate', e.target.value)} disabled={exp.isCurrent} />
               <label style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13, color: 'var(--text-secondary)' }}>
                 <input type="checkbox" checked={exp.isCurrent} onChange={e => updExp(exp.id, 'isCurrent', e.target.checked)} />
                 Current role
@@ -403,7 +479,7 @@ export default function CVBuilder() {
   const renderStep4 = () => (
     <div>
       <h2 className="step-title">Skills</h2>
-      <p className="step-subtitle">Add your key skills. Type and press Enter (or comma) to add each one. Claude can suggest more based on your target role.</p>
+      <p className="step-subtitle">Add your key skills. Type and press Enter (or comma) to add each one. Use the AI button to get suggestions — click each one to add it.</p>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 20, marginBottom: 16 }}>
         <input
@@ -443,14 +519,26 @@ export default function CVBuilder() {
 
       {suggestedSkills.length > 0 && (
         <div>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>Click to add:</p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>
+            Click to add — unselected suggestions disappear when you move on:
+          </p>
           <div className="skill-tags">
             {suggestedSkills.filter(s => !state.skills.includes(s)).map(sk => (
-              <button key={sk} className="skill-tag suggested" onClick={() => { addSkill(sk); setSuggestedSkills(prev => prev.filter(s => s !== sk)); }}>
+              <button
+                key={sk}
+                className="skill-tag suggested"
+                onClick={() => {
+                  addSkill(sk);
+                  setSuggestedSkills(prev => prev.filter(s => s !== sk));
+                }}
+              >
                 + {sk}
               </button>
             ))}
           </div>
+          {suggestedSkills.filter(s => !state.skills.includes(s)).length === 0 && (
+            <p style={{ fontSize: 13, color: 'var(--accent)' }}>All suggestions added ✓</p>
+          )}
         </div>
       )}
 
@@ -491,16 +579,22 @@ export default function CVBuilder() {
   );
 
   const renderPreview = () => (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+    <div ref={previewRef}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
         <div>
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>Your CV</h2>
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Review, copy, and paste into a document editor to format as needed.</p>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Download as PDF or Word, or copy the text.</p>
         </div>
-        <CopyButton text={cvText} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <DownloadButtons
+            text={displayCvText}
+            filename={`${(state.personal.name || 'my-cv').toLowerCase().replace(/\s+/g, '-')}`}
+          />
+          <CopyButton text={displayCvText} />
+        </div>
       </div>
 
-      <div className="result-box" style={{ minHeight: 400, maxHeight: 600 }}>{cvText}</div>
+      <div className="result-box" style={{ minHeight: 400, maxHeight: 600 }}>{displayCvText}</div>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
         <button className="btn btn-secondary" onClick={() => setStep(5)}>← Back to Summary</button>
@@ -509,9 +603,13 @@ export default function CVBuilder() {
         </button>
       </div>
 
-      <div className="section-desc" style={{ marginTop: 20 }}>
-        <strong>Next step:</strong> Copy the text above into Google Docs or Word, then apply your preferred formatting. You can also paste it into the <strong>CV Optimizer</strong> with a job description for further tailoring.
-      </div>
+      <MiniChatbot
+        currentDocument={displayCvText}
+        onUpdate={(newText) => {
+          setAdjustedCvText(newText);
+          setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+        }}
+      />
     </div>
   );
 
@@ -523,7 +621,7 @@ export default function CVBuilder() {
       </div>
 
       <div className="section-desc">
-        <strong>No existing CV?</strong> This wizard guides you step by step: add your personal info, work history, education, and skills. Claude generates bullet points, suggests skills, and writes your summary — then shows a clean formatted CV you can copy.
+        <strong>No existing CV?</strong> This wizard guides you step by step: add your personal info, work history, education, and skills. Claude generates bullet points, suggests skills, and writes your summary — then shows a clean formatted CV you can download as PDF or Word.
       </div>
 
       {state.step <= 5 && <StepIndicator step={state.step} />}

@@ -932,19 +932,7 @@ tbody td {
   color: var(--accent);
   white-space: nowrap;
 }
-.skill-tag.suggested {
-  background: var(--bg-tertiary);
-  border-color: var(--border);
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-family: inherit;
-  transition: all var(--transition);
-}
-.skill-tag.suggested:hover {
-  background: var(--accent-dim);
-  border-color: var(--accent);
-  color: var(--accent);
-}
+/* skill-tag.suggested styles defined below (green preview) */
 .skill-remove {
   background: none;
   border: none;
@@ -998,4 +986,66 @@ tbody td {
   font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.7;
+}
+
+/* ─── Mini Chatbot ─── */
+.mini-chatbot {
+  margin-top: 20px;
+  padding: 16px 18px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  border-top: 2px solid var(--accent);
+}
+
+.mini-chatbot-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mini-chatbot-icon {
+  color: var(--accent);
+  font-size: 14px;
+}
+
+.mini-chatbot-hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+.mini-chatbot-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mini-chatbot-input {
+  flex: 1;
+  min-width: 0;
+  height: 38px !important;
+  font-size: 13px !important;
+}
+
+/* ─── Skill tag (suggested — green preview) ─── */
+.skill-tag.suggested {
+  background: rgba(29, 158, 117, 0.08);
+  border-color: rgba(29, 158, 117, 0.3);
+  color: var(--accent);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition);
+}
+
+.skill-tag.suggested:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
 }

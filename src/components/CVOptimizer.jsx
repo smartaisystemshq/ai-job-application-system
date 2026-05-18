@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import FileUploadField from './FileUploadField';
+import DownloadButtons from '../utils/DownloadButtons';
 
 const LS = { cv: 'jas.cvo.cv', jd: 'jas.cvo.jd', result: 'jas.cvo.result' };
 
@@ -134,6 +135,69 @@ function CopyButton({ text }) {
   );
 }
 
+function MiniChatbot({ currentDocument, onUpdate }) {
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleAdjust = async () => {
+    if (!input.trim() || loading) return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/adjust-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentText: currentDocument,
+          instruction: input.trim(),
+          documentType: 'cv',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Adjustment failed');
+      onUpdate(data.result);
+      setInput('');
+    } catch (err) {
+      setError(err.message || 'Failed to apply adjustment. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mini-chatbot">
+      <div className="mini-chatbot-label">
+        <span className="mini-chatbot-icon">✦</span>
+        <span>Adjust with AI</span>
+        <span className="mini-chatbot-hint">Type a request — Claude updates the CV above</span>
+      </div>
+      <div className="mini-chatbot-row">
+        <input
+          className="input mini-chatbot-input"
+          placeholder={`"Make it shorter", "Add more Python keywords", "Formal tone", "Stronger opening"...`}
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && !loading && handleAdjust()}
+          disabled={loading}
+        />
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={handleAdjust}
+          disabled={loading || !input.trim()}
+          style={{ flexShrink: 0 }}
+        >
+          {loading
+            ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</>
+            : 'Apply →'}
+        </button>
+      </div>
+      {error && <p style={{ fontSize: 12, color: '#f87171', marginTop: 6 }}>{error}</p>}
+      {loading && <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Applying your adjustment…</p>}
+    </div>
+  );
+}
+
 export default function CVOptimizer() {
   const [cv, setCv] = useState(() => localStorage.getItem(LS.cv) || '');
   const [cvFile, setCvFile] = useState(null);
@@ -145,8 +209,11 @@ export default function CVOptimizer() {
 
   const [result, setResult] = useState(() => localStorage.getItem(LS.result) || '');
   const [loading, setLoading] = useState(false);
+  const [adjusting, setAdjusting] = useState(false);
   const [error, setError] = useState('');
   const [showTemplates, setShowTemplates] = useState(false);
+
+  const resultRef = useRef(null);
 
   useEffect(() => { localStorage.setItem(LS.cv, cv); }, [cv]);
   useEffect(() => { localStorage.setItem(LS.jd, jobDescription); }, [jobDescription]);
@@ -185,6 +252,10 @@ export default function CVOptimizer() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to optimize CV');
       setResult(data.result);
+      // Auto-scroll to result after a short delay for the DOM to update
+      setTimeout(() => {
+        resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
@@ -203,6 +274,13 @@ export default function CVOptimizer() {
     setCv(content);
     setCvFile(null); setCvPdfBase64('');
     setShowTemplates(false);
+  };
+
+  const handleAdjustUpdate = (newResult) => {
+    setResult(newResult);
+    setTimeout(() => {
+      resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
   };
 
   return (
@@ -293,22 +371,29 @@ export default function CVOptimizer() {
       {loading && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 0', gap: 16 }}>
           <div className="spinner-lg"></div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Analyzing job requirements and tailoring your CV...</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Analyzing job requirements and tailoring your CV…</p>
         </div>
       )}
 
       {result && !loading && (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div ref={resultRef}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600 }}>
               <span style={{ color: 'var(--accent)', marginRight: 8 }}>✦</span>Optimized CV
             </h2>
-            <CopyButton text={result} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <DownloadButtons text={result} filename="optimized-cv" />
+              <CopyButton text={result} />
+            </div>
           </div>
+
           <div className="result-box">{result}</div>
-          <p style={{ marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>
+
+          <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
             Review and personalise the output before submitting your application.
           </p>
+
+          <MiniChatbot currentDocument={result} onUpdate={handleAdjustUpdate} />
         </div>
       )}
     </div>

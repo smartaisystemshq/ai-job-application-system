@@ -15,27 +15,30 @@ module.exports = async function handler(req, res) {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
   const rules = `
-=== WRITING RULES (follow strictly) ===
-WORD LIMIT: Under 250 words. Absolute maximum.
-TONE: Conversational yet professional. Write like a confident human — not a robot, not a corporate drone.
-STRUCTURE: Opening hook → Why this role/company specifically → 2 concrete examples from the CV that match job requirements → Brief, confident close with CTA.
-BANNED PHRASES (never use these):
-- "I am writing to express my interest"
-- "I am a passionate and dedicated"
-- "team player", "hard worker", "go-getter"
-- "I believe I would be a great fit"
-- "Please find attached my CV"
-- "I look forward to hearing from you"
-- "dynamic", "synergy", "leverage", "utilise"
-REQUIREMENTS:
-- Open with something specific and compelling, not generic
-- Reference 1-2 specific things from the job description (a project, a technology, the company mission)
-- Back up claims with brief, concrete evidence from the CV (numbers preferred)
-- Sound like a real person wrote it
-- No flattery toward the company
-- End with a confident, direct close
+=== COVER LETTER RULES ===
 
-Return ONLY the cover letter text. No subject line, no "Here is your cover letter:" preamble. Just the letter.`
+WORD LIMIT: Under 250 words. Hard limit — stop at 250 if needed.
+
+STRUCTURE (4 paragraphs max):
+1. Opening hook — a specific, compelling reason you're right for THIS role at THIS company. Not "I am writing to apply." Mention something concrete from the JD or company that resonates.
+2. Your strongest relevant achievement — one specific example from your CV that directly addresses the most critical requirement in the JD. Use a number or concrete outcome.
+3. Second supporting point — another brief, specific example that addresses a secondary requirement. Show you've read the full JD, not just the headline.
+4. Close — direct, confident, short. One sentence stating you'd welcome a conversation. No begging, no "I look forward to hearing from you."
+
+VOICE: Write as if the candidate is a confident professional who knows their value. Not desperate, not arrogant. Like a brief, direct message from one professional to another.
+
+ABSOLUTELY BANNED — never write these:
+"I am writing to express my interest" / "I am passionate about" / "team player" / "hard worker" / "go-getter" / "I believe I would be a great fit" / "Please find attached my CV" / "I look forward to hearing from you" / "dynamic" / "synergy" / "leverage" / "results-driven" / "detail-oriented" / "fast-paced environment"
+
+REQUIRED:
+- Open with something specific and concrete, not a generic statement
+- Name at least one real thing from the JD (a technology, a responsibility, the company's stated mission)
+- Every claim must be backed by brief evidence from the CV
+- Sounds like a real person, not AI-generated prose
+- No flattery toward the company
+- Varied sentence length — mix short punchy sentences with longer ones
+
+Return ONLY the cover letter text. No subject line, no "Dear Hiring Manager" salutation unless context clearly supports it, no preamble. Just the letter body.`
 
   try {
     let userContent
@@ -46,13 +49,13 @@ Return ONLY the cover letter text. No subject line, no "Here is your cover lette
         : { type: 'text', text: `=== JOB DESCRIPTION ===\n${jobDescription}` }
 
       userContent = [
-        { type: 'text', text: 'You are an expert cover letter writer. The first document is the candidate\'s CV. Using it and the job description, write a cover letter that gets interviews.' },
+        { type: 'text', text: 'You are an expert cover letter writer who knows how to get interviews. The first document is the candidate\'s CV. Write a cover letter that stands out.' },
         { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: cvPdf } },
         jdPart,
         { type: 'text', text: rules },
       ]
     } else {
-      userContent = `You are an expert cover letter writer. Using the candidate's CV and the job description below, write a cover letter that gets interviews.\n\n=== CANDIDATE CV ===\n${cv}\n\n=== JOB DESCRIPTION ===\n${jobDescription}\n\n${rules}`
+      userContent = `You are an expert cover letter writer who knows how to get interviews. Write a cover letter that stands out — specific, evidence-backed, and human.\n\n=== CANDIDATE CV ===\n${cv}\n\n=== JOB DESCRIPTION ===\n${jobDescription}\n\n${rules}`
     }
 
     const message = await client.messages.create({

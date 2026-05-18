@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import FileUploadField from './FileUploadField';
+import DownloadButtons from '../utils/DownloadButtons';
 
 const LS = { cv: 'jas.cl.cv', jd: 'jas.cl.jd', result: 'jas.cl.result' };
 
@@ -145,14 +146,15 @@ export default function CoverLetterGenerator() {
 
       {result && !loading && (
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600 }}>
               <span style={{ color: 'var(--accent)', marginRight: 8 }}>✉</span>Cover Letter
             </h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 12, color: resultWordCount > 250 ? '#f87171' : 'var(--accent)', fontWeight: 500 }}>
                 {resultWordCount} words
               </span>
+              <DownloadButtons text={result} filename="cover-letter" />
               <CopyButton text={result} />
             </div>
           </div>

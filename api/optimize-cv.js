@@ -16,16 +16,38 @@ module.exports = async function handler(req, res) {
 
   const instructions = `
 === OPTIMISATION INSTRUCTIONS ===
-1. KEYWORD ALIGNMENT: Extract all key skills, technologies, qualifications, and phrases from the job description. Weave these naturally into the CV — recruiters and ATS systems scan for exact matches.
-2. PROFESSIONAL SUMMARY: Rewrite the summary/profile to directly mirror the language and priorities of this specific role.
-3. EXPERIENCE BULLETS: Transform each bullet point to lead with strong action verbs. Quantify achievements wherever possible (%, £/$, time saved, team size). Reorder and emphasise responsibilities that align with the job requirements.
-4. SKILLS SECTION: Restructure to surface the most relevant skills first; remove or deprioritise skills that are irrelevant to this role.
-5. ATS OPTIMISATION: Use standard section headings (Work Experience, Education, Skills). Avoid tables, columns, or graphics that break parsing.
-6. TAILORING: Minimise space given to experience unrelated to this role. Cut generic phrases like "hard-working team player" — replace with specific, evidenced claims.
-7. LENGTH & FORMAT: Aim for 1-2 pages of dense, relevant content. Keep the same structural sections as the original unless a change clearly improves the document.
-8. TONE: Professional, confident, and specific. No empty buzzwords.
 
-Return ONLY the optimised CV — no commentary, no preamble, no explanation. Just the final CV text, formatted cleanly.`
+GOAL: Produce a CV that a senior recruiter reads and immediately thinks "this person fits the role." Every line must earn its place.
+
+1. KEYWORD ALIGNMENT
+   Extract the exact skills, tools, qualifications, and phrases from the job description. Weave them naturally into the CV — ATS systems do exact-match scanning. Prioritise keywords from the "Requirements" and "Responsibilities" sections.
+
+2. PROFESSIONAL SUMMARY
+   Rewrite the summary in 3 crisp sentences that directly mirror this role's language. Sentence 1: professional identity + years of relevant experience. Sentence 2: 2 specific strengths the JD explicitly asks for. Sentence 3: what the candidate delivers for organisations like this one. No "passionate about" or "results-driven" — use concrete, specific language.
+
+3. EXPERIENCE BULLETS — TRANSFORM EVERY ONE
+   - Lead with the strongest action verb available: Spearheaded, Architected, Slashed, Doubled, Launched, Negotiated, Automated, Mentored
+   - Format: [Action verb] + [what you did] + [measurable outcome or scale]
+   - Quantify relentlessly: percentages, £/$, headcount, time saved, revenue, NPS scores — if the original has numbers, keep them; if it doesn't, use reasonable proxies ("team of 4", "across 12 countries", "3-month timeline")
+   - Cut bullets that have zero relevance to this job; strengthen bullets that directly match it
+   - Maximum 18 words per bullet
+
+4. SKILLS SECTION
+   Lead with the skills the JD lists as requirements. Remove or deprioritise skills irrelevant to this role. Use exact terminology from the JD (e.g. if JD says "Salesforce CRM", don't write "CRM tools").
+
+5. ATS COMPLIANCE
+   Standard section headings: Professional Summary, Work Experience, Education, Skills. No tables, columns, text boxes, or graphics. Dates in consistent format (Jan 2021 – Mar 2024).
+
+6. HONESTY & TONE
+   Never fabricate achievements. If the original lacks metrics, write "[Achieved X — add your specific metric here]" as a placeholder. Confident and direct — no self-deprecation, no corporate fluff.
+
+7. LENGTH
+   Aim for exactly 1 page for candidates with under 8 years experience; 2 pages maximum for senior candidates. Cut ruthlessly — never pad.
+
+8. HUMAN VOICE
+   The result must sound like it was written by the candidate, not by an AI. Vary sentence structure. Use the candidate's existing voice as a baseline and elevate it — don't replace it with generic corporate prose.
+
+Return ONLY the optimised CV — no commentary, no preamble. Just the final polished CV text.`
 
   try {
     let userContent
@@ -36,7 +58,7 @@ Return ONLY the optimised CV — no commentary, no preamble, no explanation. Jus
         : { type: 'text', text: `=== JOB DESCRIPTION ===\n${jobDescription}` }
 
       userContent = [
-        { type: 'text', text: 'You are an expert CV strategist and career coach. The first document is the candidate\'s CV. Your task is to rewrite and optimise it so it is perfectly tailored for the specific job description.' },
+        { type: 'text', text: 'You are a world-class CV writer and career strategist. The first document is the candidate\'s current CV. Rewrite and optimise it to perfectly match the job description.' },
         { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: cvPdf } },
         jdPart,
         { type: 'text', text: instructions },
@@ -44,13 +66,13 @@ Return ONLY the optimised CV — no commentary, no preamble, no explanation. Jus
     } else {
       const jdSection = jdPdf
         ? [
-            { type: 'text', text: `You are an expert CV strategist and career coach. Rewrite and optimise the CV below for the job description in the attached PDF.\n\n=== ORIGINAL CV ===\n${cv}` },
+            { type: 'text', text: `You are a world-class CV writer and career strategist. Rewrite and optimise the CV below for the job description in the attached PDF.\n\n=== ORIGINAL CV ===\n${cv}` },
             { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: jdPdf } },
             { type: 'text', text: instructions },
           ]
-        : `You are an expert CV strategist and career coach. Your task is to rewrite and optimise the provided CV so it is perfectly tailored for the specific job description below.\n\n=== ORIGINAL CV ===\n${cv}\n\n=== JOB DESCRIPTION ===\n${jobDescription}\n\n${instructions}`
+        : `You are a world-class CV writer and career strategist. Your task is to rewrite and optimise the provided CV so it is perfectly tailored for the job description below.\n\n=== ORIGINAL CV ===\n${cv}\n\n=== JOB DESCRIPTION ===\n${jobDescription}\n\n${instructions}`
 
-      userContent = jdPdf ? jdSection : jdSection
+      userContent = jdSection
     }
 
     const message = await client.messages.create({

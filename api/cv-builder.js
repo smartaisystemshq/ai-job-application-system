@@ -18,62 +18,65 @@ module.exports = async function handler(req, res) {
   if (action === 'generate-bullets') {
     const { jobTitle, company, description, targetRole } = data || {}
     if (!description) return res.status(400).json({ error: 'description is required.' })
-    prompt = `You are an expert CV writer. Generate exactly 4 strong, concise bullet points for this work experience entry.
+    prompt = `You are an elite CV writer. Generate exactly 4 CV bullet points for this work experience entry.
 
 Job Title: ${jobTitle || 'Not specified'}
 Company: ${company || 'Not specified'}
-Target Role (if relevant): ${targetRole || 'Not specified'}
-Description of work: ${description}
+Target Role (candidate is applying for): ${targetRole || 'Not specified'}
+Candidate's description of their work: ${description}
 
-Requirements:
-- Start each bullet with a strong past-tense action verb (Led, Built, Increased, Reduced, Designed, Managed, Delivered, etc.)
-- Quantify achievements with numbers, %, £/$, team sizes, or time saved wherever possible
-- Maximum 15 words per bullet
-- Focus on impact and outcomes, not just duties
-- Tailor to the target role if specified
+REQUIREMENTS FOR EACH BULLET:
+- Start with the strongest possible action verb: Spearheaded, Architected, Doubled, Slashed, Launched, Negotiated, Automated, Secured, Mentored, Overhauled, Streamlined, Drove
+- Format: [Action verb] + [what/how] + [measurable result or scale]
+- Quantify aggressively: percentages, revenue, headcount, time saved, volume — if the description doesn't have numbers, make a realistic inference based on the role level and write "[add your specific metric]" at the end
+- Maximum 18 words per bullet
+- Each bullet must demonstrate impact, not just describe a task
+- Tailor to the target role if one is specified
 
-Return exactly 4 bullet points. Each must start with • on its own line. No preamble, no extra text.`
+Return exactly 4 bullet points. Each starts with • on its own line. No preamble, no extra text, no numbering.`
 
   } else if (action === 'suggest-skills') {
     const { targetRole, existingSkills } = data || {}
     if (!targetRole) return res.status(400).json({ error: 'targetRole is required.' })
-    prompt = `You are a career expert. Suggest exactly 10 relevant skills for a "${targetRole}" role.
+    prompt = `You are a senior recruiter and career expert. Suggest exactly 10 highly relevant skills for a "${targetRole}" position.
 
-Skills the candidate already has: ${(existingSkills || []).join(', ') || 'none listed'}
+Skills the candidate already has listed: ${(existingSkills || []).join(', ') || 'none listed'}
 
-Rules:
+RULES:
 - Do NOT repeat any existing skills
-- Mix technical skills and soft skills appropriate for the role
-- Be specific (e.g. "Stakeholder Management" not just "Communication")
-- Return ONLY a comma-separated list of 10 skills, nothing else`
+- Mix: 60% technical/hard skills specific to this role, 40% high-value soft skills that actually matter for this role
+- Be specific and searchable: "Stakeholder Management" not "Communication"; "Agile/Scrum" not "Project Management"
+- For technical roles: include specific tools, languages, frameworks, or methodologies
+- These should be skills that would impress a recruiter reading the CV for this exact role
+- Return ONLY a comma-separated list of 10 skills, nothing else. No numbering, no bullets, no explanation.`
 
   } else if (action === 'generate-summary') {
     const { name, targetRole, experience, education, skills } = data || {}
     const expText = (experience || [])
       .filter(e => e.jobTitle || e.company)
-      .map(e => `${e.jobTitle || 'Role'} at ${e.company || 'Company'}`)
-      .join(', ')
+      .map(e => `${e.jobTitle || 'Role'} at ${e.company || 'Company'} (${e.startDate || ''}${e.endDate ? ' – ' + e.endDate : ''})`)
+      .join('; ')
     const eduText = (education || [])
       .filter(e => e.degree || e.institution)
       .map(e => `${e.degree || 'Degree'} from ${e.institution || 'Institution'}`)
       .join(', ')
-    prompt = `You are an expert CV writer. Write a professional CV summary (3-4 sentences).
+    prompt = `You are an elite CV writer. Write a professional summary section (3 sentences, under 75 words).
 
-Candidate: ${name || 'the candidate'}
-Target Role: ${targetRole || 'not specified'}
-Work Experience: ${expText || 'not provided'}
+Candidate name: ${name || 'the candidate'}
+Target role: ${targetRole || 'not specified'}
+Work experience: ${expText || 'not provided'}
 Education: ${eduText || 'not provided'}
-Key Skills: ${(skills || []).join(', ') || 'not provided'}
+Key skills: ${(skills || []).join(', ') || 'not provided'}
 
-Requirements:
-- 3-4 sentences, under 80 words total
-- Open with professional standing or years of experience (no "I")
-- Mention 2-3 specific strengths relevant to the target role
-- Close with what the candidate brings to an organisation
-- No buzzwords: "passionate", "dynamic", "results-driven", "synergy"
-- Professional, confident, third-person implied voice
+REQUIREMENTS:
+- Sentence 1: Professional identity + years/level of experience relevant to the target role (implied third-person, no "I")
+- Sentence 2: Two specific strengths or areas of expertise — make these concrete and aligned with the target role
+- Sentence 3: What the candidate delivers for organisations — quantified if possible, otherwise outcome-focused
+- Zero banned phrases: "passionate", "dynamic", "results-driven", "synergy", "team player", "motivated", "detail-oriented"
+- Reads like it was written by a skilled human — specific, confident, direct
+- Under 75 words total
 
-Return ONLY the summary text.`
+Return ONLY the summary text. No heading, no "Here is your summary:", just the paragraph.`
 
   } else {
     return res.status(400).json({ error: 'Invalid action.' })
@@ -82,7 +85,7 @@ Return ONLY the summary text.`
   try {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 600,
+      max_tokens: 700,
       messages: [{ role: 'user', content: prompt }],
     })
     return res.status(200).json({ result: message.content[0].text })

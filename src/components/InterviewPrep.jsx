@@ -1,31 +1,44 @@
 import React, { useState, useEffect } from 'react';
+import FileUploadField from './FileUploadField';
 
 const LS = { jd: 'jas.ip.jd', rawResult: 'jas.ip.rawResult' };
 
 function parseQuestions(raw) {
-  const questions = [];
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed;
   } catch {}
 
-  const blocks = raw.split(/\n(?=\d{1,2}[.)]\s|\*\*\d{1,2}[.)]\*\*|\bQuestion\s+\d)/i).filter(Boolean);
+  // Split on numbered items: "1.", "2.", etc. at the start of a line
+  const blocks = raw.split(/\n(?=\d{1,2}[.)]\s)/).filter(Boolean);
 
   if (blocks.length >= 4) {
+    const questions = [];
     for (const block of blocks) {
       const lines = block.trim().split('\n').filter(Boolean);
       if (lines.length === 0) continue;
-      const firstLine = lines[0]
-        .replace(/^\*?\*?\d+[.)]\*?\*?\s*/, '')
-        .replace(/^\*\*/, '').replace(/\*\*$/, '').trim();
+
+      // First line: remove the number prefix (e.g. "1. ", "2) ")
+      const questionText = lines[0]
+        .replace(/^\d{1,2}[.)]\s+/, '')
+        .replace(/^\*\*/, '').replace(/\*\*$/, '')
+        .trim();
+
+      // Remaining lines: find the answer framework
       const rest = lines.slice(1).join('\n')
-        .replace(/^\*?(answer framework|framework|how to answer|suggested approach)[:\s]*/i, '').trim();
-      if (firstLine) questions.push({ question: firstLine, framework: rest });
+        .replace(/^\s*\*?\*?(answer framework|framework|how to answer|suggested approach|antwort-leitfaden|hinweis|tipps?)[:\s]*/i, '')
+        .trim();
+
+      // Skip if questionText looks like a heading (no "?", no question words, very short)
+      if (questionText) {
+        questions.push({ question: questionText, framework: rest });
+      }
     }
+    if (questions.length > 0) return questions;
   }
 
-  if (questions.length > 0) return questions;
-  return [{ question: 'Interview Questions & Frameworks', framework: raw }];
+  // Fallback: show everything in one block
+  return [{ question: 'Interview Questions', framework: raw }];
 }
 
 function CopyButton({ text }) {
@@ -44,6 +57,9 @@ function CopyButton({ text }) {
 
 export default function InterviewPrep() {
   const [jobDescription, setJobDescription] = useState(() => localStorage.getItem(LS.jd) || '');
+  const [jdFile, setJdFile] = useState(null);
+  const [jdPdfBase64, setJdPdfBase64] = useState('');
+
   const [rawResult, setRawResult] = useState(() => localStorage.getItem(LS.rawResult) || '');
   const [questions, setQuestions] = useState(() => {
     const saved = localStorage.getItem(LS.rawResult);
@@ -55,14 +71,26 @@ export default function InterviewPrep() {
   useEffect(() => { localStorage.setItem(LS.jd, jobDescription); }, [jobDescription]);
   useEffect(() => { if (rawResult) localStorage.setItem(LS.rawResult, rawResult); }, [rawResult]);
 
+  const handleJdFileSelect = (fileInfo, content) => {
+    setJdFile(fileInfo);
+    if (fileInfo.type === 'pdf') { setJdPdfBase64(content); setJobDescription(''); }
+    else { setJobDescription(content); setJdPdfBase64(''); }
+  };
+  const handleJdFileRemove = () => { setJdFile(null); setJdPdfBase64(''); setJobDescription(''); };
+
+  const canSubmit = jobDescription.trim() || jdPdfBase64;
+
   const handleGenerate = async () => {
-    if (!jobDescription.trim()) { setError('Please paste a job description first.'); return; }
+    if (!canSubmit) { setError('Please paste or upload a job description first.'); return; }
     setLoading(true); setError(''); setRawResult(''); setQuestions([]);
     try {
       const res = await fetch('/api/interview-prep', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobDescription: jobDescription.trim() }),
+        body: JSON.stringify({
+          jobDescription: jobDescription.trim() || undefined,
+          jdPdf: jdPdfBase64 || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate questions');
@@ -76,7 +104,12 @@ export default function InterviewPrep() {
   };
 
   const handleClear = () => {
-    setJobDescription(''); setRawResult(''); setQuestions([]); setError('');
+    setJobDescription('');
+    setJdFile(null);
+    setJdPdfBase64('');
+    setRawResult('');
+    setQuestions([]);
+    setError('');
     Object.values(LS).forEach(k => localStorage.removeItem(k));
   };
 
@@ -84,24 +117,24 @@ export default function InterviewPrep() {
     <div className="page">
       <div className="page-header">
         <h1>Interview Prep</h1>
-        <p>Paste the job description and get the 8 most likely interview questions with answer frameworks</p>
+        <p>Paste or upload the job description and get the 8 most likely interview questions with answer frameworks</p>
       </div>
 
       <div className="section-desc">
-        <strong>How it works:</strong> Paste the job description and Claude generates the 8 most likely interview questions with specific answer frameworks — not generic tips, but role-tailored guidance on what interviewers are actually testing for.
+        <strong>How it works:</strong> Provide the job description and Claude generates the 8 most likely interview questions with specific answer frameworks — not generic tips, but role-tailored guidance on what interviewers are actually testing for. Language matches the job description automatically.
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
-        <div className="form-group" style={{ marginBottom: 0 }}>
-          <label className="label">Job Description</label>
-          <textarea
-            className="textarea"
-            rows={10}
-            placeholder="Paste the full job description here — include responsibilities, requirements, and any 'nice to have' skills..."
-            value={jobDescription}
-            onChange={e => setJobDescription(e.target.value)}
-          />
-        </div>
+        <FileUploadField
+          label="Job Description"
+          value={jobDescription}
+          onChange={setJobDescription}
+          onFileSelect={handleJdFileSelect}
+          onFileRemove={handleJdFileRemove}
+          file={jdFile}
+          placeholder="Paste the full job description here — include responsibilities, requirements, and any 'nice to have' skills..."
+          rows={10}
+        />
       </div>
 
       {error && (
@@ -114,12 +147,12 @@ export default function InterviewPrep() {
         <button
           className="btn btn-primary"
           onClick={handleGenerate}
-          disabled={loading || !jobDescription.trim()}
+          disabled={loading || !canSubmit}
           style={{ minWidth: 180 }}
         >
           {loading ? <><span className="spinner"></span> Generating...</> : '◈ Generate Questions'}
         </button>
-        {(jobDescription || rawResult) && (
+        {(jobDescription || jdFile || rawResult) && (
           <button className="btn btn-secondary" onClick={handleClear} disabled={loading}>Clear</button>
         )}
       </div>
