@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+const CONTACT_EMAIL = 'smartaisystemshq@gmail.com';
+
 const FAQS = [
   {
     q: 'How do I use the CV Optimizer?',
@@ -11,7 +13,7 @@ const FAQS = [
   },
   {
     q: 'Is my data saved anywhere?',
-    a: 'Your data is stored only in your own browser\'s localStorage — it never leaves your device and is never sent to our servers. PDFs and DOCX files are processed temporarily for text extraction only. You can clear all data at any time using the "Clear All" button in each section.',
+    a: "Your data is stored only in your own browser's localStorage — it never leaves your device and is never sent to our servers. PDFs and DOCX files are processed temporarily for text extraction only. You can clear all data at any time using the \"Clear All\" button in each section.",
   },
   {
     q: 'How do I get the best results from the CV Optimizer?',
@@ -54,22 +56,24 @@ export default function HelpInfo() {
 
   const handleContact = (e) => {
     e.preventDefault();
-    const subject = encodeURIComponent(`Contact from ${name} — AI Job Application System`);
-    const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
-    window.location.href = `mailto:smartaisystemshq@gmail.com?subject=${subject}&body=${body}`;
+    const subject = encodeURIComponent('AI Job Application System — Support');
+    const body = encodeURIComponent(
+      `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`
+    );
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
     setSent(true);
-    setTimeout(() => setSent(false), 5000);
+    setTimeout(() => setSent(false), 6000);
   };
 
   return (
     <div className="page">
-      <div className="page-header">
+      <div className="page-header scroll-reveal">
         <h1>Help & Info</h1>
         <p>Answers to common questions and a way to reach the team</p>
       </div>
 
       {/* FAQ */}
-      <div style={{ marginBottom: 40 }}>
+      <div style={{ marginBottom: 40 }} className="scroll-reveal">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <div style={{ width: 3, height: 20, background: 'var(--accent)', borderRadius: 2 }} />
           <h2 style={{ fontSize: 18, fontWeight: 700 }}>Frequently Asked Questions</h2>
@@ -82,14 +86,37 @@ export default function HelpInfo() {
       </div>
 
       {/* Contact */}
-      <div>
+      <div className="scroll-reveal">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <div style={{ width: 3, height: 20, background: 'var(--accent)', borderRadius: 2 }} />
           <h2 style={{ fontSize: 18, fontWeight: 700 }}>Get in Touch</h2>
         </div>
+
         <div className="card" style={{ maxWidth: 560 }}>
+          {/* Visible email address */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '10px 14px',
+            background: 'rgba(29,158,117,0.07)',
+            border: '1px solid rgba(29,158,117,0.2)',
+            borderRadius: 10,
+            marginBottom: 20,
+          }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Contact us at </span>
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}
+            >
+              {CONTACT_EMAIL}
+            </a>
+          </div>
+
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.6 }}>
-            Have a question or feature request? Fill in the form below — this will open your email client with the message pre-filled.
+            Have a question or feature request? Fill in the form — it will open your email client (Gmail, Outlook, etc.) with the message pre-filled, ready to send.
           </p>
 
           {sent && (
@@ -104,7 +131,7 @@ export default function HelpInfo() {
               <input className="input" placeholder="Your name" value={name} onChange={e => setName(e.target.value)} required />
             </div>
             <div className="form-group">
-              <label className="label">Email</label>
+              <label className="label">Your Email</label>
               <input className="input" type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
             <div className="form-group">
@@ -112,7 +139,7 @@ export default function HelpInfo() {
               <textarea className="textarea" rows={5} placeholder="Your question or feedback..." value={message} onChange={e => setMessage(e.target.value)} required />
             </div>
             <button type="submit" className="btn btn-primary" disabled={!name || !email || !message}>
-              Send Message
+              Open Email Client →
             </button>
           </form>
         </div>

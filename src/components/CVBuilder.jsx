@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DownloadButtons from '../utils/DownloadButtons';
+import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
 
 const LS_KEY = 'jas.cvb';
 
@@ -209,6 +210,7 @@ export default function CVBuilder() {
   const [apiError, setApiError] = useState('');
   // Adjusted CV text from chatbot (separate from raw buildCVText output)
   const [adjustedCvText, setAdjustedCvText] = useState(null);
+  const [cvScore, setCvScore] = useState(null);
 
   const previewRef = useRef(null);
 
@@ -223,7 +225,15 @@ export default function CVBuilder() {
 
   const set = (key, val) => setState(s => ({ ...s, [key]: val }));
   const setP = (key, val) => setState(s => ({ ...s, personal: { ...s.personal, [key]: val } }));
-  const setStep = (n) => { setState(s => ({ ...s, step: n })); setApiError(''); setSuggestedSkills([]); };
+  const setStep = (n) => {
+    setState(s => ({ ...s, step: n }));
+    setApiError('');
+    setSuggestedSkills([]);
+    if (n === 6) {
+      const text = adjustedCvText ?? buildCVText(state);
+      setCvScore(calculateAttractivenessScore(text));
+    }
+  };
 
   const addExp = () => set('experience', [...state.experience, newExp()]);
   const updExp = (id, key, val) => set('experience', state.experience.map(e => e.id === id ? { ...e, [key]: val } : e));
@@ -580,10 +590,19 @@ export default function CVBuilder() {
 
   const renderPreview = () => (
     <div ref={previewRef}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
+      {/* Result header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 0, flexWrap: 'wrap', gap: 8,
+        padding: '12px 16px',
+        background: 'rgba(29,158,117,0.06)',
+        border: '1px solid rgba(29,158,117,0.2)',
+        borderBottom: 'none',
+        borderRadius: '14px 14px 0 0',
+      }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>Your CV</h2>
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Download as PDF or Word, or copy the text.</p>
+          <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 2 }}>Your CV</h2>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Download as PDF or Word, or copy the text.</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <DownloadButtons
@@ -594,7 +613,9 @@ export default function CVBuilder() {
         </div>
       </div>
 
-      <div className="result-box" style={{ minHeight: 400, maxHeight: 600 }}>{displayCvText}</div>
+      <div className="result-box-wrapper" style={{ borderRadius: '0 0 16px 16px' }}>
+        <div className="result-box" style={{ borderRadius: '0 0 15px 15px', minHeight: 400, maxHeight: 560 }}>{displayCvText}</div>
+      </div>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
         <button className="btn btn-secondary" onClick={() => setStep(5)}>← Back to Summary</button>
@@ -603,10 +624,13 @@ export default function CVBuilder() {
         </button>
       </div>
 
+      {cvScore !== null && <ScoreCard score={cvScore} />}
+
       <MiniChatbot
         currentDocument={displayCvText}
         onUpdate={(newText) => {
           setAdjustedCvText(newText);
+          setCvScore(calculateAttractivenessScore(newText));
           setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
         }}
       />
@@ -615,12 +639,12 @@ export default function CVBuilder() {
 
   return (
     <div className="page">
-      <div className="page-header">
+      <div className="page-header scroll-reveal">
         <h1>CV Builder</h1>
         <p>Build a professional CV from scratch in 5 guided steps — with AI assistance at every stage</p>
       </div>
 
-      <div className="section-desc">
+      <div className="section-desc scroll-reveal">
         <strong>No existing CV?</strong> This wizard guides you step by step: add your personal info, work history, education, and skills. Claude generates bullet points, suggests skills, and writes your summary — then shows a clean formatted CV you can download as PDF or Word.
       </div>
 

@@ -9,7 +9,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const { cv, jobDescription, cvPdf, jdPdf } = req.body || {}
-  if (!jobDescription) return res.status(400).json({ error: 'jobDescription is required.' })
+  if (!jobDescription && !jdPdf) return res.status(400).json({ error: 'jobDescription is required.' })
   if (!cv && !cvPdf) return res.status(400).json({ error: 'Either cv text or cvPdf is required.' })
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })

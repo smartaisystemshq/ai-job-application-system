@@ -1,15 +1,87 @@
 import React, { useState, useEffect, useRef } from 'react';
 import FileUploadField from './FileUploadField';
 import DownloadButtons from '../utils/DownloadButtons';
+import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
 
 const LS = { cv: 'jas.cvo.cv', jd: 'jas.cvo.jd', result: 'jas.cvo.result' };
+
+// ── Template definitions ──────────────────────────────────────────
+
+function TemplatePreviewMinimal() {
+  return (
+    <div style={{ background: '#fff', padding: '10px 10px 8px', borderRadius: 6, minHeight: 90 }}>
+      <div style={{ height: 7, background: '#111', borderRadius: 2, marginBottom: 3, width: '58%' }} />
+      <div style={{ height: 1, background: '#ccc', marginBottom: 4 }} />
+      <div style={{ height: 2.5, background: '#888', borderRadius: 1, marginBottom: 10, width: '75%' }} />
+      <div style={{ height: 3, background: '#222', borderRadius: 2, marginBottom: 4, width: '38%' }} />
+      {[72, 88, 65].map((w, i) => <div key={i} style={{ height: 2, background: '#bbb', borderRadius: 1, marginBottom: 3, width: `${w}%` }} />)}
+    </div>
+  );
+}
+
+function TemplatePreviewModern() {
+  return (
+    <div style={{ background: '#fff', borderRadius: 6, overflow: 'hidden', minHeight: 90 }}>
+      <div style={{ background: '#1D9E75', height: 10, width: '100%' }} />
+      <div style={{ padding: '7px 9px' }}>
+        <div style={{ height: 7, background: '#111', borderRadius: 2, marginBottom: 3, width: '60%' }} />
+        <div style={{ height: 2, background: '#999', borderRadius: 1, marginBottom: 8, width: '78%' }} />
+        <div style={{ height: 3, background: '#1D9E75', borderRadius: 2, marginBottom: 2, width: '40%' }} />
+        <div style={{ height: 0.5, background: '#1D9E75', marginBottom: 5 }} />
+        {[76, 90, 62].map((w, i) => <div key={i} style={{ height: 2, background: '#bbb', borderRadius: 1, marginBottom: 3, width: `${w}%` }} />)}
+      </div>
+    </div>
+  );
+}
+
+function TemplatePreviewClassic() {
+  return (
+    <div style={{ background: '#fff', padding: '10px 9px 8px', borderRadius: 6, minHeight: 90 }}>
+      <div style={{ height: 7, background: '#111', borderRadius: 2, margin: '0 auto 3px', width: '52%' }} />
+      <div style={{ height: 1.5, background: '#333', marginBottom: 1.5 }} />
+      <div style={{ height: 0.5, background: '#999', marginBottom: 5 }} />
+      <div style={{ height: 2, background: '#777', borderRadius: 1, margin: '0 auto 9px', width: '68%' }} />
+      <div style={{ height: 0.5, background: '#bbb', marginBottom: 4 }} />
+      {[80, 94, 70].map((w, i) => <div key={i} style={{ height: 2, background: '#ccc', borderRadius: 1, marginBottom: 3, width: `${w}%` }} />)}
+    </div>
+  );
+}
+
+function TemplatePreviewExecutive() {
+  return (
+    <div style={{ background: '#fff', padding: '10px 9px 8px', borderRadius: 6, minHeight: 90 }}>
+      <div style={{ height: 7, background: '#111', borderRadius: 2, marginBottom: 4, width: '68%', fontWeight: 800 }} />
+      <div style={{ height: 2, background: '#1D9E75', marginBottom: 7 }} />
+      <div style={{ height: 2, background: '#888', borderRadius: 1, marginBottom: 10, width: '72%' }} />
+      <div style={{ height: 3, background: '#333', borderRadius: 2, marginBottom: 4, width: '36%' }} />
+      {[86, 72, 90].map((w, i) => <div key={i} style={{ height: 2, background: '#bbb', borderRadius: 1, marginBottom: 3, width: `${w}%` }} />)}
+    </div>
+  );
+}
+
+function TemplatePreviewTech() {
+  return (
+    <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', minHeight: 90 }}>
+      <div style={{ background: '#1a1a1a', width: '36%', padding: '8px 7px' }}>
+        <div style={{ height: 5, background: '#1D9E75', borderRadius: 2, marginBottom: 5, width: '82%' }} />
+        <div style={{ height: 0.5, background: '#1D9E75', marginBottom: 6, opacity: 0.6 }} />
+        {[70, 58, 74, 62].map((w, i) => <div key={i} style={{ height: 1.8, background: '#555', borderRadius: 1, marginBottom: 3, width: `${w}%` }} />)}
+      </div>
+      <div style={{ background: '#fff', flex: 1, padding: '8px 8px' }}>
+        <div style={{ height: 5, background: '#222', borderRadius: 2, marginBottom: 5, width: '62%' }} />
+        <div style={{ height: 1.5, background: '#1D9E75', marginBottom: 5 }} />
+        {[90, 72, 86].map((w, i) => <div key={i} style={{ height: 2, background: '#bbb', borderRadius: 1, marginBottom: 3, width: `${w}%` }} />)}
+      </div>
+    </div>
+  );
+}
 
 const TEMPLATES = [
   {
     id: 'minimal',
     name: 'Minimal',
-    description: 'Single column, clean whitespace, timeless.',
-    preview: '[Full Name]\n[email] | [phone] | [location]\nlinkedin.com/in/yourname\n\nPROFESSIONAL SUMMARY\n[2-3 sentences about your background]\n\nWORK EXPERIENCE\n[Job Title] | [Company] | [Year – Year]\n• Achievement with metric\n• Achievement with metric\n\nEDUCATION\n[Degree] | [University] | [Year]\n\nSKILLS\n[Skill 1], [Skill 2], [Skill 3]',
+    description: 'Single column, clean spacing, timeless black typography.',
+    Preview: TemplatePreviewMinimal,
     content: `[Full Name]
 [email@example.com] | [+44 000 000 0000] | [City, Country]
 linkedin.com/in/yourname
@@ -40,17 +112,17 @@ SKILLS
   {
     id: 'modern',
     name: 'Modern',
-    description: 'Bold dividers, structured blocks, contemporary.',
-    preview: '[FULL NAME]\n━━━━━━━━━━━━━━━━━━━━━━━━\n[email] • [phone] • [location]\n\n▌ PROFILE\n[Summary text]\n\n▌ EXPERIENCE\n[COMPANY]              [Year – Now]\n[Job Title]\n▸ Impact-led achievement\n▸ Quantified result',
+    description: 'Green accents, bold dividers, structured contemporary layout.',
+    Preview: TemplatePreviewModern,
     content: `[FULL NAME]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 [email@example.com] • [+44 000 000 0000] • [Location] • linkedin.com/in/yourname
 
-▌ PROFILE
+PROFILE
 
 [2-3 sentence professional profile. Who you are, what you do, what sets you apart from other candidates.]
 
-▌ EXPERIENCE
+EXPERIENCE
 
 [COMPANY NAME]                                    [Month Year – Present]
 [Job Title]
@@ -63,21 +135,21 @@ SKILLS
 ▸ [Achievement]
 ▸ [Achievement]
 
-▌ SKILLS & TOOLS
+SKILLS
 
 Technical ▸ [Skill 1] • [Skill 2] • [Skill 3]
 Tools ▸ [Tool 1] • [Tool 2] • [Tool 3]
 Soft Skills ▸ [Skill 1] • [Skill 2]
 
-▌ EDUCATION
+EDUCATION
 
 [Degree] | [Institution] | [Year]`,
   },
   {
     id: 'classic',
     name: 'Classic',
-    description: 'Traditional layout, formal tone, universally readable.',
-    preview: '              [FULL NAME]\n    ──────────────────────────\n    [Address] | [Phone] | [Email]\n\nPROFESSIONAL EXPERIENCE\n──────────────────────────\n[Job Title]              [Year]\n[Company, Location]\n•  Responsibility / achievement',
+    description: 'Traditional centred layout, formal structure, universally accepted.',
+    Preview: TemplatePreviewClassic,
     content: `                          [FULL NAME]
               ──────────────────────────────────────────────
               [Address]  |  [Phone]  |  [Email]
@@ -93,7 +165,7 @@ PROFESSIONAL EXPERIENCE
 [Job Title]                                             [Year – Year]
 [Company Name], [Location]
 
-•  [Key responsibility or achievement — provide context and measurable outcome where possible]
+•  [Key responsibility or achievement — provide context and measurable outcome]
 •  [Second key contribution demonstrating relevant competency]
 •  [Third achievement]
 
@@ -118,6 +190,78 @@ REFERENCES
 ──────────────────────────────────────────────────────────────
 
 Available upon request.`,
+  },
+  {
+    id: 'executive',
+    name: 'Executive',
+    description: 'Uppercase name, green accent line, polished senior-level presence.',
+    Preview: TemplatePreviewExecutive,
+    content: `JOHN SMITH
+──────────────────────────────────────────────────────────────
+john.smith@email.com  |  +44 000 000 0000  |  London, UK  |  linkedin.com/in/johnsmith
+
+EXECUTIVE SUMMARY
+
+[Senior-level professional overview. 2-3 sentences that immediately communicate seniority, domain expertise, and the scale of impact you deliver. Reference the industry and level you're targeting.]
+
+PROFESSIONAL EXPERIENCE
+
+[Job Title]                                                    [Year – Present]
+[Company Name], [Location]
+
+• [C-suite or senior-level achievement — strategic impact, P&L responsibility, or organisation-wide change]
+• [Achievement demonstrating leadership of teams or major initiatives]
+• [Revenue, cost, or performance outcome with clear numbers]
+
+[Previous Job Title]                                           [Year – Year]
+[Company Name], [Location]
+
+• [Achievement]
+• [Achievement]
+
+EDUCATION
+
+[Degree / Executive Programme]  |  [Institution]  |  [Year]
+
+SKILLS & EXPERTISE
+
+[Leadership skill]  |  [Domain expertise]  |  [Strategic skill]  |  [Technical skill]`,
+  },
+  {
+    id: 'tech',
+    name: 'Tech',
+    description: 'Two-column layout — dark sidebar for skills, white panel for experience.',
+    Preview: TemplatePreviewTech,
+    content: `[Full Name]
+[email@example.com] | [github.com/username] | [Location]
+linkedin.com/in/yourname
+
+SKILLS
+
+[Programming Language 1], [Programming Language 2]
+[Framework 1], [Framework 2], [Framework 3]
+[Cloud / DevOps tool 1], [Cloud tool 2]
+[Database 1], [Database 2]
+[Methodology: Agile, TDD, CI/CD]
+
+PROFESSIONAL SUMMARY
+
+[2-3 sentences: your technical focus, years of experience, and what kind of engineering problems you solve best.]
+
+WORK EXPERIENCE
+
+[Job Title] | [Company] | [Month Year] – [Month Year]
+• [Technical achievement — what you built, language/stack used, and measurable outcome]
+• [Performance improvement or scale: e.g. reduced latency by 40%, handled 1M requests/day]
+• [Leadership or collaboration: mentored 3 engineers, led migration of legacy system]
+
+[Previous Job Title] | [Company] | [Month Year] – [Month Year]
+• [Technical achievement]
+• [Impact metric]
+
+EDUCATION
+
+[Degree in Computer Science / Software Engineering]  |  [University]  |  [Year]`,
   },
 ];
 
@@ -148,11 +292,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
       const res = await fetch('/api/adjust-document', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          documentText: currentDocument,
-          instruction: input.trim(),
-          documentType: 'cv',
-        }),
+        body: JSON.stringify({ documentText: currentDocument, instruction: input.trim(), documentType: 'cv' }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Adjustment failed');
@@ -187,9 +327,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
           disabled={loading || !input.trim()}
           style={{ flexShrink: 0 }}
         >
-          {loading
-            ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</>
-            : 'Apply →'}
+          {loading ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</> : 'Apply →'}
         </button>
       </div>
       {error && <p style={{ fontSize: 12, color: '#f87171', marginTop: 6 }}>{error}</p>}
@@ -209,9 +347,10 @@ export default function CVOptimizer() {
 
   const [result, setResult] = useState(() => localStorage.getItem(LS.result) || '');
   const [loading, setLoading] = useState(false);
-  const [adjusting, setAdjusting] = useState(false);
   const [error, setError] = useState('');
   const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState('minimal');
+  const [score, setScore] = useState(null);
 
   const resultRef = useRef(null);
 
@@ -237,7 +376,7 @@ export default function CVOptimizer() {
 
   const handleOptimize = async () => {
     if (!canSubmit) { setError('Please provide both your CV and the job description.'); return; }
-    setLoading(true); setError(''); setResult('');
+    setLoading(true); setError(''); setResult(''); setScore(null);
     try {
       const res = await fetch('/api/optimize-cv', {
         method: 'POST',
@@ -252,10 +391,8 @@ export default function CVOptimizer() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to optimize CV');
       setResult(data.result);
-      // Auto-scroll to result after a short delay for the DOM to update
-      setTimeout(() => {
-        resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      setScore(calculateAttractivenessScore(data.result, jobDescription));
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
@@ -266,36 +403,36 @@ export default function CVOptimizer() {
   const handleClear = () => {
     setCv(''); setCvFile(null); setCvPdfBase64('');
     setJobDescription(''); setJdFile(null); setJdPdfBase64('');
-    setResult(''); setError('');
+    setResult(''); setError(''); setScore(null);
     Object.values(LS).forEach(k => localStorage.removeItem(k));
   };
 
-  const useTemplate = (content) => {
-    setCv(content);
+  const useTemplate = (tmpl) => {
+    setCv(tmpl.content);
+    setSelectedTemplate(tmpl.id);
     setCvFile(null); setCvPdfBase64('');
     setShowTemplates(false);
   };
 
   const handleAdjustUpdate = (newResult) => {
     setResult(newResult);
-    setTimeout(() => {
-      resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 80);
+    setScore(calculateAttractivenessScore(newResult, jobDescription));
+    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   };
 
   return (
     <div className="page">
-      <div className="page-header">
+      <div className="page-header scroll-reveal">
         <h1>CV Optimizer</h1>
         <p>Paste or upload your CV and job description — Claude tailors your CV to maximise ATS score and recruiter impact</p>
       </div>
 
-      <div className="section-desc">
+      <div className="section-desc scroll-reveal">
         <strong>How it works:</strong> Provide your CV and the target job description (text or PDF/DOCX). Claude rewrites your CV with keyword alignment, quantified achievements, and ATS-friendly formatting tailored to the specific role.
       </div>
 
       {/* Templates */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 20 }} className="scroll-reveal">
         <button
           className="btn btn-ghost"
           onClick={() => setShowTemplates(v => !v)}
@@ -305,32 +442,39 @@ export default function CVOptimizer() {
             <rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/>
             <rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>
           </svg>
-          {showTemplates ? 'Hide Templates' : 'CV Templates — start from a structured layout'}
+          {showTemplates ? 'Hide Templates' : '5 CV Templates — start from a professionally designed layout'}
         </button>
 
         {showTemplates && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14, marginTop: 14 }}>
-            {TEMPLATES.map(tmpl => (
-              <div key={tmpl.id} className="template-card card">
-                <div style={{ marginBottom: 10 }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', marginBottom: 3 }}>{tmpl.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{tmpl.description}</div>
-                </div>
-                <div className="template-preview">{tmpl.preview}</div>
-                <button
-                  className="btn btn-secondary btn-sm"
-                  style={{ marginTop: 12, width: '100%' }}
-                  onClick={() => useTemplate(tmpl.content)}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 14, marginTop: 14 }}>
+            {TEMPLATES.map(tmpl => {
+              const isSelected = selectedTemplate === tmpl.id;
+              return (
+                <div
+                  key={tmpl.id}
+                  className={`template-card card${isSelected ? ' selected' : ''}`}
+                  style={{ padding: 14 }}
                 >
-                  Use Template
-                </button>
-              </div>
-            ))}
+                  <div className="template-preview-visual">
+                    <tmpl.Preview />
+                  </div>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 2 }}>{tmpl.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10, lineHeight: 1.4 }}>{tmpl.description}</div>
+                  <button
+                    className={`btn btn-sm ${isSelected ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ width: '100%' }}
+                    onClick={() => useTemplate(tmpl)}
+                  >
+                    {isSelected ? '✓ In Use' : 'Use Template'}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
 
-      <div className="two-col" style={{ marginBottom: 20 }}>
+      <div className="two-col scroll-reveal" style={{ marginBottom: 20 }}>
         <FileUploadField
           label="Your CV"
           value={cv}
@@ -359,10 +503,15 @@ export default function CVOptimizer() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 28 }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 28, alignItems: 'center' }} className="scroll-reveal">
         <button className="btn btn-primary" onClick={handleOptimize} disabled={loading || !canSubmit} style={{ minWidth: 160 }}>
           {loading ? <><span className="spinner"></span> Optimizing...</> : '✦ Optimize CV'}
         </button>
+        {selectedTemplate !== 'minimal' && (
+          <span style={{ fontSize: 12, color: 'var(--accent)', background: 'var(--accent-dim)', padding: '4px 10px', borderRadius: 100, border: '1px solid rgba(29,158,117,0.2)' }}>
+            Template: {TEMPLATES.find(t => t.id === selectedTemplate)?.name}
+          </span>
+        )}
         {(cv || cvFile || jobDescription || jdFile || result) && (
           <button className="btn btn-secondary" onClick={handleClear} disabled={loading}>Clear All</button>
         )}
@@ -377,21 +526,37 @@ export default function CVOptimizer() {
 
       {result && !loading && (
         <div ref={resultRef}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600 }}>
-              <span style={{ color: 'var(--accent)', marginRight: 8 }}>✦</span>Optimized CV
+          {/* Result header */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            marginBottom: 0, flexWrap: 'wrap', gap: 8,
+            padding: '12px 16px',
+            background: 'rgba(29,158,117,0.06)',
+            border: '1px solid rgba(29,158,117,0.2)',
+            borderBottom: 'none',
+            borderRadius: '14px 14px 0 0',
+          }}>
+            <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ color: 'var(--accent)' }}>✦</span>Optimized CV
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 4 }}>
+                · {TEMPLATES.find(t => t.id === selectedTemplate)?.name} template
+              </span>
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <DownloadButtons text={result} filename="optimized-cv" />
+              <DownloadButtons text={result} filename="optimized-cv" template={selectedTemplate} />
               <CopyButton text={result} />
             </div>
           </div>
 
-          <div className="result-box">{result}</div>
+          <div className="result-box-wrapper" style={{ borderRadius: '0 0 16px 16px' }}>
+            <div className="result-box" style={{ borderRadius: '0 0 15px 15px', maxHeight: 480 }}>{result}</div>
+          </div>
 
           <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
             Review and personalise the output before submitting your application.
           </p>
+
+          {score !== null && <ScoreCard score={score} />}
 
           <MiniChatbot currentDocument={result} onUpdate={handleAdjustUpdate} />
         </div>

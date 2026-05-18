@@ -10,7 +10,6 @@ export default function WaveBackground() {
     let animId;
     let t = 0;
 
-    // Mix of white and brand-green (#1D9E75) waves, more lines, higher opacity, faster
     const waves = [
       { yRatio: 0.06, amp: 22, freq: 0.0042, speed: 0.028, opacity: 0.07,  lw: 1.0, green: false },
       { yRatio: 0.15, amp: 32, freq: 0.0058, speed: 0.022, opacity: 0.09,  lw: 1.2, green: true  },
@@ -33,6 +32,28 @@ export default function WaveBackground() {
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Fill between adjacent wave pairs with subtle green tint
+      for (let wi = 0; wi < waves.length - 1; wi++) {
+        const w1 = waves[wi];
+        const w2 = waves[wi + 1];
+        const fillOpacity = (w1.green || w2.green) ? 0.05 : 0.025;
+
+        ctx.beginPath();
+        for (let x = 0; x <= canvas.width; x += 4) {
+          const y = canvas.height * w1.yRatio + Math.sin(x * w1.freq + t * w1.speed) * w1.amp;
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        for (let x = canvas.width; x >= 0; x -= 4) {
+          const y = canvas.height * w2.yRatio + Math.sin(x * w2.freq + t * w2.speed) * w2.amp;
+          ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = `rgba(29,158,117,${fillOpacity})`;
+        ctx.fill();
+      }
+
+      // Draw wave strokes on top
       for (const w of waves) {
         const y0 = canvas.height * w.yRatio;
         ctx.beginPath();
@@ -47,6 +68,7 @@ export default function WaveBackground() {
         }
         ctx.stroke();
       }
+
       t += 1;
       animId = requestAnimationFrame(draw);
     };

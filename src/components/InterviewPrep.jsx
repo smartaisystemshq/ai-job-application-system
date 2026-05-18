@@ -9,7 +9,6 @@ function parseQuestions(raw) {
     if (Array.isArray(parsed)) return parsed;
   } catch {}
 
-  // Split on numbered items: "1.", "2.", etc. at the start of a line
   const blocks = raw.split(/\n(?=\d{1,2}[.)]\s)/).filter(Boolean);
 
   if (blocks.length >= 4) {
@@ -18,18 +17,15 @@ function parseQuestions(raw) {
       const lines = block.trim().split('\n').filter(Boolean);
       if (lines.length === 0) continue;
 
-      // First line: remove the number prefix (e.g. "1. ", "2) ")
       const questionText = lines[0]
         .replace(/^\d{1,2}[.)]\s+/, '')
         .replace(/^\*\*/, '').replace(/\*\*$/, '')
         .trim();
 
-      // Remaining lines: find the answer framework
       const rest = lines.slice(1).join('\n')
         .replace(/^\s*\*?\*?(answer framework|framework|how to answer|suggested approach|antwort-leitfaden|hinweis|tipps?)[:\s]*/i, '')
         .trim();
 
-      // Skip if questionText looks like a heading (no "?", no question words, very short)
       if (questionText) {
         questions.push({ question: questionText, framework: rest });
       }
@@ -37,7 +33,6 @@ function parseQuestions(raw) {
     if (questions.length > 0) return questions;
   }
 
-  // Fallback: show everything in one block
   return [{ question: 'Interview Questions', framework: raw }];
 }
 
@@ -115,16 +110,16 @@ export default function InterviewPrep() {
 
   return (
     <div className="page">
-      <div className="page-header">
+      <div className="page-header scroll-reveal">
         <h1>Interview Prep</h1>
         <p>Paste or upload the job description and get the 8 most likely interview questions with answer frameworks</p>
       </div>
 
-      <div className="section-desc">
+      <div className="section-desc scroll-reveal">
         <strong>How it works:</strong> Provide the job description and Claude generates the 8 most likely interview questions with specific answer frameworks — not generic tips, but role-tailored guidance on what interviewers are actually testing for. Language matches the job description automatically.
       </div>
 
-      <div className="card" style={{ marginBottom: 20 }}>
+      <div className="card scroll-reveal" style={{ marginBottom: 20 }}>
         <FileUploadField
           label="Job Description"
           value={jobDescription}
@@ -143,7 +138,7 @@ export default function InterviewPrep() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 28 }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 28 }} className="scroll-reveal">
         <button
           className="btn btn-primary"
           onClick={handleGenerate}
@@ -166,16 +161,16 @@ export default function InterviewPrep() {
 
       {questions.length > 0 && !loading && (
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600 }}>
-              <span style={{ color: 'var(--accent)', marginRight: 8 }}>◈</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, padding: '12px 16px', background: 'rgba(29,158,117,0.06)', border: '1px solid rgba(29,158,117,0.2)', borderRadius: 12 }}>
+            <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ color: 'var(--accent)' }}>◈</span>
               {questions.length} Interview Questions
             </h2>
             <CopyButton text={rawResult} />
           </div>
 
           {questions.map((q, i) => (
-            <div key={i} className="question-item">
+            <div key={i} className="question-item scroll-reveal" style={{ animationDelay: `${i * 0.04}s` }}>
               <div className="question-number">Question {i + 1}</div>
               <div className="question-text">{q.question}</div>
               {q.framework && <div className="question-framework">{q.framework}</div>}

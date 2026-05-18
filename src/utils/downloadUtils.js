@@ -1,5 +1,4 @@
-// PDF generation via pdfmake (Roboto font via vfs_fonts)
-// Word generation via docx
+// PDF via pdfmake, Word via docx
 
 let _pdfMake = null
 
@@ -10,7 +9,6 @@ async function loadPdfMake() {
     import('pdfmake/build/vfs_fonts'),
   ])
   const pdfMake = pdfMakeMod.default || pdfMakeMod
-  // vfs_fonts exports the font data object directly (no .default or .vfs wrapper)
   const vfs = vfsMod.default || vfsMod
   pdfMake.vfs = vfs
   _pdfMake = pdfMake
@@ -41,26 +39,16 @@ export function parseDocumentLines(text) {
     const raw = rawLines[i]
     const trimmed = raw.trim()
 
-    if (!trimmed) {
-      result.push({ type: 'empty' })
-      continue
-    }
+    if (!trimmed) { result.push({ type: 'empty' }); continue }
 
-    // Divider lines
-    if (/^[─━═\-=]{3,}$/.test(trimmed)) {
-      result.push({ type: 'divider' })
-      continue
-    }
+    if (/^[─━═\-=]{3,}$/.test(trimmed)) { result.push({ type: 'divider' }); continue }
 
-    // First real line = name
     if (!nameFound) {
       nameFound = true
       result.push({ type: 'name', text: trimmed })
       continue
     }
 
-    // Lines right after name that look like contact info
-    // Key: do NOT use bare '|' as a contact indicator — job lines also use '|'
     const looksContact =
       contactCount < 3 &&
       !isSectionHeader(trimmed) &&
@@ -69,23 +57,16 @@ export function parseDocumentLines(text) {
         trimmed.toLowerCase().includes('linkedin') ||
         trimmed.toLowerCase().includes('http') ||
         trimmed.toLowerCase().includes('www') ||
-        // Catch-all for first few raw lines only (no year numbers, no bullets)
         (i <= 4 && trimmed.length < 100 && !isSectionHeader(trimmed) &&
           !/^[•▸▌►\-*]/.test(trimmed) && !/\d{4}/.test(trimmed)))
 
-    if (looksContact) {
-      contactCount++
-      result.push({ type: 'contact', text: trimmed })
-      continue
-    }
+    if (looksContact) { contactCount++; result.push({ type: 'contact', text: trimmed }); continue }
 
-    // Section header
     if (isSectionHeader(trimmed)) {
       result.push({ type: 'header', text: trimmed.replace(/^[▌►▸]\s*/, '') })
       continue
     }
 
-    // Bullet
     if (/^[•▸▌►]\s/.test(trimmed) || /^[-*]\s/.test(trimmed)) {
       result.push({ type: 'bullet', text: trimmed.replace(/^[•▸▌►\-*]\s+/, '') })
       continue
@@ -97,12 +78,10 @@ export function parseDocumentLines(text) {
   return result
 }
 
-// ── Optimal font size estimate ───────────────────────────────────────────────
-
 function getOptimalFontSize(text) {
   const lines = parseDocumentLines(text)
   let effective = 0
-  const CPL = 90 // chars per line at 10.5pt in A4 with 40pt margins
+  const CPL = 90
 
   for (const l of lines) {
     if (l.type === 'empty') { effective += 0.3; continue }
@@ -113,7 +92,6 @@ function getOptimalFontSize(text) {
     effective += Math.max(1, Math.ceil((l.text?.length || 0) / CPL))
   }
 
-  // A4 at 10.5pt: ~53 lines fit
   if (effective <= 53) return 10.5
   if (effective <= 56) return 10.0
   if (effective <= 60) return 9.5
@@ -121,9 +99,9 @@ function getOptimalFontSize(text) {
   return 8.5
 }
 
-// ── PDF document definition ──────────────────────────────────────────────────
+// ── Template-specific PDF builders ──────────────────────────────────────────
 
-function buildPDFDocDef(text, bodySize) {
+function buildMinimalPDF(text, bodySize) {
   const lines = parseDocumentLines(text)
   const content = []
   const nameSize = Math.round(bodySize + 7)
@@ -133,252 +111,404 @@ function buildPDFDocDef(text, bodySize) {
   for (const line of lines) {
     switch (line.type) {
       case 'empty':
-        content.push({ text: ' ', fontSize: bodySize * 0.5, margin: [0, 0, 0, 0] })
-        break
+        content.push({ text: ' ', fontSize: bodySize * 0.5, margin: [0, 0, 0, 0] }); break
+      case 'divider':
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: 515, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 3] }); break
+      case 'name':
+        content.push({ text: line.text, fontSize: nameSize, bold: true, color: '#111111', margin: [0, 0, 0, 3] }); break
+      case 'contact':
+        content.push({ text: line.text, fontSize: contactSize, color: '#555555', margin: [0, 0, 0, 1] }); break
+      case 'header':
+        content.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', margin: [0, 8, 0, 1] })
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.6, lineColor: '#888888' }], margin: [0, 0, 0, 3] }); break
+      case 'bullet':
+        content.push({ columns: [{ text: '•', width: 10, fontSize: bodySize, color: '#333333' }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [4, 1, 0, 1] }); break
+      case 'body':
+        content.push({ text: line.text, fontSize: bodySize, color: '#2a2a2a', margin: [0, 1, 0, 1] }); break
+    }
+  }
+
+  return {
+    pageSize: 'A4', pageMargins: [40, 36, 40, 36],
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.28 },
+    content,
+  }
+}
+
+function buildModernPDF(text, bodySize) {
+  const lines = parseDocumentLines(text)
+  const content = []
+  const nameSize = Math.round(bodySize + 7)
+  const contactSize = bodySize - 1.5
+  const headerSize = bodySize + 0.5
+  const GREEN = '#1D9E75'
+
+  // Green top accent bar
+  content.push({ canvas: [{ type: 'rect', x: 0, y: 0, w: 515, h: 4, r: 0, color: GREEN }], margin: [0, 0, 0, 8] })
+
+  for (const line of lines) {
+    switch (line.type) {
+      case 'empty':
+        content.push({ text: ' ', fontSize: bodySize * 0.5, margin: [0, 0, 0, 0] }); break
+      case 'divider':
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: 515, y2: 1, lineWidth: 0.4, lineColor: '#dddddd' }], margin: [0, 2, 0, 3] }); break
+      case 'name':
+        content.push({ text: line.text, fontSize: nameSize, bold: true, color: '#111111', margin: [0, 0, 0, 3] }); break
+      case 'contact':
+        content.push({ text: line.text, fontSize: contactSize, color: '#666666', margin: [0, 0, 0, 1] }); break
+      case 'header':
+        content.push({ text: line.text, fontSize: headerSize, bold: true, color: GREEN, margin: [0, 10, 0, 1] })
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.0, lineColor: GREEN }], margin: [0, 0, 0, 4] }); break
+      case 'bullet':
+        content.push({ columns: [{ text: '▸', width: 12, fontSize: bodySize, color: GREEN }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [4, 1, 0, 1] }); break
+      case 'body':
+        content.push({ text: line.text, fontSize: bodySize, color: '#2a2a2a', margin: [0, 1, 0, 1] }); break
+    }
+  }
+
+  return {
+    pageSize: 'A4', pageMargins: [40, 36, 40, 36],
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.28 },
+    content,
+  }
+}
+
+function buildClassicPDF(text, bodySize) {
+  const lines = parseDocumentLines(text)
+  const content = []
+  const nameSize = Math.round(bodySize + 8)
+  const contactSize = bodySize - 1.5
+  const headerSize = bodySize + 0.5
+
+  for (const line of lines) {
+    switch (line.type) {
+      case 'empty':
+        content.push({ text: ' ', fontSize: bodySize * 0.5, margin: [0, 0, 0, 0] }); break
       case 'divider':
         content.push({
-          canvas: [{ type: 'line', x1: 0, y1: 1, x2: 515, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }],
-          margin: [0, 2, 0, 3],
-        })
-        break
-      case 'name':
-        content.push({
-          text: line.text,
-          fontSize: nameSize,
-          bold: true,
-          color: '#111111',
-          margin: [0, 0, 0, 3],
-        })
-        break
-      case 'contact':
-        content.push({
-          text: line.text,
-          fontSize: contactSize,
-          color: '#555555',
-          margin: [0, 0, 0, 1],
-        })
-        break
-      case 'header':
-        content.push({
-          text: line.text,
-          fontSize: headerSize,
-          bold: true,
-          color: '#111111',
-          margin: [0, 8, 0, 1],
-        })
-        content.push({
-          canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.6, lineColor: '#888888' }],
-          margin: [0, 0, 0, 3],
-        })
-        break
-      case 'bullet':
-        content.push({
           columns: [
-            { text: '•', width: 10, fontSize: bodySize, color: '#333333' },
-            { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' },
+            { canvas: [{ type: 'line', x1: 0, y1: 1, x2: 240, y2: 1, lineWidth: 0.5, lineColor: '#999999' }] },
+            { canvas: [{ type: 'line', x1: 0, y1: 1, x2: 240, y2: 1, lineWidth: 0.5, lineColor: '#999999' }] },
           ],
-          margin: [4, 1, 0, 1],
-        })
-        break
+          margin: [0, 2, 0, 3],
+        }); break
+      case 'name':
+        content.push({ text: line.text, fontSize: nameSize, bold: true, color: '#111111', alignment: 'center', margin: [0, 0, 0, 2] })
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.5, lineColor: '#333333' }], margin: [0, 0, 0, 1] })
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#333333' }], margin: [0, 2, 0, 3] }); break
+      case 'contact':
+        content.push({ text: line.text, fontSize: contactSize, color: '#555555', alignment: 'center', margin: [0, 0, 0, 1] }); break
+      case 'header':
+        content.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', margin: [0, 10, 0, 2] })
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.8, lineColor: '#555555' }], margin: [0, 0, 0, 4] }); break
+      case 'bullet':
+        content.push({ columns: [{ text: '•', width: 10, fontSize: bodySize, color: '#333333' }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [8, 1, 0, 1] }); break
       case 'body':
-        content.push({
-          text: line.text,
-          fontSize: bodySize,
-          color: '#2a2a2a',
-          margin: [0, 1, 0, 1],
-        })
-        break
-      default:
-        break
+        content.push({ text: line.text, fontSize: bodySize, color: '#2a2a2a', margin: [0, 1, 0, 1] }); break
+    }
+  }
+
+  return {
+    pageSize: 'A4', pageMargins: [44, 38, 44, 38],
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.30 },
+    content,
+  }
+}
+
+function buildExecutivePDF(text, bodySize) {
+  const lines = parseDocumentLines(text)
+  const content = []
+  const nameSize = Math.round(bodySize + 8)
+  const contactSize = bodySize - 1.5
+  const headerSize = bodySize + 0.5
+  const GREEN = '#1D9E75'
+
+  for (const line of lines) {
+    switch (line.type) {
+      case 'empty':
+        content.push({ text: ' ', fontSize: bodySize * 0.5, margin: [0, 0, 0, 0] }); break
+      case 'divider':
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: 515, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 3] }); break
+      case 'name':
+        content.push({ text: line.text.toUpperCase(), fontSize: nameSize, bold: true, color: '#111111', letterSpacing: 2, margin: [0, 0, 0, 4] })
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.5, lineColor: GREEN }], margin: [0, 0, 0, 6] }); break
+      case 'contact':
+        content.push({ text: line.text, fontSize: contactSize, color: '#555555', margin: [0, 0, 0, 1] }); break
+      case 'header':
+        content.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', characterSpacing: 0.5, margin: [0, 10, 0, 1] })
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.6, lineColor: '#aaaaaa' }], margin: [0, 0, 0, 4] }); break
+      case 'bullet':
+        content.push({ columns: [{ text: '—', width: 12, fontSize: bodySize, color: '#666666' }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [4, 1, 0, 1] }); break
+      case 'body':
+        content.push({ text: line.text, fontSize: bodySize, color: '#2a2a2a', margin: [0, 1, 0, 1] }); break
+    }
+  }
+
+  return {
+    pageSize: 'A4', pageMargins: [46, 40, 46, 40],
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.32 },
+    content,
+  }
+}
+
+function buildTechPDF(text, bodySize) {
+  const lines = parseDocumentLines(text)
+  const GREEN = '#1D9E75'
+  const SIDEBAR_BG = '#1a1a1a'
+  const nameSize = Math.round(bodySize + 6)
+  const contactSize = bodySize - 2
+  const headerSize = bodySize + 0.5
+
+  // Split lines into left (name/contact/skills) and right (everything else)
+  const leftLines = []
+  const rightLines = []
+
+  let inSkills = false
+  let pastHeader = false
+
+  for (const line of lines) {
+    if (line.type === 'name' || line.type === 'contact') {
+      leftLines.push(line)
+    } else if (line.type === 'header' && (line.text === 'SKILLS' || line.text === 'CORE COMPETENCIES' || line.text === 'TECHNICAL SKILLS')) {
+      inSkills = true
+      leftLines.push(line)
+    } else if (inSkills && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
+      leftLines.push(line)
+    } else {
+      inSkills = false
+      rightLines.push(line)
+    }
+  }
+
+  // Build left column content (dark sidebar)
+  const leftContent = []
+  for (const line of leftLines) {
+    switch (line.type) {
+      case 'name':
+        leftContent.push({ text: line.text, fontSize: nameSize - 2, bold: true, color: '#ffffff', margin: [0, 0, 0, 4] }); break
+      case 'contact':
+        leftContent.push({ text: line.text, fontSize: contactSize, color: '#aaaaaa', margin: [0, 0, 0, 2] }); break
+      case 'header':
+        leftContent.push({ text: line.text, fontSize: bodySize - 0.5, bold: true, color: GREEN, margin: [0, 10, 0, 3] })
+        leftContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 135, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, 4] }); break
+      case 'bullet':
+        leftContent.push({ text: '• ' + line.text, fontSize: bodySize - 1, color: '#cccccc', margin: [0, 1, 0, 1] }); break
+      case 'body':
+        leftContent.push({ text: line.text, fontSize: bodySize - 1, color: '#cccccc', margin: [0, 1, 0, 1] }); break
+      case 'empty':
+        leftContent.push({ text: ' ', fontSize: bodySize * 0.4, margin: [0, 0, 0, 0] }); break
+    }
+  }
+
+  // Build right column content
+  const rightContent = []
+  for (const line of rightLines) {
+    switch (line.type) {
+      case 'empty':
+        rightContent.push({ text: ' ', fontSize: bodySize * 0.5, margin: [0, 0, 0, 0] }); break
+      case 'divider':
+        rightContent.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: 355, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 3] }); break
+      case 'header':
+        rightContent.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', margin: [0, 8, 0, 1] })
+        rightContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 355, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, 3] }); break
+      case 'bullet':
+        rightContent.push({ columns: [{ text: '▸', width: 10, fontSize: bodySize, color: GREEN }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [2, 1, 0, 1] }); break
+      case 'body':
+        rightContent.push({ text: line.text, fontSize: bodySize, color: '#2a2a2a', margin: [0, 1, 0, 1] }); break
     }
   }
 
   return {
     pageSize: 'A4',
-    pageMargins: [40, 36, 40, 36],
-    defaultStyle: {
-      font: 'Roboto',
-      fontSize: bodySize,
-      lineHeight: 1.28,
-    },
-    content,
+    pageMargins: [0, 0, 0, 0],
+    background: [
+      { canvas: [{ type: 'rect', x: 0, y: 0, w: 170, h: 842, color: SIDEBAR_BG }] }
+    ],
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.28 },
+    content: [
+      {
+        columns: [
+          {
+            width: 170,
+            stack: leftContent,
+            margin: [16, 32, 12, 32],
+          },
+          {
+            width: '*',
+            stack: rightContent,
+            margin: [16, 32, 32, 32],
+          },
+        ],
+      },
+    ],
+  }
+}
+
+function buildPDFDocDef(text, bodySize, template) {
+  switch (template) {
+    case 'modern':    return buildModernPDF(text, bodySize)
+    case 'classic':   return buildClassicPDF(text, bodySize)
+    case 'executive': return buildExecutivePDF(text, bodySize)
+    case 'tech':      return buildTechPDF(text, bodySize)
+    default:          return buildMinimalPDF(text, bodySize)
   }
 }
 
 // ── Public: download as PDF ──────────────────────────────────────────────────
 
-export async function downloadAsPDF(text, filename) {
+export async function downloadAsPDF(text, filename, template = 'minimal') {
   const pdfMake = await loadPdfMake()
   const bodySize = getOptimalFontSize(text)
-  const docDef = buildPDFDocDef(text, bodySize)
+  const docDef = buildPDFDocDef(text, bodySize, template)
   pdfMake.createPdf(docDef).download(filename + '.pdf')
 }
 
 // ── Public: download as Word (.docx) ────────────────────────────────────────
 
-export async function downloadAsWord(text, filename) {
+export async function downloadAsWord(text, filename, template = 'minimal') {
   const {
-    Document,
-    Packer,
-    Paragraph,
-    TextRun,
-    BorderStyle,
+    Document, Packer, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType,
   } = await import('docx')
 
   const lines = parseDocumentLines(text)
-  const children = []
+  const GREEN = '1D9E75'
+  const nameHalfPt = 44
+  const contactHalfPt = 18
+  const headerHalfPt = 22
+  const bodyHalfPt = 20
 
-  // twips: 1pt = 20 twips; 1mm ≈ 56.7 twips
-  // Sizes in half-points: 10pt = 20, 11pt = 22, 22pt = 44
+  // Template-specific builders
+  function buildParagraphs(linesToProcess, isDarkBg = false) {
+    const children = []
+    const textColor = isDarkBg ? 'ffffff' : '2a2a2a'
+    const headingColor = isDarkBg ? 'ffffff' : '111111'
+    const subColor = isDarkBg ? 'aaaaaa' : '555555'
+    const accentColor = isDarkBg ? '1D9E75' : GREEN
 
-  const nameHalfPt = 44      // 22pt
-  const contactHalfPt = 18   // 9pt
-  const headerHalfPt = 22    // 11pt
-  const bodyHalfPt = 20      // 10pt
-
-  for (const line of lines) {
-    switch (line.type) {
-      case 'name':
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: line.text,
-                bold: true,
-                size: nameHalfPt,
-                font: 'Calibri',
-                color: '111111',
-              }),
-            ],
-            spacing: { after: 60 },
-          })
-        )
-        break
-
-      case 'contact':
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: line.text,
-                size: contactHalfPt,
-                font: 'Calibri',
-                color: '555555',
-              }),
-            ],
+    for (const line of linesToProcess) {
+      switch (line.type) {
+        case 'name': {
+          const nameText = template === 'executive' ? line.text.toUpperCase() : line.text
+          children.push(new Paragraph({
+            children: [new TextRun({ text: nameText, bold: true, size: isDarkBg ? nameHalfPt - 4 : nameHalfPt, font: 'Calibri', color: isDarkBg ? 'ffffff' : '111111' })],
+            spacing: { after: template === 'executive' ? 40 : 60 },
+          }))
+          if (template === 'executive' || template === 'modern') {
+            children.push(new Paragraph({
+              children: [new TextRun({ text: '' })],
+              border: { bottom: { style: BorderStyle.SINGLE, size: template === 'executive' ? 8 : 12, color: GREEN, space: 1 } },
+              spacing: { before: 0, after: 60 },
+            }))
+          } else if (template === 'classic') {
+            children.push(new Paragraph({
+              children: [new TextRun({ text: '' })],
+              border: { bottom: { style: BorderStyle.DOUBLE, size: 8, color: '333333', space: 1 } },
+              spacing: { before: 0, after: 40 },
+            }))
+          } else if (isDarkBg) {
+            children.push(new Paragraph({
+              children: [new TextRun({ text: '' })],
+              border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: GREEN, space: 1 } },
+              spacing: { before: 0, after: 40 },
+            }))
+          }
+          break
+        }
+        case 'contact':
+          children.push(new Paragraph({
+            children: [new TextRun({ text: line.text, size: contactHalfPt, font: 'Calibri', color: subColor })],
             spacing: { after: 30 },
-          })
-        )
-        break
-
-      case 'divider':
-        // Add a thin horizontal rule via paragraph border
-        children.push(
-          new Paragraph({
+            alignment: template === 'classic' ? 'center' : 'left',
+          })); break
+        case 'divider':
+          children.push(new Paragraph({
             children: [new TextRun({ text: '' })],
-            border: {
-              bottom: {
-                style: BorderStyle.SINGLE,
-                size: 4,
-                color: 'cccccc',
-                space: 1,
-              },
-            },
+            border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: isDarkBg ? '444444' : 'cccccc', space: 1 } },
             spacing: { before: 60, after: 60 },
-          })
-        )
-        break
-
-      case 'header':
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: line.text,
-                bold: true,
-                size: headerHalfPt,
-                font: 'Calibri',
-                color: '111111',
-              }),
-            ],
-            border: {
-              bottom: {
-                style: BorderStyle.SINGLE,
-                size: 6,
-                color: '888888',
-                space: 1,
-              },
-            },
-            spacing: { before: 180, after: 80 },
-          })
-        )
-        break
-
-      case 'bullet':
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: '•  ' + line.text,
-                size: bodyHalfPt,
-                font: 'Calibri',
-                color: '2a2a2a',
-              }),
-            ],
+          })); break
+        case 'header': {
+          const headerColor = isDarkBg ? accentColor : (template === 'modern' ? GREEN : headingColor)
+          const borderColor = isDarkBg ? accentColor : (template === 'modern' ? GREEN : '888888')
+          children.push(new Paragraph({
+            children: [new TextRun({ text: line.text, bold: true, size: headerHalfPt, font: 'Calibri', color: headerColor })],
+            border: { bottom: { style: BorderStyle.SINGLE, size: (template === 'modern' || isDarkBg) ? 10 : 6, color: borderColor, space: 1 } },
+            spacing: { before: 200, after: 80 },
+          })); break
+        }
+        case 'bullet':
+          children.push(new Paragraph({
+            children: [new TextRun({ text: (template === 'executive' ? '—  ' : '•  ') + line.text, size: bodyHalfPt, font: 'Calibri', color: textColor })],
             indent: { left: 280 },
             spacing: { after: 40 },
-          })
-        )
-        break
-
-      case 'body':
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: line.text,
-                size: bodyHalfPt,
-                font: 'Calibri',
-                color: '2a2a2a',
-              }),
-            ],
+          })); break
+        case 'body':
+          children.push(new Paragraph({
+            children: [new TextRun({ text: line.text, size: bodyHalfPt, font: 'Calibri', color: textColor })],
             spacing: { after: 40 },
-          })
-        )
-        break
-
-      case 'empty':
-        children.push(
-          new Paragraph({
-            children: [new TextRun({ text: '' })],
-            spacing: { after: 80 },
-          })
-        )
-        break
-
-      default:
-        break
+          })); break
+        case 'empty':
+          children.push(new Paragraph({ children: [new TextRun({ text: '' })], spacing: { after: 80 } })); break
+      }
     }
+    return children
   }
 
-  const doc = new Document({
-    sections: [
-      {
-        properties: {
-          page: {
-            margin: {
-              top: 850,    // ~15mm
-              right: 1000, // ~17.6mm
-              bottom: 850,
-              left: 1000,
-            },
-          },
-        },
-        children,
-      },
-    ],
-  })
+  let sections
 
+  if (template === 'tech') {
+    // Two-column table for tech template
+    const leftLines = []
+    const rightLines = []
+    let inSkills = false
+
+    for (const line of lines) {
+      if (line.type === 'name' || line.type === 'contact') {
+        leftLines.push(line)
+      } else if (line.type === 'header' && (line.text === 'SKILLS' || line.text === 'CORE COMPETENCIES' || line.text === 'TECHNICAL SKILLS')) {
+        inSkills = true
+        leftLines.push(line)
+      } else if (inSkills && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
+        leftLines.push(line)
+      } else {
+        inSkills = false
+        rightLines.push(line)
+      }
+    }
+
+    const leftChildren = buildParagraphs(leftLines, true)
+    const rightChildren = buildParagraphs(rightLines, false)
+
+    const table = new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              width: { size: 33, type: WidthType.PERCENTAGE },
+              children: leftChildren,
+              shading: { fill: '1a1a1a', type: ShadingType.CLEAR },
+              margins: { top: 200, bottom: 200, left: 200, right: 200 },
+            }),
+            new TableCell({
+              width: { size: 67, type: WidthType.PERCENTAGE },
+              children: rightChildren,
+              margins: { top: 200, bottom: 200, left: 300, right: 200 },
+            }),
+          ],
+        }),
+      ],
+    })
+
+    sections = [{ properties: { page: { margin: { top: 600, right: 600, bottom: 600, left: 600 } } }, children: [table] }]
+  } else {
+    const children = buildParagraphs(lines)
+    sections = [{
+      properties: { page: { margin: { top: 850, right: 1000, bottom: 850, left: 1000 } } },
+      children,
+    }]
+  }
+
+  const doc = new Document({ sections })
   const blob = await Packer.toBlob(doc)
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

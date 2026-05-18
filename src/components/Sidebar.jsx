@@ -111,7 +111,6 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggleCol
               title={collapsed ? label : undefined}
               className={`sidebar-nav-item${isActive ? ' active' : ''}${collapsed ? ' collapsed' : ''}`}
             >
-              {isActive && !collapsed && <div className="sidebar-active-bar" />}
               <span style={{ flexShrink: 0, display: 'flex' }}><Icon /></span>
               {!collapsed && (
                 <div>

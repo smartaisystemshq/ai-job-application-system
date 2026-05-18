@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import FileUploadField from './FileUploadField';
 import DownloadButtons from '../utils/DownloadButtons';
+import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
 
 const LS = { cv: 'jas.cl.cv', jd: 'jas.cl.jd', result: 'jas.cl.result' };
 
@@ -34,6 +35,7 @@ export default function CoverLetterGenerator() {
   const [result, setResult] = useState(() => localStorage.getItem(LS.result) || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [score, setScore] = useState(null);
 
   useEffect(() => { localStorage.setItem(LS.cv, cv); }, [cv]);
   useEffect(() => { localStorage.setItem(LS.jd, jobDescription); }, [jobDescription]);
@@ -57,7 +59,7 @@ export default function CoverLetterGenerator() {
 
   const handleGenerate = async () => {
     if (!canSubmit) { setError('Please provide both your CV and the job description.'); return; }
-    setLoading(true); setError(''); setResult('');
+    setLoading(true); setError(''); setResult(''); setScore(null);
     try {
       const res = await fetch('/api/generate-cover-letter', {
         method: 'POST',
@@ -72,6 +74,7 @@ export default function CoverLetterGenerator() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate cover letter');
       setResult(data.result);
+      setScore(calculateAttractivenessScore(data.result, jobDescription));
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
@@ -82,7 +85,7 @@ export default function CoverLetterGenerator() {
   const handleClear = () => {
     setCv(''); setCvFile(null); setCvPdfBase64('');
     setJobDescription(''); setJdFile(null); setJdPdfBase64('');
-    setResult(''); setError('');
+    setResult(''); setError(''); setScore(null);
     Object.values(LS).forEach(k => localStorage.removeItem(k));
   };
 
@@ -90,16 +93,16 @@ export default function CoverLetterGenerator() {
 
   return (
     <div className="page">
-      <div className="page-header">
+      <div className="page-header scroll-reveal">
         <h1>Cover Letter Generator</h1>
         <p>Generate a concise, human-sounding cover letter under 250 words — no fluff, no clichés</p>
       </div>
 
-      <div className="section-desc">
+      <div className="section-desc scroll-reveal">
         <strong>How it works:</strong> Upload or paste your CV and the job description. Claude writes a compelling, specific cover letter that sounds like a real person — referencing the company's actual requirements with evidence from your background.
       </div>
 
-      <div className="two-col" style={{ marginBottom: 20 }}>
+      <div className="two-col scroll-reveal" style={{ marginBottom: 20 }}>
         <FileUploadField
           label="Your CV"
           value={cv}
@@ -128,7 +131,7 @@ export default function CoverLetterGenerator() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 28 }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 28 }} className="scroll-reveal">
         <button className="btn btn-primary" onClick={handleGenerate} disabled={loading || !canSubmit} style={{ minWidth: 200 }}>
           {loading ? <><span className="spinner"></span> Generating...</> : '✉ Generate Cover Letter'}
         </button>
@@ -146,22 +149,37 @@ export default function CoverLetterGenerator() {
 
       {result && !loading && (
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600 }}>
-              <span style={{ color: 'var(--accent)', marginRight: 8 }}>✉</span>Cover Letter
+          {/* Result header */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '12px 16px',
+            background: 'rgba(29,158,117,0.06)',
+            border: '1px solid rgba(29,158,117,0.2)',
+            borderBottom: 'none',
+            borderRadius: '14px 14px 0 0',
+            flexWrap: 'wrap', gap: 8,
+          }}>
+            <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ color: 'var(--accent)' }}>✉</span>Cover Letter
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 12, color: resultWordCount > 250 ? '#f87171' : 'var(--accent)', fontWeight: 500 }}>
+              <span style={{ fontSize: 12, color: resultWordCount > 250 ? '#f87171' : 'var(--accent)', fontWeight: 600, background: resultWordCount > 250 ? 'rgba(239,68,68,0.1)' : 'var(--accent-dim)', padding: '3px 8px', borderRadius: 100 }}>
                 {resultWordCount} words
               </span>
               <DownloadButtons text={result} filename="cover-letter" />
               <CopyButton text={result} />
             </div>
           </div>
-          <div className="result-box">{result}</div>
-          <p style={{ marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>
+
+          <div className="result-box-wrapper" style={{ borderRadius: '0 0 16px 16px' }}>
+            <div className="result-box" style={{ borderRadius: '0 0 15px 15px' }}>{result}</div>
+          </div>
+
+          <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
             Personalise with specific details (contact names, hiring manager) before sending.
           </p>
+
+          {score !== null && <ScoreCard score={score} />}
         </div>
       )}
     </div>

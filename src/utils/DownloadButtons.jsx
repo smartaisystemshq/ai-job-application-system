@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { downloadAsPDF, downloadAsWord } from './downloadUtils'
 
-export default function DownloadButtons({ text, filename = 'document', style = {} }) {
+export default function DownloadButtons({ text, filename = 'document', template = 'minimal', style = {} }) {
   const [pdfLoading, setPdfLoading] = useState(false)
   const [wordLoading, setWordLoading] = useState(false)
   const [error, setError] = useState('')
@@ -10,7 +10,7 @@ export default function DownloadButtons({ text, filename = 'document', style = {
     setPdfLoading(true)
     setError('')
     try {
-      await downloadAsPDF(text, filename)
+      await downloadAsPDF(text, filename, template)
     } catch (err) {
       console.error('PDF error:', err)
       setError('PDF generation failed. Please try again.')
@@ -23,7 +23,7 @@ export default function DownloadButtons({ text, filename = 'document', style = {
     setWordLoading(true)
     setError('')
     try {
-      await downloadAsWord(text, filename)
+      await downloadAsWord(text, filename, template)
     } catch (err) {
       console.error('Word error:', err)
       setError('Word generation failed. Please try again.')

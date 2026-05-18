@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import WaveBackground from './components/WaveBackground';
 import Dashboard from './components/Dashboard';
@@ -13,11 +13,33 @@ export default function App() {
   const [activePage, setActivePage] = useState(PAGES.DASHBOARD);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [pageKey, setPageKey] = useState(0);
 
   const navigate = (page) => {
+    if (page === activePage) return;
     setActivePage(page);
+    setPageKey(k => k + 1);
     setMobileSidebarOpen(false);
   };
+
+  // Scroll-reveal observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('sr-visible');
+        }
+      }),
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+    );
+    const refresh = () => {
+      document.querySelectorAll('.scroll-reveal:not(.sr-visible)').forEach(el => observer.observe(el));
+    };
+    refresh();
+    const mo = new MutationObserver(refresh);
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => { observer.disconnect(); mo.disconnect(); };
+  }, [activePage]);
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh' }}>
@@ -60,12 +82,14 @@ export default function App() {
         </div>
 
         <main style={{ flex: 1, position: 'relative', zIndex: 1 }}>
-          {activePage === PAGES.DASHBOARD    && <Dashboard key="dashboard" />}
-          {activePage === PAGES.CV_OPTIMIZER && <CVOptimizer key="cv-optimizer" />}
-          {activePage === PAGES.COVER_LETTER && <CoverLetterGenerator key="cover-letter" />}
-          {activePage === PAGES.INTERVIEW_PREP && <InterviewPrep key="interview-prep" />}
-          {activePage === PAGES.CV_BUILDER   && <CVBuilder key="cv-builder" />}
-          {activePage === PAGES.HELP_INFO    && <HelpInfo key="help-info" />}
+          <div key={pageKey} className="page-transition">
+            {activePage === PAGES.DASHBOARD    && <Dashboard />}
+            {activePage === PAGES.CV_OPTIMIZER && <CVOptimizer />}
+            {activePage === PAGES.COVER_LETTER && <CoverLetterGenerator />}
+            {activePage === PAGES.INTERVIEW_PREP && <InterviewPrep />}
+            {activePage === PAGES.CV_BUILDER   && <CVBuilder />}
+            {activePage === PAGES.HELP_INFO    && <HelpInfo />}
+          </div>
         </main>
 
         <footer style={{
