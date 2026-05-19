@@ -5,32 +5,21 @@ let _pdfMake = null
 async function loadPdfMake() {
   if (_pdfMake) return _pdfMake
 
-  // Try CDN-loaded window.pdfMake first
-  if (typeof window !== 'undefined' && window.pdfMake?.vfs) {
-    _pdfMake = window.pdfMake
-    return _pdfMake
-  }
-
   const [pdfMakeMod, vfsMod] = await Promise.all([
     import('pdfmake/build/pdfmake'),
     import('pdfmake/build/vfs_fonts'),
   ])
 
   const pdfMake = pdfMakeMod.default || pdfMakeMod
-
-  // pdfmake vfs can be nested differently across versions / bundlers:
-  // 0.3.x via Vite: vfsMod.default = { vfs: { "Roboto-Regular.ttf": "...", ... } }
-  // 0.2.x pattern: vfsMod.default.pdfMake.vfs = { "Roboto-Regular.ttf": "..." }
-  // CDN global: window.pdfMake.vfs = { "Roboto-Regular.ttf": "..." }
+  // vfs_fonts exports a flat map: { "Roboto-Regular.ttf": base64, ... }
   const raw = vfsMod?.default || vfsMod
-  const vfs =
-    raw?.pdfMake?.vfs ||       // 0.2.x nested
-    raw?.vfs ||                 // 0.3.x: { vfs: {...} }
-    (typeof window !== 'undefined' && window.pdfMake?.vfs) ||
-    raw
 
-  if (vfs && typeof vfs === 'object') {
-    pdfMake.vfs = vfs
+  // pdfmake 0.3.x uses addVirtualFileSystem() — not the legacy .vfs property
+  if (typeof pdfMake.addVirtualFileSystem === 'function') {
+    pdfMake.addVirtualFileSystem(raw)
+  } else {
+    // Fallback for older builds
+    pdfMake.vfs = raw?.pdfMake?.vfs || raw?.vfs || raw
   }
 
   _pdfMake = pdfMake
@@ -440,35 +429,21 @@ export async function downloadAsPDF(text, filename, template = 'minimal', isLett
     ? buildCoverLetterPDFDocDef(cleanText, bodySize)
     : buildPDFDocDef(cleanText, bodySize, template)
 
-  return new Promise((resolve, reject) => {
-    try {
-      const pdf = pdfMake.createPdf(docDef)
-      pdf.getBlob((blob) => {
-        if (!blob) {
-          reject(new Error('PDF generation returned empty blob'))
-          return
-        }
-        try {
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = filename + '.pdf'
-          a.style.display = 'none'
-          document.body.appendChild(a)
-          a.click()
-          setTimeout(() => {
-            document.body.removeChild(a)
-            URL.revokeObjectURL(url)
-          }, 200)
-          resolve()
-        } catch (e) {
-          reject(e)
-        }
-      })
-    } catch (e) {
-      reject(e)
-    }
-  })
+  // pdfmake 0.3.x: getBlob() returns a Promise, not a callback
+  const pdf = pdfMake.createPdf(docDef)
+  const blob = await pdf.getBlob()
+  if (!blob) throw new Error('PDF generation returned empty blob')
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename + '.pdf'
+  a.style.display = 'none'
+  document.body.appendChild(a)
+  a.click()
+  setTimeout(() => {
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, 200)
 }
 
 // ── Public: download as Word (.docx) ────────────────────────────────────────
