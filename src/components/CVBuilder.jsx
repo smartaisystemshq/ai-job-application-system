@@ -8,7 +8,7 @@ const LS_KEY = 'jas.cvb';
 
 const BLANK = {
   step: 1,
-  personal: { name: '', email: '', phone: '', location: '', linkedin: '', portfolio: '', targetRole: '' },
+  personal: { name: '', email: '', phone: '', street: '', city: '', postalCode: '', country: '', linkedin: '', portfolio: '', targetRole: '' },
   experience: [],
   education: [],
   skills: [],
@@ -18,7 +18,10 @@ const BLANK = {
 function load() {
   try {
     const s = localStorage.getItem(LS_KEY);
-    if (s) return { ...BLANK, ...JSON.parse(s) };
+    if (s) {
+      const parsed = JSON.parse(s);
+      return { ...BLANK, ...parsed, personal: { ...BLANK.personal, ...(parsed.personal || {}) } };
+    }
   } catch {}
   return BLANK;
 }
@@ -144,10 +147,11 @@ function MiniChatbot({ currentDocument, onUpdate }) {
 
 // ── CV Text Generator ───────────────────────────────────────────
 function buildCVText({ personal, experience, education, skills, summary }) {
-  const { name, email, phone, location, linkedin, portfolio } = personal;
+  const { name, email, phone, street, city, postalCode, country, linkedin, portfolio } = personal;
   const lines = [];
   lines.push((name || 'YOUR NAME').toUpperCase());
-  const contact = [email, phone, location].filter(Boolean).join(' | ');
+  const loc = [city, country].filter(Boolean).join(', ');
+  const contact = [email, phone, loc].filter(Boolean).join(' | ');
   if (contact) lines.push(contact);
   if (linkedin) lines.push(linkedin);
   if (portfolio) lines.push(portfolio);
@@ -352,8 +356,29 @@ export default function CVBuilder() {
           <input className="input" placeholder="+44 7000 000000" value={state.personal.phone} onChange={e => setP('phone', e.target.value)} />
         </div>
         <div className="form-group">
-          <label className="label">Location</label>
-          <input className="input" placeholder="London, UK" value={state.personal.location} onChange={e => setP('location', e.target.value)} />
+          <label className="label">
+            Street &amp; House Number
+            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>(optional)</span>
+          </label>
+          <input className="input" placeholder="123 High Street" value={state.personal.street} onChange={e => setP('street', e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label className="label">City</label>
+          <input className="input" placeholder="London" value={state.personal.city} onChange={e => setP('city', e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label className="label">
+            Postal Code
+            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>(optional)</span>
+          </label>
+          <input className="input" placeholder="SW1A 1AA" value={state.personal.postalCode} onChange={e => setP('postalCode', e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label className="label">
+            Country
+            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>(optional)</span>
+          </label>
+          <input className="input" placeholder="United Kingdom" value={state.personal.country} onChange={e => setP('country', e.target.value)} />
         </div>
         <div className="form-group">
           <label className="label">

@@ -4,17 +4,19 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Content-Type', 'application/json')
 
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { cv, jobDescription, cvPdf, jdPdf } = req.body || {}
-  if (!jobDescription && !jdPdf) return res.status(400).json({ error: 'jobDescription is required.' })
-  if (!cv && !cvPdf) return res.status(400).json({ error: 'Either cv text or cvPdf is required.' })
+  try {
+    const { cv, jobDescription, cvPdf, jdPdf } = req.body || {}
+    if (!jobDescription && !jdPdf) return res.status(400).json({ error: 'jobDescription is required.' })
+    if (!cv && !cvPdf) return res.status(400).json({ error: 'Either cv text or cvPdf is required.' })
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-  const rules = `
+    const rules = `
 === COVER LETTER RULES ===
 
 WORD LIMIT: Under 300 words total (body content only, not counting the header). Hard limit.
@@ -56,14 +58,13 @@ REQUIRED:
 
 IMPORTANT — PLAIN TEXT FORMATTING (MANDATORY):
 - Return PLAIN TEXT ONLY — absolutely no markdown symbols
-- No #, ##, **, *, __, _, \`\` in the output
+- No #, ##, **, *, __, _, backticks in the output
 - Use blank lines between each section/paragraph
 - No bullet points — flowing paragraph prose only
 - The output must look clean when pasted into any document editor
 
 Return ONLY the complete business letter as specified above. No extra commentary.`
 
-  try {
     let userContent
 
     if (cvPdf) {
@@ -72,9 +73,16 @@ Return ONLY the complete business letter as specified above. No extra commentary
         : { type: 'text', text: `=== JOB DESCRIPTION ===\n${jobDescription}` }
 
       userContent = [
-        { type: 'text', text: 'You are an expert cover letter writer who knows how to get interviews. The first document is the candidate\'s CV. Write a cover letter that stands out.' },
+        { type: 'text', text: "You are an expert cover letter writer who knows how to get interviews. The first document is the candidate's CV. Write a cover letter that stands out." },
         { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: cvPdf } },
         jdPart,
+        { type: 'text', text: rules },
+      ]
+    } else if (jdPdf) {
+      userContent = [
+        { type: 'text', text: "You are an expert cover letter writer who knows how to get interviews. Write a cover letter that stands out — specific, evidence-backed, and human." },
+        { type: 'text', text: `=== CANDIDATE CV ===\n${cv}` },
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: jdPdf } },
         { type: 'text', text: rules },
       ]
     } else {
@@ -83,13 +91,13 @@ Return ONLY the complete business letter as specified above. No extra commentary
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
+      max_tokens: 2048,
       messages: [{ role: 'user', content: userContent }],
     })
 
     return res.status(200).json({ result: message.content[0].text })
   } catch (err) {
-    console.error('Claude API error:', err)
+    console.error('Cover letter API error:', err)
     if (err.status === 401) return res.status(500).json({ error: 'Invalid API key. Please contact support.' })
     if (err.status === 429) return res.status(429).json({ error: 'Rate limit exceeded. Please try again shortly.' })
     return res.status(500).json({ error: err.message || 'Failed to generate cover letter. Please try again.' })

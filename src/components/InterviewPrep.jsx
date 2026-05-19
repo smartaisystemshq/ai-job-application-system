@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import FileUploadField from './FileUploadField';
+import { stripMarkdown } from '../utils/downloadUtils';
 
 const LS = { jd: 'jas.ip.jd', rawResult: 'jas.ip.rawResult' };
 
@@ -50,6 +51,56 @@ function CopyButton({ text }) {
   );
 }
 
+function MiniChatbot({ currentDocument, onUpdate }) {
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleAdjust = async () => {
+    if (!input.trim() || loading) return;
+    setLoading(true); setError('');
+    try {
+      const res = await fetch('/api/adjust-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentText: currentDocument, instruction: input.trim(), documentType: 'interview-questions' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Adjustment failed');
+      onUpdate(stripMarkdown(data.result));
+      setInput('');
+    } catch (err) {
+      setError(err.message || 'Failed to apply adjustment. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mini-chatbot">
+      <div className="mini-chatbot-label">
+        <span className="mini-chatbot-icon">✦</span>
+        <span>Adjust with AI</span>
+        <span className="mini-chatbot-hint">Type a request — Claude updates the questions above</span>
+      </div>
+      <div className="mini-chatbot-row">
+        <input
+          className="input mini-chatbot-input"
+          placeholder={`"Make the frameworks shorter", "Add STAR examples", "Focus on leadership questions", "Translate to German"...`}
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && !loading && handleAdjust()}
+          disabled={loading}
+        />
+        <button className="btn btn-primary btn-sm" onClick={handleAdjust} disabled={loading || !input.trim()} style={{ flexShrink: 0 }}>
+          {loading ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</> : 'Apply →'}
+        </button>
+      </div>
+      {error && <p style={{ fontSize: 12, color: '#f87171', marginTop: 6 }}>{error}</p>}
+    </div>
+  );
+}
+
 export default function InterviewPrep() {
   const [jobDescription, setJobDescription] = useState(() => localStorage.getItem(LS.jd) || '');
   const [jdFile, setJdFile] = useState(null);
@@ -62,6 +113,8 @@ export default function InterviewPrep() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const resultRef = useRef(null);
 
   useEffect(() => { localStorage.setItem(LS.jd, jobDescription); }, [jobDescription]);
   useEffect(() => { if (rawResult) localStorage.setItem(LS.rawResult, rawResult); }, [rawResult]);
@@ -91,6 +144,7 @@ export default function InterviewPrep() {
       if (!res.ok) throw new Error(data.error || 'Failed to generate questions');
       setRawResult(data.result);
       setQuestions(parseQuestions(data.result));
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
@@ -106,6 +160,12 @@ export default function InterviewPrep() {
     setQuestions([]);
     setError('');
     Object.values(LS).forEach(k => localStorage.removeItem(k));
+  };
+
+  const handleAdjustUpdate = (newRaw) => {
+    setRawResult(newRaw);
+    setQuestions(parseQuestions(newRaw));
+    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   };
 
   return (
@@ -160,7 +220,7 @@ export default function InterviewPrep() {
       )}
 
       {questions.length > 0 && !loading && (
-        <div>
+        <div ref={resultRef}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, padding: '12px 16px', background: 'rgba(29,158,117,0.06)', border: '1px solid rgba(29,158,117,0.2)', borderRadius: 12 }}>
             <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ color: 'var(--accent)' }}>◈</span>
@@ -180,6 +240,8 @@ export default function InterviewPrep() {
           <p style={{ marginTop: 16, fontSize: 12, color: 'var(--text-muted)' }}>
             Practise answering each question out loud and prepare 1-2 specific examples (STAR method works well).
           </p>
+
+          <MiniChatbot currentDocument={rawResult} onUpdate={handleAdjustUpdate} />
         </div>
       )}
     </div>

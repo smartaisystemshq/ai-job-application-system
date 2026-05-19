@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import FileUploadField from './FileUploadField';
 import DownloadButtons from '../utils/DownloadButtons';
 import DocumentPreview from '../utils/DocumentPreview';
-import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
+import ScoreCard, { calculateAttractivenessScore, KeywordMatch } from './ScoreCard';
 import { stripMarkdown } from '../utils/downloadUtils';
 
 const LS = { cv: 'jas.cvo.cv', jd: 'jas.cvo.jd', result: 'jas.cvo.result' };
@@ -223,6 +223,8 @@ export default function CVOptimizer() {
   const [selectedTemplate, setSelectedTemplate] = useState('minimal');
   const [score, setScore] = useState(null);
 
+  const jdRef = useRef(null);
+  const generateRef = useRef(null);
   const resultRef = useRef(null);
 
   useEffect(() => { localStorage.setItem(LS.cv, cv); }, [cv]);
@@ -233,6 +235,8 @@ export default function CVOptimizer() {
     setCvFile(fileInfo);
     if (fileInfo.type === 'pdf') { setCvPdfBase64(content); setCv(''); }
     else { setCv(content); setCvPdfBase64(''); }
+    // Auto-scroll to JD field after CV is loaded
+    setTimeout(() => jdRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
   };
   const handleCvFileRemove = () => { setCvFile(null); setCvPdfBase64(''); setCv(''); };
 
@@ -240,6 +244,8 @@ export default function CVOptimizer() {
     setJdFile(fileInfo);
     if (fileInfo.type === 'pdf') { setJdPdfBase64(content); setJobDescription(''); }
     else { setJobDescription(content); setJdPdfBase64(''); }
+    // Auto-scroll to generate button after JD is loaded
+    setTimeout(() => generateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
   };
   const handleJdFileRemove = () => { setJdFile(null); setJdPdfBase64(''); setJobDescription(''); };
 
@@ -296,35 +302,7 @@ export default function CVOptimizer() {
         <strong>How it works:</strong> Provide your CV and the target job description (text or PDF/DOCX). Claude rewrites your CV with keyword alignment, quantified achievements, and ATS-friendly formatting tailored to the specific role.
       </div>
 
-      {/* Input section */}
-      <div className="two-col scroll-reveal" style={{ marginBottom: 20 }}>
-        <div className="input-card">
-          <FileUploadField
-            label="Your CV"
-            value={cv}
-            onChange={setCv}
-            onFileSelect={handleCvFileSelect}
-            onFileRemove={handleCvFileRemove}
-            file={cvFile}
-            placeholder="Paste your full CV here..."
-            rows={14}
-          />
-        </div>
-        <div className="input-card">
-          <FileUploadField
-            label="Job Description"
-            value={jobDescription}
-            onChange={setJobDescription}
-            onFileSelect={handleJdFileSelect}
-            onFileRemove={handleJdFileRemove}
-            file={jdFile}
-            placeholder="Paste the full job description here..."
-            rows={14}
-          />
-        </div>
-      </div>
-
-      {/* Template selector — horizontal scroll row */}
+      {/* Template selector — ABOVE inputs */}
       <div className="scroll-reveal" style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>
           Select Template
@@ -349,14 +327,42 @@ export default function CVOptimizer() {
         </div>
       </div>
 
+      {/* Input section */}
+      <div className="two-col scroll-reveal" style={{ marginBottom: 20 }}>
+        <div className="input-card">
+          <FileUploadField
+            label="Your CV"
+            value={cv}
+            onChange={setCv}
+            onFileSelect={handleCvFileSelect}
+            onFileRemove={handleCvFileRemove}
+            file={cvFile}
+            placeholder="Paste your full CV here..."
+            rows={14}
+          />
+        </div>
+        <div className="input-card" ref={jdRef}>
+          <FileUploadField
+            label="Job Description"
+            value={jobDescription}
+            onChange={setJobDescription}
+            onFileSelect={handleJdFileSelect}
+            onFileRemove={handleJdFileRemove}
+            file={jdFile}
+            placeholder="Paste the full job description here..."
+            rows={14}
+          />
+        </div>
+      </div>
+
       {error && (
         <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 'var(--radius-sm)', color: '#f87171', fontSize: 14, marginBottom: 16 }}>
           {error}
         </div>
       )}
 
-      {/* Generate button — centered, prominent */}
-      <div className="scroll-reveal" style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 32, alignItems: 'center', flexWrap: 'wrap' }}>
+      {/* Generate button — directly below inputs */}
+      <div ref={generateRef} className="scroll-reveal" style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 32, alignItems: 'center', flexWrap: 'wrap' }}>
         <button
           className="btn btn-primary"
           onClick={handleOptimize}
@@ -406,6 +412,8 @@ export default function CVOptimizer() {
           </p>
 
           {score !== null && <ScoreCard score={score} />}
+
+          <KeywordMatch cvText={result} jdText={jobDescription} />
 
           <MiniChatbot currentDocument={result} onUpdate={handleAdjustUpdate} />
         </div>

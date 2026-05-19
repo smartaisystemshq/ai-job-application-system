@@ -29,6 +29,56 @@ function wordCount(text) {
   return body ? body.split(/\s+/).filter(w => w).length : 0;
 }
 
+function MiniChatbot({ currentDocument, onUpdate }) {
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleAdjust = async () => {
+    if (!input.trim() || loading) return;
+    setLoading(true); setError('');
+    try {
+      const res = await fetch('/api/adjust-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentText: currentDocument, instruction: input.trim(), documentType: 'cover-letter' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Adjustment failed');
+      onUpdate(stripMarkdown(data.result));
+      setInput('');
+    } catch (err) {
+      setError(err.message || 'Failed to apply adjustment. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mini-chatbot">
+      <div className="mini-chatbot-label">
+        <span className="mini-chatbot-icon">✦</span>
+        <span>Adjust with AI</span>
+        <span className="mini-chatbot-hint">Type a request — Claude updates the cover letter above</span>
+      </div>
+      <div className="mini-chatbot-row">
+        <input
+          className="input mini-chatbot-input"
+          placeholder={`"Make it shorter", "More formal tone", "Add more keywords", "Translate to German"...`}
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && !loading && handleAdjust()}
+          disabled={loading}
+        />
+        <button className="btn btn-primary btn-sm" onClick={handleAdjust} disabled={loading || !input.trim()} style={{ flexShrink: 0 }}>
+          {loading ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</> : 'Apply →'}
+        </button>
+      </div>
+      {error && <p style={{ fontSize: 12, color: '#f87171', marginTop: 6 }}>{error}</p>}
+    </div>
+  );
+}
+
 export default function CoverLetterGenerator() {
   const [cv, setCv] = useState(() => localStorage.getItem(LS.cv) || '');
   const [cvFile, setCvFile] = useState(null);
@@ -43,6 +93,8 @@ export default function CoverLetterGenerator() {
   const [error, setError] = useState('');
   const [score, setScore] = useState(null);
 
+  const jdRef = useRef(null);
+  const generateRef = useRef(null);
   const resultRef = useRef(null);
 
   useEffect(() => { localStorage.setItem(LS.cv, cv); }, [cv]);
@@ -53,6 +105,7 @@ export default function CoverLetterGenerator() {
     setCvFile(fileInfo);
     if (fileInfo.type === 'pdf') { setCvPdfBase64(content); setCv(''); }
     else { setCv(content); setCvPdfBase64(''); }
+    setTimeout(() => jdRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
   };
   const handleCvFileRemove = () => { setCvFile(null); setCvPdfBase64(''); setCv(''); };
 
@@ -60,6 +113,7 @@ export default function CoverLetterGenerator() {
     setJdFile(fileInfo);
     if (fileInfo.type === 'pdf') { setJdPdfBase64(content); setJobDescription(''); }
     else { setJobDescription(content); setJdPdfBase64(''); }
+    setTimeout(() => generateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
   };
   const handleJdFileRemove = () => { setJdFile(null); setJdPdfBase64(''); setJobDescription(''); };
 
@@ -99,13 +153,19 @@ export default function CoverLetterGenerator() {
     Object.values(LS).forEach(k => localStorage.removeItem(k));
   };
 
+  const handleAdjustUpdate = (newResult) => {
+    setResult(newResult);
+    setScore(calculateAttractivenessScore(newResult, jobDescription));
+    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  };
+
   const resultWordCount = wordCount(result);
 
   return (
     <div className="page">
       <div className="page-header scroll-reveal">
         <h1>Cover Letter Generator</h1>
-        <p>Generate a concise, human-sounding cover letter under 250 words — no fluff, no clichés</p>
+        <p>Generate a concise, human-sounding cover letter under 300 words — no fluff, no clichés</p>
       </div>
 
       <div className="section-desc scroll-reveal">
@@ -126,7 +186,7 @@ export default function CoverLetterGenerator() {
             rows={14}
           />
         </div>
-        <div className="input-card">
+        <div className="input-card" ref={jdRef}>
           <FileUploadField
             label="Job Description"
             value={jobDescription}
@@ -146,8 +206,8 @@ export default function CoverLetterGenerator() {
         </div>
       )}
 
-      {/* Generate button — centered, prominent */}
-      <div className="scroll-reveal" style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 32, alignItems: 'center', flexWrap: 'wrap' }}>
+      {/* Generate button — directly below inputs */}
+      <div ref={generateRef} className="scroll-reveal" style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 32, alignItems: 'center', flexWrap: 'wrap' }}>
         <button
           className="btn btn-primary"
           onClick={handleGenerate}
@@ -183,8 +243,8 @@ export default function CoverLetterGenerator() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <span style={{
                 fontSize: 12, fontWeight: 600,
-                color: resultWordCount > 250 ? '#f87171' : 'var(--accent)',
-                background: resultWordCount > 250 ? 'rgba(239,68,68,0.1)' : 'var(--accent-dim)',
+                color: resultWordCount > 300 ? '#f87171' : 'var(--accent)',
+                background: resultWordCount > 300 ? 'rgba(239,68,68,0.1)' : 'var(--accent-dim)',
                 padding: '3px 8px', borderRadius: 100,
               }}>
                 {resultWordCount} words
@@ -202,6 +262,8 @@ export default function CoverLetterGenerator() {
           </p>
 
           {score !== null && <ScoreCard score={score} />}
+
+          <MiniChatbot currentDocument={result} onUpdate={handleAdjustUpdate} />
         </div>
       )}
     </div>

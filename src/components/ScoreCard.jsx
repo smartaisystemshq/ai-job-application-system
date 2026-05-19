@@ -1,4 +1,99 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+
+// ── ATS Keyword Match ──────────────────────────────────────────────────────────
+
+const STOP_WORDS = new Set(['the','and','for','with','that','this','from','are','were','have','been','will','your','their','they','would','could','should','into','about','when','than','more','also','such','each','other','both','those','these','then','which','there','where','what','been','can','has','was','not','but','its','may','per','our','any','all','new','how','who','you','use','used','using']);
+
+export function extractKeywords(jd) {
+  if (!jd || !jd.trim()) return [];
+  const words = jd.toLowerCase()
+    .replace(/[^\w\s+#]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !STOP_WORDS.has(w) && !/^\d+$/.test(w));
+
+  const freq = {};
+  for (const w of words) { freq[w] = (freq[w] || 0) + 1; }
+  return Object.entries(freq)
+    .filter(([word, c]) => c >= 2 || word.length > 6)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 30)
+    .map(([word]) => word);
+}
+
+export function KeywordMatch({ cvText, jdText }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const { matched, missing, matchPct } = useMemo(() => {
+    if (!jdText || !cvText) return { matched: [], missing: [], matchPct: 0 };
+    const keywords = extractKeywords(jdText);
+    if (keywords.length === 0) return { matched: [], missing: [], matchPct: 0 };
+    const cvLower = cvText.toLowerCase();
+    const matched = keywords.filter(k => cvLower.includes(k));
+    const missing = keywords.filter(k => !cvLower.includes(k));
+    const matchPct = Math.round((matched.length / keywords.length) * 100);
+    return { matched, missing, matchPct };
+  }, [cvText, jdText]);
+
+  if (!jdText || matched.length + missing.length === 0) return null;
+
+  const color = matchPct >= 70 ? '#1D9E75' : matchPct >= 50 ? '#f59e0b' : '#ef4444';
+  const label = matchPct >= 70 ? 'Strong keyword alignment' : matchPct >= 50 ? 'Moderate alignment' : 'Low keyword overlap';
+
+  return (
+    <div style={{
+      background: 'rgba(29,158,117,0.04)',
+      border: '1px solid rgba(29,158,117,0.2)',
+      borderRadius: 14,
+      padding: '16px 20px',
+      marginTop: 16,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color }}>{matchPct}%</div>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>ATS Keyword Match</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1 }}>{label} — {matched.length}/{matched.length + missing.length} keywords found</div>
+          </div>
+        </div>
+        <button onClick={() => setExpanded(e => !e)} className="btn btn-ghost" style={{ fontSize: 12, padding: '4px 10px' }}>
+          {expanded ? 'Hide keywords' : 'Show keywords'}
+        </button>
+      </div>
+
+      {/* Mini progress bar */}
+      <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden', marginTop: 10 }}>
+        <div style={{ height: '100%', width: `${matchPct}%`, background: color, borderRadius: 2, transition: 'width 0.4s ease' }} />
+      </div>
+
+      {expanded && (
+        <div style={{ marginTop: 14 }}>
+          {matched.length > 0 && (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#1D9E75', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>✓ Found in your CV</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {matched.map(k => (
+                  <span key={k} style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(29,158,117,0.12)', color: '#1D9E75', borderRadius: 100, border: '1px solid rgba(29,158,117,0.25)' }}>{k}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {missing.length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#f87171', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>✗ Missing — consider adding</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {missing.map(k => (
+                  <span key={k} style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(239,68,68,0.08)', color: '#f87171', borderRadius: 100, border: '1px solid rgba(239,68,68,0.2)' }}>{k}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 
 export function calculateAttractivenessScore(resultText, jobDescription = '') {
   let score = 6.5;

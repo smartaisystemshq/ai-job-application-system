@@ -21,7 +21,7 @@ const FAQS = [
   },
   {
     q: 'How long should a cover letter be?',
-    a: 'The Cover Letter Generator targets under 250 words — roughly 3 short paragraphs. Research consistently shows that recruiters spend under 30 seconds on a cover letter, so brevity and specificity always beat length.',
+    a: 'The Cover Letter Generator targets under 300 words — roughly 3 short paragraphs. Research consistently shows that recruiters spend under 30 seconds on a cover letter, so brevity and specificity always beat length.',
   },
   {
     q: 'Can I use this for any industry or role level?',
@@ -48,11 +48,63 @@ function FaqItem({ q, a }) {
   );
 }
 
+function FallbackModal({ onClose, name, email, message }) {
+  const [copied, setCopied] = useState(false);
+  const fullText = `To: ${CONTACT_EMAIL}\nSubject: AI Job Application System — Support\n\nName: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
+
+  const copyEmail = async () => {
+    await navigator.clipboard.writeText(CONTACT_EMAIL);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 200,
+      background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+    }} onClick={onClose}>
+      <div style={{
+        background: 'var(--bg-card)', border: '1px solid var(--border)',
+        borderRadius: 'var(--radius)', padding: 32, maxWidth: 520, width: '100%',
+        boxShadow: 'var(--shadow)',
+      }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700 }}>Send us your message</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 20, lineHeight: 1 }}>✕</button>
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
+          Your email client didn't open automatically. Copy the address below and send your message manually.
+        </p>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '10px 14px', background: 'rgba(29,158,117,0.07)',
+          border: '1px solid rgba(29,158,117,0.2)', borderRadius: 10, marginBottom: 20,
+        }}>
+          <span style={{ fontSize: 14, color: 'var(--accent)', fontWeight: 600, flex: 1 }}>{CONTACT_EMAIL}</span>
+          <button
+            onClick={copyEmail}
+            className="btn btn-secondary btn-sm"
+            style={{ fontSize: 12 }}
+          >
+            {copied ? '✓ Copied' : 'Copy'}
+          </button>
+        </div>
+        <div style={{ background: 'var(--bg-secondary)', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
+          <pre style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', fontFamily: 'inherit', lineHeight: 1.6 }}>{fullText}</pre>
+        </div>
+        <button className="btn btn-primary" onClick={onClose} style={{ width: '100%' }}>Close</button>
+      </div>
+    </div>
+  );
+}
+
 export default function HelpInfo() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [sent, setSent] = useState(false);
+  const [showFallback, setShowFallback] = useState(false);
 
   const handleContact = (e) => {
     e.preventDefault();
@@ -60,13 +112,35 @@ export default function HelpInfo() {
     const body = encodeURIComponent(
       `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`
     );
-    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+    const mailtoLink = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+
+    try {
+      const win = window.open(mailtoLink, '_blank');
+      if (!win) {
+        window.location.href = mailtoLink;
+      }
+    } catch {
+      window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+    }
+
     setSent(true);
     setTimeout(() => setSent(false), 6000);
+
+    // Show fallback after brief delay to catch cases where no client opened
+    setTimeout(() => setShowFallback(true), 1500);
   };
 
   return (
     <div className="page">
+      {showFallback && (
+        <FallbackModal
+          onClose={() => setShowFallback(false)}
+          name={name}
+          email={email}
+          message={message}
+        />
+      )}
+
       <div className="page-header scroll-reveal">
         <h1>Help & Info</h1>
         <p>Answers to common questions and a way to reach the team</p>
@@ -93,7 +167,7 @@ export default function HelpInfo() {
         </div>
 
         <div className="card" style={{ maxWidth: 560 }}>
-          {/* Visible email address */}
+          {/* Visible email address — always shown */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '10px 14px',
@@ -116,12 +190,12 @@ export default function HelpInfo() {
           </div>
 
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.6 }}>
-            Have a question or feature request? Fill in the form — it will open your email client (Gmail, Outlook, etc.) with the message pre-filled, ready to send.
+            Have a question or feature request? Fill in the form — it will open your email client with the message pre-filled. If it doesn't open, a fallback will show the pre-written message so you can copy and send manually.
           </p>
 
           {sent && (
             <div style={{ padding: '12px 16px', background: 'rgba(29,158,117,0.1)', border: '1px solid rgba(29,158,117,0.25)', borderRadius: 'var(--radius-sm)', color: 'var(--accent)', fontSize: 14, marginBottom: 16 }}>
-              Your email client should have opened. We'll get back to you soon.
+              Your email client should have opened. If not, use the dialog that appears to copy the message.
             </div>
           )}
 
