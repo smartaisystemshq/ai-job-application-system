@@ -4,15 +4,70 @@ let _pdfMake = null
 
 async function loadPdfMake() {
   if (_pdfMake) return _pdfMake
+
+  // Try CDN-loaded window.pdfMake first
+  if (typeof window !== 'undefined' && window.pdfMake?.vfs) {
+    _pdfMake = window.pdfMake
+    return _pdfMake
+  }
+
   const [pdfMakeMod, vfsMod] = await Promise.all([
     import('pdfmake/build/pdfmake'),
     import('pdfmake/build/vfs_fonts'),
   ])
+
   const pdfMake = pdfMakeMod.default || pdfMakeMod
-  const vfs = vfsMod.default || vfsMod
-  pdfMake.vfs = vfs
+
+  // pdfmake vfs can be nested differently across versions / bundlers:
+  // 0.3.x via Vite: vfsMod.default = { vfs: { "Roboto-Regular.ttf": "...", ... } }
+  // 0.2.x pattern: vfsMod.default.pdfMake.vfs = { "Roboto-Regular.ttf": "..." }
+  // CDN global: window.pdfMake.vfs = { "Roboto-Regular.ttf": "..." }
+  const raw = vfsMod?.default || vfsMod
+  const vfs =
+    raw?.pdfMake?.vfs ||       // 0.2.x nested
+    raw?.vfs ||                 // 0.3.x: { vfs: {...} }
+    (typeof window !== 'undefined' && window.pdfMake?.vfs) ||
+    raw
+
+  if (vfs && typeof vfs === 'object') {
+    pdfMake.vfs = vfs
+  }
+
   _pdfMake = pdfMake
   return pdfMake
+}
+
+// ── Markdown stripper ────────────────────────────────────────────────────────
+
+export function stripMarkdown(text) {
+  if (!text) return text
+  return text
+    .split('\n')
+    .map(line => {
+      // Convert ## HEADER → HEADER (uppercase, let parser recognise as section)
+      const headingMatch = line.match(/^#{1,6}\s+(.+)$/)
+      if (headingMatch) return headingMatch[1].toUpperCase()
+
+      let l = line
+      // Remove bold markers **text** → text
+      l = l.replace(/\*\*([^*\n]+)\*\*/g, '$1')
+      // Remove __bold__ → text
+      l = l.replace(/__([^_\n]+)__/g, '$1')
+      // Convert "* bullet" at start → "• bullet"
+      l = l.replace(/^\s*\*\s+/, '• ')
+      // Remove remaining *italic* markers (not bullets)
+      if (!l.startsWith('•')) {
+        l = l.replace(/\*([^*\n]+)\*/g, '$1')
+      }
+      // Remove _italic_ but not mid-word underscores
+      l = l.replace(/(?<!\w)_([^_\n]+)_(?!\w)/g, '$1')
+      // Remove backtick code markers
+      l = l.replace(/`([^`\n]+)`/g, '$1')
+      // Convert -- to – (en-dash) for cleaner typography
+      l = l.replace(/--/g, '–')
+      return l
+    })
+    .join('\n')
 }
 
 // ── Line parser ──────────────────────────────────────────────────────────────
@@ -259,12 +314,9 @@ function buildTechPDF(text, bodySize) {
   const contactSize = bodySize - 2
   const headerSize = bodySize + 0.5
 
-  // Split lines into left (name/contact/skills) and right (everything else)
   const leftLines = []
   const rightLines = []
-
   let inSkills = false
-  let pastHeader = false
 
   for (const line of lines) {
     if (line.type === 'name' || line.type === 'contact') {
@@ -280,7 +332,6 @@ function buildTechPDF(text, bodySize) {
     }
   }
 
-  // Build left column content (dark sidebar)
   const leftContent = []
   for (const line of leftLines) {
     switch (line.type) {
@@ -300,7 +351,6 @@ function buildTechPDF(text, bodySize) {
     }
   }
 
-  // Build right column content
   const rightContent = []
   for (const line of rightLines) {
     switch (line.type) {
@@ -354,30 +404,106 @@ function buildPDFDocDef(text, bodySize, template) {
   }
 }
 
+// ── Cover letter PDF builder ─────────────────────────────────────────────────
+
+function buildCoverLetterPDFDocDef(text, bodySize) {
+  const paragraphs = text.split(/\n\n+/).filter(p => p.trim())
+  const content = []
+
+  for (const para of paragraphs) {
+    const cleaned = para.replace(/\n/g, ' ').trim()
+    if (!cleaned) continue
+    content.push({
+      text: cleaned,
+      fontSize: bodySize,
+      color: '#2a2a2a',
+      margin: [0, 0, 0, bodySize * 1.2],
+      lineHeight: 1.55,
+    })
+  }
+
+  return {
+    pageSize: 'A4',
+    pageMargins: [60, 56, 60, 56],
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.55 },
+    content,
+  }
+}
+
 // ── Public: download as PDF ──────────────────────────────────────────────────
 
-export async function downloadAsPDF(text, filename, template = 'minimal') {
+export async function downloadAsPDF(text, filename, template = 'minimal', isLetter = false) {
+  const cleanText = stripMarkdown(text)
   const pdfMake = await loadPdfMake()
-  const bodySize = getOptimalFontSize(text)
-  const docDef = buildPDFDocDef(text, bodySize, template)
-  pdfMake.createPdf(docDef).download(filename + '.pdf')
+  const bodySize = isLetter ? 11 : getOptimalFontSize(cleanText)
+  const docDef = isLetter
+    ? buildCoverLetterPDFDocDef(cleanText, bodySize)
+    : buildPDFDocDef(cleanText, bodySize, template)
+
+  return new Promise((resolve, reject) => {
+    try {
+      const pdf = pdfMake.createPdf(docDef)
+      pdf.getBlob((blob) => {
+        if (!blob) {
+          reject(new Error('PDF generation returned empty blob'))
+          return
+        }
+        try {
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = filename + '.pdf'
+          a.style.display = 'none'
+          document.body.appendChild(a)
+          a.click()
+          setTimeout(() => {
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+          }, 200)
+          resolve()
+        } catch (e) {
+          reject(e)
+        }
+      })
+    } catch (e) {
+      reject(e)
+    }
+  })
 }
 
 // ── Public: download as Word (.docx) ────────────────────────────────────────
 
-export async function downloadAsWord(text, filename, template = 'minimal') {
+export async function downloadAsWord(text, filename, template = 'minimal', isLetter = false) {
+  const cleanText = stripMarkdown(text)
   const {
-    Document, Packer, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType,
+    Document, Packer, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType,
   } = await import('docx')
 
-  const lines = parseDocumentLines(text)
+  // Cover letter: simple paragraphs
+  if (isLetter) {
+    const paras = cleanText.split(/\n\n+/).filter(p => p.trim()).map(para =>
+      new Paragraph({
+        children: [new TextRun({ text: para.replace(/\n/g, ' ').trim(), size: 22, font: 'Calibri', color: '2a2a2a' })],
+        spacing: { after: 240, line: 360 },
+      })
+    )
+    const doc = new Document({ sections: [{ properties: { page: { margin: { top: 1100, right: 1200, bottom: 1100, left: 1200 } } }, children: paras }] })
+    const blob = await Packer.toBlob(doc)
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = filename + '.docx'; a.style.display = 'none'
+    document.body.appendChild(a); a.click()
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url) }, 200)
+    return
+  }
+
+  const lines = parseDocumentLines(cleanText)
   const GREEN = '1D9E75'
   const nameHalfPt = 44
   const contactHalfPt = 18
   const headerHalfPt = 22
   const bodyHalfPt = 20
 
-  // Template-specific builders
   function buildParagraphs(linesToProcess, isDarkBg = false) {
     const children = []
     const textColor = isDarkBg ? 'ffffff' : '2a2a2a'
@@ -456,7 +582,6 @@ export async function downloadAsWord(text, filename, template = 'minimal') {
   let sections
 
   if (template === 'tech') {
-    // Two-column table for tech template
     const leftLines = []
     const rightLines = []
     let inSkills = false
@@ -514,8 +639,11 @@ export async function downloadAsWord(text, filename, template = 'minimal') {
   const a = document.createElement('a')
   a.href = url
   a.download = filename + '.docx'
+  a.style.display = 'none'
   document.body.appendChild(a)
   a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  setTimeout(() => {
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, 200)
 }

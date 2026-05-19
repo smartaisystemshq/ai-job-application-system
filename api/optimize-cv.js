@@ -47,6 +47,15 @@ GOAL: Produce a CV that a senior recruiter reads and immediately thinks "this pe
 8. HUMAN VOICE
    The result must sound like it was written by the candidate, not by an AI. Vary sentence structure. Use the candidate's existing voice as a baseline and elevate it — don't replace it with generic corporate prose.
 
+IMPORTANT — PLAIN TEXT FORMATTING (MANDATORY):
+- Return PLAIN TEXT ONLY — absolutely no markdown symbols
+- No #, ##, ###, **, *, __, _, `` in the output
+- Use ALL CAPS for section headers: PROFESSIONAL SUMMARY, WORK EXPERIENCE, EDUCATION, SKILLS
+- Use • (Unicode bullet •) for bullet points — never use * or - for bullets
+- Use ─── (repeated dashes) as section dividers if needed
+- Dates: Jan 2021 – Mar 2024 (use – en-dash, never -- double-dash)
+- The output must be ready to paste into a Word doc and look clean with no special characters
+
 Return ONLY the optimised CV — no commentary, no preamble. Just the final polished CV text.`
 
   try {

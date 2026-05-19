@@ -1,268 +1,147 @@
 import React, { useState, useEffect, useRef } from 'react';
 import FileUploadField from './FileUploadField';
 import DownloadButtons from '../utils/DownloadButtons';
+import DocumentPreview from '../utils/DocumentPreview';
 import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
+import { stripMarkdown } from '../utils/downloadUtils';
 
 const LS = { cv: 'jas.cvo.cv', jd: 'jas.cvo.jd', result: 'jas.cvo.result' };
 
-// ── Template definitions ──────────────────────────────────────────
+// ── Template mini-preview cards ───────────────────────────────────────────────
+
+const SCALE = 0.26
+const DOC_W = 580
+
+function MiniDocFrame({ children }) {
+  return (
+    <div style={{ height: 88, overflow: 'hidden', borderRadius: 6, position: 'relative' }}>
+      <div style={{
+        position: 'absolute', top: 0, left: 0,
+        width: DOC_W, background: '#fff',
+        transform: `scale(${SCALE})`, transformOrigin: 'top left',
+        fontFamily: "'Inter', sans-serif", padding: '30px 36px 0',
+      }}>
+        {children}
+      </div>
+    </div>
+  )
+}
 
 function TemplatePreviewMinimal() {
   return (
-    <div style={{ background: '#fff', padding: '10px 10px 8px', borderRadius: 6, minHeight: 90 }}>
-      <div style={{ height: 7, background: '#111', borderRadius: 2, marginBottom: 3, width: '58%' }} />
-      <div style={{ height: 1, background: '#ccc', marginBottom: 4 }} />
-      <div style={{ height: 2.5, background: '#888', borderRadius: 1, marginBottom: 10, width: '75%' }} />
-      <div style={{ height: 3, background: '#222', borderRadius: 2, marginBottom: 4, width: '38%' }} />
-      {[72, 88, 65].map((w, i) => <div key={i} style={{ height: 2, background: '#bbb', borderRadius: 1, marginBottom: 3, width: `${w}%` }} />)}
-    </div>
-  );
+    <MiniDocFrame>
+      <div style={{ fontSize: 46, fontWeight: 700, color: '#111', marginBottom: 8, lineHeight: 1 }}>JOHN SMITH</div>
+      <div style={{ fontSize: 22, color: '#666', marginBottom: 14 }}>john@email.com | London | linkedin.com/in/john</div>
+      <div style={{ height: 2, background: '#ccc', marginBottom: 18 }} />
+      <div style={{ fontSize: 28, fontWeight: 700, color: '#111', marginBottom: 6 }}>WORK EXPERIENCE</div>
+      <div style={{ height: 1.5, background: '#888', marginBottom: 12 }} />
+      <div style={{ fontSize: 22, color: '#333', marginBottom: 8 }}>Software Engineer | TechCorp | 2021 – 2023</div>
+      {['Led payment system handling £2M/month revenue', 'Reduced deployment time 70% via CI/CD pipelines'].map((t, i) => (
+        <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 7 }}>
+          <span style={{ color: '#555', fontSize: 22, flexShrink: 0 }}>•</span>
+          <span style={{ fontSize: 22, color: '#333' }}>{t}</span>
+        </div>
+      ))}
+    </MiniDocFrame>
+  )
 }
 
 function TemplatePreviewModern() {
+  const G = '#1D9E75'
   return (
-    <div style={{ background: '#fff', borderRadius: 6, overflow: 'hidden', minHeight: 90 }}>
-      <div style={{ background: '#1D9E75', height: 10, width: '100%' }} />
-      <div style={{ padding: '7px 9px' }}>
-        <div style={{ height: 7, background: '#111', borderRadius: 2, marginBottom: 3, width: '60%' }} />
-        <div style={{ height: 2, background: '#999', borderRadius: 1, marginBottom: 8, width: '78%' }} />
-        <div style={{ height: 3, background: '#1D9E75', borderRadius: 2, marginBottom: 2, width: '40%' }} />
-        <div style={{ height: 0.5, background: '#1D9E75', marginBottom: 5 }} />
-        {[76, 90, 62].map((w, i) => <div key={i} style={{ height: 2, background: '#bbb', borderRadius: 1, marginBottom: 3, width: `${w}%` }} />)}
-      </div>
-    </div>
-  );
+    <MiniDocFrame>
+      <div style={{ height: 14, background: G, marginLeft: -36, marginRight: -36, marginTop: -30, marginBottom: 20 }} />
+      <div style={{ fontSize: 46, fontWeight: 700, color: '#111', marginBottom: 8, lineHeight: 1 }}>JOHN SMITH</div>
+      <div style={{ height: 4, background: G, marginBottom: 10 }} />
+      <div style={{ fontSize: 22, color: '#666', marginBottom: 16 }}>john@email.com | London</div>
+      <div style={{ fontSize: 28, fontWeight: 700, color: G, marginBottom: 5 }}>WORK EXPERIENCE</div>
+      <div style={{ height: 2.5, background: G, marginBottom: 12 }} />
+      {['Led payment system handling £2M/month', 'Reduced deployment time 70%'].map((t, i) => (
+        <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 7 }}>
+          <span style={{ color: G, fontSize: 22, flexShrink: 0 }}>▸</span>
+          <span style={{ fontSize: 22, color: '#333' }}>{t}</span>
+        </div>
+      ))}
+    </MiniDocFrame>
+  )
 }
 
 function TemplatePreviewClassic() {
   return (
-    <div style={{ background: '#fff', padding: '10px 9px 8px', borderRadius: 6, minHeight: 90 }}>
-      <div style={{ height: 7, background: '#111', borderRadius: 2, margin: '0 auto 3px', width: '52%' }} />
-      <div style={{ height: 1.5, background: '#333', marginBottom: 1.5 }} />
-      <div style={{ height: 0.5, background: '#999', marginBottom: 5 }} />
-      <div style={{ height: 2, background: '#777', borderRadius: 1, margin: '0 auto 9px', width: '68%' }} />
-      <div style={{ height: 0.5, background: '#bbb', marginBottom: 4 }} />
-      {[80, 94, 70].map((w, i) => <div key={i} style={{ height: 2, background: '#ccc', borderRadius: 1, marginBottom: 3, width: `${w}%` }} />)}
-    </div>
-  );
+    <MiniDocFrame>
+      <div style={{ fontFamily: "'Times New Roman', serif" }}>
+        <div style={{ fontSize: 44, fontWeight: 700, color: '#111', marginBottom: 6, textAlign: 'center', lineHeight: 1 }}>JOHN SMITH</div>
+        <div style={{ height: 3, background: '#333', marginBottom: 2 }} />
+        <div style={{ height: 1, background: '#999', marginBottom: 10 }} />
+        <div style={{ fontSize: 22, color: '#555', marginBottom: 14, textAlign: 'center' }}>john@email.com | +44 7000 | London</div>
+        <div style={{ fontSize: 28, fontWeight: 700, color: '#111', marginBottom: 5 }}>PROFESSIONAL EXPERIENCE</div>
+        <div style={{ height: 1.5, background: '#666', marginBottom: 12 }} />
+        {['Managed team of 8 analysts across 3 regions', 'Delivered £4M project on time and under budget'].map((t, i) => (
+          <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 7 }}>
+            <span style={{ color: '#555', fontSize: 22, flexShrink: 0 }}>•</span>
+            <span style={{ fontSize: 22, color: '#333', fontFamily: "'Times New Roman', serif" }}>{t}</span>
+          </div>
+        ))}
+      </div>
+    </MiniDocFrame>
+  )
 }
 
 function TemplatePreviewExecutive() {
+  const G = '#1D9E75'
   return (
-    <div style={{ background: '#fff', padding: '10px 9px 8px', borderRadius: 6, minHeight: 90 }}>
-      <div style={{ height: 7, background: '#111', borderRadius: 2, marginBottom: 4, width: '68%', fontWeight: 800 }} />
-      <div style={{ height: 2, background: '#1D9E75', marginBottom: 7 }} />
-      <div style={{ height: 2, background: '#888', borderRadius: 1, marginBottom: 10, width: '72%' }} />
-      <div style={{ height: 3, background: '#333', borderRadius: 2, marginBottom: 4, width: '36%' }} />
-      {[86, 72, 90].map((w, i) => <div key={i} style={{ height: 2, background: '#bbb', borderRadius: 1, marginBottom: 3, width: `${w}%` }} />)}
-    </div>
-  );
+    <MiniDocFrame>
+      <div style={{ fontSize: 40, fontWeight: 800, color: '#111', marginBottom: 8, letterSpacing: 6, lineHeight: 1 }}>JOHN SMITH</div>
+      <div style={{ height: 4, background: G, marginBottom: 12 }} />
+      <div style={{ fontSize: 22, color: '#666', marginBottom: 18 }}>john@email.com | London | linkedin.com/in/john</div>
+      <div style={{ fontSize: 28, fontWeight: 700, color: '#111', marginBottom: 5, letterSpacing: 1 }}>PROFESSIONAL EXPERIENCE</div>
+      <div style={{ height: 1.5, background: '#bbb', marginBottom: 12 }} />
+      {['Drove £40M revenue growth as VP Commercial', 'Led 120-person team across 6 markets globally'].map((t, i) => (
+        <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 7 }}>
+          <span style={{ color: '#777', fontSize: 22, flexShrink: 0 }}>—</span>
+          <span style={{ fontSize: 22, color: '#333' }}>{t}</span>
+        </div>
+      ))}
+    </MiniDocFrame>
+  )
 }
 
 function TemplatePreviewTech() {
+  const G = '#1D9E75'
+  const DARK = '#1a1a1a'
   return (
-    <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', minHeight: 90 }}>
-      <div style={{ background: '#1a1a1a', width: '36%', padding: '8px 7px' }}>
-        <div style={{ height: 5, background: '#1D9E75', borderRadius: 2, marginBottom: 5, width: '82%' }} />
-        <div style={{ height: 0.5, background: '#1D9E75', marginBottom: 6, opacity: 0.6 }} />
-        {[70, 58, 74, 62].map((w, i) => <div key={i} style={{ height: 1.8, background: '#555', borderRadius: 1, marginBottom: 3, width: `${w}%` }} />)}
+    <div style={{ height: 88, overflow: 'hidden', borderRadius: 6, display: 'flex' }}>
+      <div style={{ background: DARK, width: '36%', padding: '10px 9px', flexShrink: 0 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', marginBottom: 3 }}>JOHN SMITH</div>
+        <div style={{ height: 1, background: G, marginBottom: 5 }} />
+        <div style={{ fontSize: 7, color: '#aaa', marginBottom: 4 }}>john@email.com</div>
+        <div style={{ fontSize: 8, fontWeight: 700, color: G, marginBottom: 2 }}>SKILLS</div>
+        <div style={{ height: 0.5, background: G, opacity: 0.5, marginBottom: 3 }} />
+        {['Python, TypeScript', 'AWS, Docker', 'PostgreSQL', 'Agile / TDD'].map((s, i) => (
+          <div key={i} style={{ fontSize: 7, color: '#ccc', marginBottom: 2 }}>• {s}</div>
+        ))}
       </div>
-      <div style={{ background: '#fff', flex: 1, padding: '8px 8px' }}>
-        <div style={{ height: 5, background: '#222', borderRadius: 2, marginBottom: 5, width: '62%' }} />
-        <div style={{ height: 1.5, background: '#1D9E75', marginBottom: 5 }} />
-        {[90, 72, 86].map((w, i) => <div key={i} style={{ height: 2, background: '#bbb', borderRadius: 1, marginBottom: 3, width: `${w}%` }} />)}
+      <div style={{ background: '#fff', flex: 1, padding: '10px 8px' }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: '#111', marginBottom: 3 }}>WORK EXPERIENCE</div>
+        <div style={{ height: 0.8, background: G, marginBottom: 5 }} />
+        <div style={{ fontSize: 7.5, color: '#333', marginBottom: 4 }}>Senior Engineer | FinTech | 2021–2023</div>
+        {['Built fraud detection saving £800K/yr', 'Led 5 engineers across 3 services'].map((t, i) => (
+          <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 3 }}>
+            <span style={{ color: G, fontSize: 8, flexShrink: 0 }}>▸</span>
+            <span style={{ fontSize: 7.5, color: '#333' }}>{t}</span>
+          </div>
+        ))}
       </div>
     </div>
-  );
+  )
 }
 
 const TEMPLATES = [
-  {
-    id: 'minimal',
-    name: 'Minimal',
-    description: 'Single column, clean spacing, timeless black typography.',
-    Preview: TemplatePreviewMinimal,
-    content: `[Full Name]
-[email@example.com] | [+44 000 000 0000] | [City, Country]
-linkedin.com/in/yourname
-
-PROFESSIONAL SUMMARY
-
-[Replace with 2-3 sentences about your background, key strengths, and what you bring to this specific role.]
-
-WORK EXPERIENCE
-
-[Job Title] | [Company] | [Month Year] – [Month Year]
-• [Achievement or responsibility — lead with action verb, quantify where possible]
-• [Achievement or responsibility]
-• [Achievement or responsibility]
-
-[Previous Job Title] | [Company] | [Month Year] – [Month Year]
-• [Achievement]
-• [Achievement]
-
-EDUCATION
-
-[Degree in Subject] | [University/Institution] | [Year]
-
-SKILLS
-
-[Technical Skill 1], [Technical Skill 2], [Soft Skill 1], [Tool 1], [Tool 2]`,
-  },
-  {
-    id: 'modern',
-    name: 'Modern',
-    description: 'Green accents, bold dividers, structured contemporary layout.',
-    Preview: TemplatePreviewModern,
-    content: `[FULL NAME]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[email@example.com] • [+44 000 000 0000] • [Location] • linkedin.com/in/yourname
-
-PROFILE
-
-[2-3 sentence professional profile. Who you are, what you do, what sets you apart from other candidates.]
-
-EXPERIENCE
-
-[COMPANY NAME]                                    [Month Year – Present]
-[Job Title]
-▸ [Impact-focused achievement with numbers or percentage improvement]
-▸ [Achievement that shows scope of responsibility or team size]
-▸ [Technical or strategic skill applied in real context]
-
-[PREVIOUS COMPANY]                                [Month Year – Month Year]
-[Job Title]
-▸ [Achievement]
-▸ [Achievement]
-
-SKILLS
-
-Technical ▸ [Skill 1] • [Skill 2] • [Skill 3]
-Tools ▸ [Tool 1] • [Tool 2] • [Tool 3]
-Soft Skills ▸ [Skill 1] • [Skill 2]
-
-EDUCATION
-
-[Degree] | [Institution] | [Year]`,
-  },
-  {
-    id: 'classic',
-    name: 'Classic',
-    description: 'Traditional centred layout, formal structure, universally accepted.',
-    Preview: TemplatePreviewClassic,
-    content: `                          [FULL NAME]
-              ──────────────────────────────────────────────
-              [Address]  |  [Phone]  |  [Email]
-
-PROFESSIONAL PROFILE
-──────────────────────────────────────────────────────────────
-[A concise professional overview demonstrating your suitability for the role.
-2-3 sentences covering experience, key strengths, and career objectives.]
-
-PROFESSIONAL EXPERIENCE
-──────────────────────────────────────────────────────────────
-
-[Job Title]                                             [Year – Year]
-[Company Name], [Location]
-
-•  [Key responsibility or achievement — provide context and measurable outcome]
-•  [Second key contribution demonstrating relevant competency]
-•  [Third achievement]
-
-[Previous Job Title]                                    [Year – Year]
-[Company Name], [Location]
-
-•  [Achievement]
-•  [Achievement]
-
-EDUCATION
-──────────────────────────────────────────────────────────────
-
-[Qualification / Degree]                                       [Year]
-[Institution Name], [Location]
-
-CORE COMPETENCIES
-──────────────────────────────────────────────────────────────
-
-[Competency 1]  |  [Competency 2]  |  [Competency 3]  |  [Competency 4]
-
-REFERENCES
-──────────────────────────────────────────────────────────────
-
-Available upon request.`,
-  },
-  {
-    id: 'executive',
-    name: 'Executive',
-    description: 'Uppercase name, green accent line, polished senior-level presence.',
-    Preview: TemplatePreviewExecutive,
-    content: `JOHN SMITH
-──────────────────────────────────────────────────────────────
-john.smith@email.com  |  +44 000 000 0000  |  London, UK  |  linkedin.com/in/johnsmith
-
-EXECUTIVE SUMMARY
-
-[Senior-level professional overview. 2-3 sentences that immediately communicate seniority, domain expertise, and the scale of impact you deliver. Reference the industry and level you're targeting.]
-
-PROFESSIONAL EXPERIENCE
-
-[Job Title]                                                    [Year – Present]
-[Company Name], [Location]
-
-• [C-suite or senior-level achievement — strategic impact, P&L responsibility, or organisation-wide change]
-• [Achievement demonstrating leadership of teams or major initiatives]
-• [Revenue, cost, or performance outcome with clear numbers]
-
-[Previous Job Title]                                           [Year – Year]
-[Company Name], [Location]
-
-• [Achievement]
-• [Achievement]
-
-EDUCATION
-
-[Degree / Executive Programme]  |  [Institution]  |  [Year]
-
-SKILLS & EXPERTISE
-
-[Leadership skill]  |  [Domain expertise]  |  [Strategic skill]  |  [Technical skill]`,
-  },
-  {
-    id: 'tech',
-    name: 'Tech',
-    description: 'Two-column layout — dark sidebar for skills, white panel for experience.',
-    Preview: TemplatePreviewTech,
-    content: `[Full Name]
-[email@example.com] | [github.com/username] | [Location]
-linkedin.com/in/yourname
-
-SKILLS
-
-[Programming Language 1], [Programming Language 2]
-[Framework 1], [Framework 2], [Framework 3]
-[Cloud / DevOps tool 1], [Cloud tool 2]
-[Database 1], [Database 2]
-[Methodology: Agile, TDD, CI/CD]
-
-PROFESSIONAL SUMMARY
-
-[2-3 sentences: your technical focus, years of experience, and what kind of engineering problems you solve best.]
-
-WORK EXPERIENCE
-
-[Job Title] | [Company] | [Month Year] – [Month Year]
-• [Technical achievement — what you built, language/stack used, and measurable outcome]
-• [Performance improvement or scale: e.g. reduced latency by 40%, handled 1M requests/day]
-• [Leadership or collaboration: mentored 3 engineers, led migration of legacy system]
-
-[Previous Job Title] | [Company] | [Month Year] – [Month Year]
-• [Technical achievement]
-• [Impact metric]
-
-EDUCATION
-
-[Degree in Computer Science / Software Engineering]  |  [University]  |  [Year]`,
-  },
+  { id: 'minimal',   name: 'Minimal',   description: 'Single column · clean black typography · timeless', Preview: TemplatePreviewMinimal },
+  { id: 'modern',    name: 'Modern',    description: 'Green accents · bold dividers · contemporary',       Preview: TemplatePreviewModern  },
+  { id: 'classic',   name: 'Classic',   description: 'Centred name · serif feel · universally accepted',  Preview: TemplatePreviewClassic },
+  { id: 'executive', name: 'Executive', description: 'Uppercase name · premium spacing · senior roles',   Preview: TemplatePreviewExecutive },
+  { id: 'tech',      name: 'Tech',      description: 'Dark sidebar for skills · white panel for XP',      Preview: TemplatePreviewTech    },
 ];
 
 function CopyButton({ text }) {
@@ -286,8 +165,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
 
   const handleAdjust = async () => {
     if (!input.trim() || loading) return;
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     try {
       const res = await fetch('/api/adjust-document', {
         method: 'POST',
@@ -296,7 +174,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Adjustment failed');
-      onUpdate(data.result);
+      onUpdate(stripMarkdown(data.result));
       setInput('');
     } catch (err) {
       setError(err.message || 'Failed to apply adjustment. Please try again.');
@@ -321,17 +199,11 @@ function MiniChatbot({ currentDocument, onUpdate }) {
           onKeyDown={e => e.key === 'Enter' && !loading && handleAdjust()}
           disabled={loading}
         />
-        <button
-          className="btn btn-primary btn-sm"
-          onClick={handleAdjust}
-          disabled={loading || !input.trim()}
-          style={{ flexShrink: 0 }}
-        >
+        <button className="btn btn-primary btn-sm" onClick={handleAdjust} disabled={loading || !input.trim()} style={{ flexShrink: 0 }}>
           {loading ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</> : 'Apply →'}
         </button>
       </div>
       {error && <p style={{ fontSize: 12, color: '#f87171', marginTop: 6 }}>{error}</p>}
-      {loading && <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Applying your adjustment…</p>}
     </div>
   );
 }
@@ -348,7 +220,6 @@ export default function CVOptimizer() {
   const [result, setResult] = useState(() => localStorage.getItem(LS.result) || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showTemplates, setShowTemplates] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState('minimal');
   const [score, setScore] = useState(null);
 
@@ -390,8 +261,9 @@ export default function CVOptimizer() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to optimize CV');
-      setResult(data.result);
-      setScore(calculateAttractivenessScore(data.result, jobDescription));
+      const clean = stripMarkdown(data.result);
+      setResult(clean);
+      setScore(calculateAttractivenessScore(clean, jobDescription));
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
@@ -405,13 +277,6 @@ export default function CVOptimizer() {
     setJobDescription(''); setJdFile(null); setJdPdfBase64('');
     setResult(''); setError(''); setScore(null);
     Object.values(LS).forEach(k => localStorage.removeItem(k));
-  };
-
-  const useTemplate = (tmpl) => {
-    setCv(tmpl.content);
-    setSelectedTemplate(tmpl.id);
-    setCvFile(null); setCvPdfBase64('');
-    setShowTemplates(false);
   };
 
   const handleAdjustUpdate = (newResult) => {
@@ -431,70 +296,57 @@ export default function CVOptimizer() {
         <strong>How it works:</strong> Provide your CV and the target job description (text or PDF/DOCX). Claude rewrites your CV with keyword alignment, quantified achievements, and ATS-friendly formatting tailored to the specific role.
       </div>
 
-      {/* Templates */}
-      <div style={{ marginBottom: 20 }} className="scroll-reveal">
-        <button
-          className="btn btn-ghost"
-          onClick={() => setShowTemplates(v => !v)}
-          style={{ fontSize: 13, padding: '8px 14px', gap: 6 }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/>
-            <rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>
-          </svg>
-          {showTemplates ? 'Hide Templates' : '5 CV Templates — start from a professionally designed layout'}
-        </button>
-
-        {showTemplates && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 14, marginTop: 14 }}>
-            {TEMPLATES.map(tmpl => {
-              const isSelected = selectedTemplate === tmpl.id;
-              return (
-                <div
-                  key={tmpl.id}
-                  className={`template-card card${isSelected ? ' selected' : ''}`}
-                  style={{ padding: 14 }}
-                >
-                  <div className="template-preview-visual">
-                    <tmpl.Preview />
-                  </div>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 2 }}>{tmpl.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10, lineHeight: 1.4 }}>{tmpl.description}</div>
-                  <button
-                    className={`btn btn-sm ${isSelected ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ width: '100%' }}
-                    onClick={() => useTemplate(tmpl)}
-                  >
-                    {isSelected ? '✓ In Use' : 'Use Template'}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
+      {/* Input section */}
+      <div className="two-col scroll-reveal" style={{ marginBottom: 20 }}>
+        <div className="input-card">
+          <FileUploadField
+            label="Your CV"
+            value={cv}
+            onChange={setCv}
+            onFileSelect={handleCvFileSelect}
+            onFileRemove={handleCvFileRemove}
+            file={cvFile}
+            placeholder="Paste your full CV here..."
+            rows={14}
+          />
+        </div>
+        <div className="input-card">
+          <FileUploadField
+            label="Job Description"
+            value={jobDescription}
+            onChange={setJobDescription}
+            onFileSelect={handleJdFileSelect}
+            onFileRemove={handleJdFileRemove}
+            file={jdFile}
+            placeholder="Paste the full job description here..."
+            rows={14}
+          />
+        </div>
       </div>
 
-      <div className="two-col scroll-reveal" style={{ marginBottom: 20 }}>
-        <FileUploadField
-          label="Your CV"
-          value={cv}
-          onChange={setCv}
-          onFileSelect={handleCvFileSelect}
-          onFileRemove={handleCvFileRemove}
-          file={cvFile}
-          placeholder="Paste your full CV here..."
-          rows={16}
-        />
-        <FileUploadField
-          label="Job Description"
-          value={jobDescription}
-          onChange={setJobDescription}
-          onFileSelect={handleJdFileSelect}
-          onFileRemove={handleJdFileRemove}
-          file={jdFile}
-          placeholder="Paste the full job description here..."
-          rows={16}
-        />
+      {/* Template selector — horizontal scroll row */}
+      <div className="scroll-reveal" style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>
+          Select Template
+        </div>
+        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4 }} className="template-row">
+          {TEMPLATES.map(tmpl => {
+            const isSelected = selectedTemplate === tmpl.id;
+            return (
+              <div
+                key={tmpl.id}
+                onClick={() => setSelectedTemplate(tmpl.id)}
+                className={`template-card-h${isSelected ? ' selected' : ''}`}
+              >
+                <tmpl.Preview />
+                <div style={{ padding: '8px 2px 0' }}>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: isSelected ? 'var(--accent)' : 'var(--text-primary)', marginBottom: 1 }}>{tmpl.name}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.4 }}>{tmpl.description}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {error && (
@@ -503,17 +355,20 @@ export default function CVOptimizer() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 28, alignItems: 'center' }} className="scroll-reveal">
-        <button className="btn btn-primary" onClick={handleOptimize} disabled={loading || !canSubmit} style={{ minWidth: 160 }}>
+      {/* Generate button — centered, prominent */}
+      <div className="scroll-reveal" style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 32, alignItems: 'center', flexWrap: 'wrap' }}>
+        <button
+          className="btn btn-primary"
+          onClick={handleOptimize}
+          disabled={loading || !canSubmit}
+          style={{ minWidth: 200, padding: '13px 32px', fontSize: 15 }}
+        >
           {loading ? <><span className="spinner"></span> Optimizing...</> : '✦ Optimize CV'}
         </button>
-        {selectedTemplate !== 'minimal' && (
-          <span style={{ fontSize: 12, color: 'var(--accent)', background: 'var(--accent-dim)', padding: '4px 10px', borderRadius: 100, border: '1px solid rgba(29,158,117,0.2)' }}>
-            Template: {TEMPLATES.find(t => t.id === selectedTemplate)?.name}
-          </span>
-        )}
         {(cv || cvFile || jobDescription || jdFile || result) && (
-          <button className="btn btn-secondary" onClick={handleClear} disabled={loading}>Clear All</button>
+          <button className="btn btn-ghost" onClick={handleClear} disabled={loading} style={{ fontSize: 13 }}>
+            Clear All
+          </button>
         )}
       </div>
 
@@ -526,19 +381,14 @@ export default function CVOptimizer() {
 
       {result && !loading && (
         <div ref={resultRef}>
-          {/* Result header */}
+          {/* Result toolbar */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            marginBottom: 0, flexWrap: 'wrap', gap: 8,
-            padding: '12px 16px',
-            background: 'rgba(29,158,117,0.06)',
-            border: '1px solid rgba(29,158,117,0.2)',
-            borderBottom: 'none',
-            borderRadius: '14px 14px 0 0',
+            marginBottom: 12, flexWrap: 'wrap', gap: 8,
           }}>
             <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ color: 'var(--accent)' }}>✦</span>Optimized CV
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 4 }}>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 2 }}>
                 · {TEMPLATES.find(t => t.id === selectedTemplate)?.name} template
               </span>
             </h2>
@@ -548,12 +398,11 @@ export default function CVOptimizer() {
             </div>
           </div>
 
-          <div className="result-box-wrapper" style={{ borderRadius: '0 0 16px 16px' }}>
-            <div className="result-box" style={{ borderRadius: '0 0 15px 15px', maxHeight: 480 }}>{result}</div>
-          </div>
+          {/* WYSIWYG document preview */}
+          <DocumentPreview text={result} template={selectedTemplate} />
 
           <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
-            Review and personalise the output before submitting your application.
+            Review and personalise before submitting your application.
           </p>
 
           {score !== null && <ScoreCard score={score} />}

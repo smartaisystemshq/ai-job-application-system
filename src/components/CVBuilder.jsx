@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DownloadButtons from '../utils/DownloadButtons';
+import DocumentPreview from '../utils/DocumentPreview';
 import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
+import { stripMarkdown } from '../utils/downloadUtils';
 
 const LS_KEY = 'jas.cvb';
 
@@ -98,7 +100,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Adjustment failed');
-      onUpdate(data.result);
+      onUpdate(stripMarkdown(data.result));
       setInput('');
     } catch (err) {
       setError(err.message || 'Failed to apply adjustment. Please try again.');
@@ -270,7 +272,7 @@ export default function CVBuilder() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      updExp(expId, 'bullets', data.result);
+      updExp(expId, 'bullets', stripMarkdown(data.result));
     } catch (err) {
       setApiError(err.message || 'Failed to generate bullet points.');
     } finally {
@@ -308,7 +310,7 @@ export default function CVBuilder() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      set('summary', data.result);
+      set('summary', stripMarkdown(data.result));
     } catch (err) {
       setApiError(err.message || 'Failed to generate summary.');
     } finally {
@@ -590,15 +592,10 @@ export default function CVBuilder() {
 
   const renderPreview = () => (
     <div ref={previewRef}>
-      {/* Result header */}
+      {/* Result toolbar */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: 0, flexWrap: 'wrap', gap: 8,
-        padding: '12px 16px',
-        background: 'rgba(29,158,117,0.06)',
-        border: '1px solid rgba(29,158,117,0.2)',
-        borderBottom: 'none',
-        borderRadius: '14px 14px 0 0',
+        marginBottom: 12, flexWrap: 'wrap', gap: 8,
       }}>
         <div>
           <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 2 }}>Your CV</h2>
@@ -613,9 +610,8 @@ export default function CVBuilder() {
         </div>
       </div>
 
-      <div className="result-box-wrapper" style={{ borderRadius: '0 0 16px 16px' }}>
-        <div className="result-box" style={{ borderRadius: '0 0 15px 15px', minHeight: 400, maxHeight: 560 }}>{displayCvText}</div>
-      </div>
+      {/* WYSIWYG document preview */}
+      <DocumentPreview text={displayCvText} template="minimal" />
 
       <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
         <button className="btn btn-secondary" onClick={() => setStep(5)}>← Back to Summary</button>

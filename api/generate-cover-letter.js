@@ -38,6 +38,13 @@ REQUIRED:
 - No flattery toward the company
 - Varied sentence length — mix short punchy sentences with longer ones
 
+IMPORTANT — PLAIN TEXT FORMATTING (MANDATORY):
+- Return PLAIN TEXT ONLY — absolutely no markdown symbols
+- No #, ##, **, *, __, _, `` in the output
+- Use paragraph breaks between sections — no headers needed for a cover letter
+- No bullet points in a cover letter — flowing paragraph prose only
+- The output must look clean when pasted into any document editor
+
 Return ONLY the cover letter text. No subject line, no "Dear Hiring Manager" salutation unless context clearly supports it, no preamble. Just the letter body.`
 
   try {

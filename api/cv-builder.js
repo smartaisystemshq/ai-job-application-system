@@ -76,6 +76,8 @@ REQUIREMENTS:
 - Reads like it was written by a skilled human — specific, confident, direct
 - Under 75 words total
 
+PLAIN TEXT ONLY — no markdown, no **, no #. Just the paragraph text.
+
 Return ONLY the summary text. No heading, no "Here is your summary:", just the paragraph.`
 
   } else {

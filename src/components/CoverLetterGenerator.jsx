@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import FileUploadField from './FileUploadField';
 import DownloadButtons from '../utils/DownloadButtons';
+import DocumentPreview from '../utils/DocumentPreview';
 import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
+import { stripMarkdown } from '../utils/downloadUtils';
 
 const LS = { cv: 'jas.cl.cv', jd: 'jas.cl.jd', result: 'jas.cl.result' };
 
@@ -36,6 +38,8 @@ export default function CoverLetterGenerator() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [score, setScore] = useState(null);
+
+  const resultRef = useRef(null);
 
   useEffect(() => { localStorage.setItem(LS.cv, cv); }, [cv]);
   useEffect(() => { localStorage.setItem(LS.jd, jobDescription); }, [jobDescription]);
@@ -73,8 +77,10 @@ export default function CoverLetterGenerator() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate cover letter');
-      setResult(data.result);
-      setScore(calculateAttractivenessScore(data.result, jobDescription));
+      const clean = stripMarkdown(data.result);
+      setResult(clean);
+      setScore(calculateAttractivenessScore(clean, jobDescription));
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
@@ -102,27 +108,32 @@ export default function CoverLetterGenerator() {
         <strong>How it works:</strong> Upload or paste your CV and the job description. Claude writes a compelling, specific cover letter that sounds like a real person — referencing the company's actual requirements with evidence from your background.
       </div>
 
+      {/* Input section */}
       <div className="two-col scroll-reveal" style={{ marginBottom: 20 }}>
-        <FileUploadField
-          label="Your CV"
-          value={cv}
-          onChange={setCv}
-          onFileSelect={handleCvFileSelect}
-          onFileRemove={handleCvFileRemove}
-          file={cvFile}
-          placeholder="Paste your CV to give context about your background..."
-          rows={14}
-        />
-        <FileUploadField
-          label="Job Description"
-          value={jobDescription}
-          onChange={setJobDescription}
-          onFileSelect={handleJdFileSelect}
-          onFileRemove={handleJdFileRemove}
-          file={jdFile}
-          placeholder="Paste the job description — the letter will reference specific requirements..."
-          rows={14}
-        />
+        <div className="input-card">
+          <FileUploadField
+            label="Your CV"
+            value={cv}
+            onChange={setCv}
+            onFileSelect={handleCvFileSelect}
+            onFileRemove={handleCvFileRemove}
+            file={cvFile}
+            placeholder="Paste your CV to give context about your background..."
+            rows={14}
+          />
+        </div>
+        <div className="input-card">
+          <FileUploadField
+            label="Job Description"
+            value={jobDescription}
+            onChange={setJobDescription}
+            onFileSelect={handleJdFileSelect}
+            onFileRemove={handleJdFileRemove}
+            file={jdFile}
+            placeholder="Paste the job description — the letter will reference specific requirements..."
+            rows={14}
+          />
+        </div>
       </div>
 
       {error && (
@@ -131,49 +142,56 @@ export default function CoverLetterGenerator() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 28 }} className="scroll-reveal">
-        <button className="btn btn-primary" onClick={handleGenerate} disabled={loading || !canSubmit} style={{ minWidth: 200 }}>
+      {/* Generate button — centered, prominent */}
+      <div className="scroll-reveal" style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 32, alignItems: 'center', flexWrap: 'wrap' }}>
+        <button
+          className="btn btn-primary"
+          onClick={handleGenerate}
+          disabled={loading || !canSubmit}
+          style={{ minWidth: 220, padding: '13px 32px', fontSize: 15 }}
+        >
           {loading ? <><span className="spinner"></span> Generating...</> : '✉ Generate Cover Letter'}
         </button>
         {(cv || cvFile || jobDescription || jdFile || result) && (
-          <button className="btn btn-secondary" onClick={handleClear} disabled={loading}>Clear All</button>
+          <button className="btn btn-ghost" onClick={handleClear} disabled={loading} style={{ fontSize: 13 }}>
+            Clear All
+          </button>
         )}
       </div>
 
       {loading && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 0', gap: 16 }}>
           <div className="spinner-lg"></div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Writing your cover letter...</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Writing your cover letter…</p>
         </div>
       )}
 
       {result && !loading && (
-        <div>
-          {/* Result header */}
+        <div ref={resultRef}>
+          {/* Result toolbar */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '12px 16px',
-            background: 'rgba(29,158,117,0.06)',
-            border: '1px solid rgba(29,158,117,0.2)',
-            borderBottom: 'none',
-            borderRadius: '14px 14px 0 0',
-            flexWrap: 'wrap', gap: 8,
+            marginBottom: 12, flexWrap: 'wrap', gap: 8,
           }}>
             <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ color: 'var(--accent)' }}>✉</span>Cover Letter
             </h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 12, color: resultWordCount > 250 ? '#f87171' : 'var(--accent)', fontWeight: 600, background: resultWordCount > 250 ? 'rgba(239,68,68,0.1)' : 'var(--accent-dim)', padding: '3px 8px', borderRadius: 100 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{
+                fontSize: 12, fontWeight: 600,
+                color: resultWordCount > 250 ? '#f87171' : 'var(--accent)',
+                background: resultWordCount > 250 ? 'rgba(239,68,68,0.1)' : 'var(--accent-dim)',
+                padding: '3px 8px', borderRadius: 100,
+              }}>
                 {resultWordCount} words
               </span>
-              <DownloadButtons text={result} filename="cover-letter" />
+              <DownloadButtons text={result} filename="cover-letter" isLetter={true} />
               <CopyButton text={result} />
             </div>
           </div>
 
-          <div className="result-box-wrapper" style={{ borderRadius: '0 0 16px 16px' }}>
-            <div className="result-box" style={{ borderRadius: '0 0 15px 15px' }}>{result}</div>
-          </div>
+          {/* WYSIWYG document preview — letter mode for flowing paragraphs */}
+          <DocumentPreview text={result} type="letter" />
 
           <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
             Personalise with specific details (contact names, hiring manager) before sending.

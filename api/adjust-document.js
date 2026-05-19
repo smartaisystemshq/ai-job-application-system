@@ -35,6 +35,11 @@ Apply the requested adjustment while:
 - If asked to change tone: adjust word choice and sentence structure while keeping the facts
 - If asked to add keywords: weave them in naturally, never just append a keyword list
 
+IMPORTANT — PLAIN TEXT FORMATTING:
+- Return PLAIN TEXT ONLY — no markdown symbols (no **, *, #, ##, __, _)
+- For CV: use ALL CAPS for section headers, • for bullets, ─── for dividers
+- For cover letter: flowing prose paragraphs only, no bullets or headers
+
 Return ONLY the complete updated ${typeLabel} text — no commentary, no "Here is the updated version:", just the document itself.`
 
   try {
