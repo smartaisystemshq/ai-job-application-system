@@ -37,13 +37,22 @@ export function stripMarkdown(text) {
       const headingMatch = line.match(/^#{1,6}\s+(.+)$/)
       if (headingMatch) return headingMatch[1].toUpperCase()
 
+      // Convert horizontal rules --- / === / ___ → section divider
+      if (/^\s*[-=_]{3,}\s*$/.test(line)) return '──────────────────────────────────────────────────────'
+
       let l = line
-      // Remove bold markers **text** → text
+      // Remove bold markers **text** → text (do this before italic to avoid interference)
+      l = l.replace(/\*\*\*([^*\n]+)\*\*\*/g, '$1')
       l = l.replace(/\*\*([^*\n]+)\*\*/g, '$1')
       // Remove __bold__ → text
+      l = l.replace(/___([^_\n]+)___/g, '$1')
       l = l.replace(/__([^_\n]+)__/g, '$1')
       // Convert "* bullet" at start → "• bullet"
       l = l.replace(/^\s*\*\s+/, '• ')
+      // Convert "- bullet" at start → "• bullet"
+      l = l.replace(/^\s*-\s+/, '• ')
+      // Convert numbered list "1. item" → "• item"
+      l = l.replace(/^\s*\d+[.)]\s+/, '• ')
       // Remove remaining *italic* markers (not bullets)
       if (!l.startsWith('•')) {
         l = l.replace(/\*([^*\n]+)\*/g, '$1')
@@ -52,8 +61,10 @@ export function stripMarkdown(text) {
       l = l.replace(/(?<!\w)_([^_\n]+)_(?!\w)/g, '$1')
       // Remove backtick code markers
       l = l.replace(/`([^`\n]+)`/g, '$1')
+      // Remove blockquote markers
+      l = l.replace(/^\s*>\s?/, '')
       // Convert -- to – (en-dash) for cleaner typography
-      l = l.replace(/--/g, '–')
+      l = l.replace(/(?<![─])--(?![-─])/g, '–')
       return l
     })
     .join('\n')
@@ -396,25 +407,69 @@ function buildPDFDocDef(text, bodySize, template) {
 // ── Cover letter PDF builder ─────────────────────────────────────────────────
 
 function buildCoverLetterPDFDocDef(text, bodySize) {
-  const paragraphs = text.split(/\n\n+/).filter(p => p.trim())
-  const content = []
+  // Parse into blocks of lines (split on blank lines, preserve internal lines)
+  const rawLines = text.split('\n')
+  const blocks = []
+  let cur = []
+  for (const line of rawLines) {
+    if (!line.trim()) {
+      if (cur.length) { blocks.push(cur); cur = [] }
+    } else { cur.push(line.trim()) }
+  }
+  if (cur.length) blocks.push(cur)
 
-  for (const para of paragraphs) {
-    const cleaned = para.replace(/\n/g, ' ').trim()
-    if (!cleaned) continue
-    content.push({
-      text: cleaned,
-      fontSize: bodySize,
-      color: '#2a2a2a',
-      margin: [0, 0, 0, bodySize * 1.2],
-      lineHeight: 1.55,
-    })
+  const content = []
+  const headerSize = bodySize + 1
+  const smallSize = bodySize - 1
+
+  for (let i = 0; i < blocks.length; i++) {
+    const blockLines = blocks[i]
+    const joined = blockLines.join(' ')
+    if (!joined) continue
+
+    // First block: sender / name / contact info
+    if (i === 0) {
+      const name = blockLines[0]
+      const contact = blockLines.slice(1).join('  |  ')
+      content.push({ text: name, fontSize: headerSize + 2, bold: true, color: '#111111', margin: [0, 0, 0, 4] })
+      if (contact) {
+        content.push({ text: contact, fontSize: smallSize, color: '#555555', margin: [0, 0, 0, 8] })
+      }
+      content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 455, y2: 0, lineWidth: 0.5, lineColor: '#cccccc' }], margin: [0, 0, 0, 12] })
+      continue
+    }
+
+    // Date line (short, early, contains year or month)
+    if (joined.length < 40 && i <= 2 &&
+      /\d{4}|january|february|march|april|may|june|july|august|september|october|november|december|\bjan\b|\bfeb\b|\bmar\b|\bapr\b|\bjun\b|\bjul\b|\baug\b|\bsep\b|\boct\b|\bnov\b|\bdec\b/i.test(joined)) {
+      content.push({ text: joined, fontSize: smallSize, color: '#555555', margin: [0, 0, 0, 14] })
+      continue
+    }
+
+    // Greeting / salutation
+    if (/^dear\b|^to whom\b|^liebe[rs]?\b|^sehr geehrte[rs]?\b/i.test(joined)) {
+      content.push({ text: joined, fontSize: bodySize, color: '#1a1a1a', margin: [0, 0, 0, bodySize], lineHeight: 1.55 })
+      continue
+    }
+
+    // Closing (short, toward end, starts with closing phrase)
+    if (i >= blocks.length - 2 && joined.length < 80 &&
+      /^(best|kind|sincerely|yours|mit freundlichen|hochachtungsvoll|regards)/i.test(joined)) {
+      for (const l of blockLines) {
+        content.push({ text: l, fontSize: bodySize, color: '#1a1a1a', margin: [0, 2, 0, 2], lineHeight: 1.4 })
+      }
+      content.push({ text: ' ', fontSize: bodySize * 0.3, margin: [0, 0, 0, 0] })
+      continue
+    }
+
+    // Body paragraph
+    content.push({ text: joined, fontSize: bodySize, color: '#2a2a2a', margin: [0, 0, 0, bodySize * 1.1], lineHeight: 1.6 })
   }
 
   return {
     pageSize: 'A4',
-    pageMargins: [60, 56, 60, 56],
-    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.55 },
+    pageMargins: [60, 50, 60, 50],
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.6 },
     content,
   }
 }
@@ -454,15 +509,60 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
     Document, Packer, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType,
   } = await import('docx')
 
-  // Cover letter: simple paragraphs
+  // Cover letter: business letter format
   if (isLetter) {
-    const paras = cleanText.split(/\n\n+/).filter(p => p.trim()).map(para =>
-      new Paragraph({
-        children: [new TextRun({ text: para.replace(/\n/g, ' ').trim(), size: 22, font: 'Calibri', color: '2a2a2a' })],
-        spacing: { after: 240, line: 360 },
-      })
-    )
-    const doc = new Document({ sections: [{ properties: { page: { margin: { top: 1100, right: 1200, bottom: 1100, left: 1200 } } }, children: paras }] })
+    const rawLines = cleanText.split('\n')
+    const blocks = []
+    let cur = []
+    for (const line of rawLines) {
+      if (!line.trim()) {
+        if (cur.length) { blocks.push(cur); cur = [] }
+      } else { cur.push(line.trim()) }
+    }
+    if (cur.length) blocks.push(cur)
+
+    const paras = []
+    for (let i = 0; i < blocks.length; i++) {
+      const blockLines = blocks[i]
+      const joined = blockLines.join(' ')
+      if (!joined) continue
+
+      // First block: sender name (first line) + contact info (remaining lines)
+      if (i === 0) {
+        const name = blockLines[0]
+        const contact = blockLines.slice(1).join('  |  ')
+        paras.push(new Paragraph({ children: [new TextRun({ text: name, bold: true, size: 28, font: 'Calibri', color: '111111' })], spacing: { after: 40 } }))
+        if (contact) {
+          paras.push(new Paragraph({ children: [new TextRun({ text: contact, size: 18, font: 'Calibri', color: '666666' })], spacing: { after: 60 }, border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'cccccc', space: 4 } } }))
+        } else {
+          paras.push(new Paragraph({ children: [new TextRun({ text: '' })], border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'cccccc', space: 1 } }, spacing: { after: 80 } }))
+        }
+        continue
+      }
+      // Date line
+      if (joined.length < 40 && i <= 2 &&
+        /\d{4}|january|february|march|april|may|june|july|august|september|october|november|december|\bjan\b|\bfeb\b|\bmar\b|\bapr\b|\bjun\b|\bjul\b|\baug\b|\bsep\b|\boct\b|\bnov\b|\bdec\b/i.test(joined)) {
+        paras.push(new Paragraph({ children: [new TextRun({ text: joined, size: 18, font: 'Calibri', color: '666666' })], spacing: { after: 200 } }))
+        continue
+      }
+      // Greeting
+      if (/^dear\b|^to whom\b|^liebe[rs]?\b|^sehr geehrte[rs]?\b/i.test(joined)) {
+        paras.push(new Paragraph({ children: [new TextRun({ text: joined, size: 22, font: 'Calibri', color: '1a1a1a' })], spacing: { after: 160 } }))
+        continue
+      }
+      // Closing (toward end, starts with closing phrase)
+      if (i >= blocks.length - 2 && joined.length < 80 &&
+        /^(best|kind|sincerely|yours|mit freundlichen|hochachtungsvoll|regards)/i.test(joined)) {
+        for (const l of blockLines) {
+          paras.push(new Paragraph({ children: [new TextRun({ text: l, size: 22, font: 'Calibri', color: '1a1a1a' })], spacing: { before: i === blocks.length - 2 ? 200 : 0, after: 60 } }))
+        }
+        continue
+      }
+      // Body paragraph
+      paras.push(new Paragraph({ children: [new TextRun({ text: joined, size: 22, font: 'Calibri', color: '2a2a2a' })], spacing: { after: 200 } }))
+    }
+
+    const doc = new Document({ sections: [{ properties: { page: { margin: { top: 1000, right: 1200, bottom: 1000, left: 1200 } } }, children: paras }] })
     const blob = await Packer.toBlob(doc)
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')

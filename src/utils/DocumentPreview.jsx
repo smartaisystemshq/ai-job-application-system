@@ -266,50 +266,92 @@ function TechPage({ lines }) {
   )
 }
 
-// ── Cover letter renderer (pure paragraphs, no CV structure) ─────────────────
+// ── Cover letter renderer — business letter format ───────────────────────────
 
 function LetterPage({ text }) {
-  let paragraphs = (text || '').split(/\n\n+/).filter(p => p.trim())
-  // Fallback: if no double-newlines, treat each non-empty line as a paragraph
-  if (paragraphs.length <= 1 && (text || '').includes('\n')) {
-    paragraphs = (text || '').split(/\n/).filter(p => p.trim())
+  // Parse into blocks of lines (split on blank lines, preserve internal lines)
+  const rawLines = (text || '').split('\n')
+  const blocks = []
+  let cur = []
+  for (const line of rawLines) {
+    if (!line.trim()) {
+      if (cur.length) { blocks.push(cur); cur = [] }
+    } else { cur.push(line.trim()) }
   }
+  if (cur.length) blocks.push(cur)
+
+  if (!blocks.length) return null
 
   return (
     <div style={{
       background: '#fff',
       maxWidth: 680,
       margin: '0 auto',
-      padding: '40px 48px',
+      padding: '36px 48px',
       boxShadow: '0 20px 70px rgba(0,0,0,0.65), 0 4px 20px rgba(0,0,0,0.35)',
       borderRadius: 2,
       fontFamily: "'Inter', -apple-system, sans-serif",
-      fontSize: 12,
-      lineHeight: 1.75,
+      fontSize: 11.5,
+      lineHeight: 1.7,
       color: '#2a2a2a',
     }}>
-      {paragraphs.map((para, i) => (
-        <p key={i} style={{ marginBottom: i < paragraphs.length - 1 ? 18 : 0 }}>
-          {para.replace(/\n/g, ' ').trim()}
-        </p>
-      ))}
+      {blocks.map((blockLines, i) => {
+        const joined = blockLines.join(' ')
+
+        // First block: sender info — name is first line, contact is remaining lines
+        if (i === 0) {
+          const name = blockLines[0]
+          const contact = blockLines.slice(1).join('  |  ')
+          return (
+            <div key={i} style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#111', marginBottom: 3 }}>{name}</div>
+              {contact && <div style={{ fontSize: 10.5, color: '#666' }}>{contact}</div>}
+              <div style={{ height: 0.8, background: '#ddd', marginTop: 10 }} />
+            </div>
+          )
+        }
+
+        // Date line (short, early, contains year or month name)
+        if (joined.length < 40 && i <= 2 &&
+          /\d{4}|january|february|march|april|may|june|july|august|september|october|november|december|\bjan\b|\bfeb\b|\bmar\b|\bapr\b|\bjun\b|\bjul\b|\baug\b|\bsep\b|\boct\b|\bnov\b|\bdec\b/i.test(joined)) {
+          return <div key={i} style={{ fontSize: 10.5, color: '#666', marginBottom: 18 }}>{joined}</div>
+        }
+
+        // Greeting / salutation
+        if (/^dear\b|^to whom\b|^liebe[rs]?\b|^sehr geehrte[rs]?\b/i.test(joined)) {
+          return <div key={i} style={{ marginBottom: 14 }}>{joined}</div>
+        }
+
+        // Closing line (short, toward end, starts with common closing)
+        if ((i >= blocks.length - 2) && joined.length < 80 &&
+          /^(best|kind|sincerely|yours|mit freundlichen|hochachtungsvoll|regards)/i.test(joined)) {
+          return (
+            <div key={i} style={{ marginTop: 20, lineHeight: 1.8 }}>
+              {blockLines.map((l, j) => <div key={j}>{l}</div>)}
+            </div>
+          )
+        }
+
+        // Body paragraph — join lines with space
+        return <p key={i} style={{ marginBottom: 14 }}>{joined}</p>
+      })}
     </div>
   )
 }
 
 // ── Public component ──────────────────────────────────────────────────────────
 
-export default function DocumentPreview({ text, template = 'minimal', maxHeight = 560, type = 'cv' }) {
+export default function DocumentPreview({ text, template = 'minimal', maxHeight = 900, type = 'cv' }) {
   const lines = useMemo(() => parseDocumentLines(text || ''), [text])
 
   if (!text) return null
 
   return (
     <div style={{
-      background: 'linear-gradient(160deg, #0e0e1c 0%, #111118 100%)',
+      background: 'linear-gradient(160deg, #0c0c1a 0%, #0f0f16 100%)',
       borderRadius: 14,
       padding: '28px 20px',
-      boxShadow: 'inset 0 0 60px rgba(0,0,0,0.5)',
+      boxShadow: 'inset 0 0 60px rgba(0,0,0,0.5), 0 8px 40px rgba(0,0,0,0.4)',
       maxHeight,
       overflowY: 'auto',
     }}>

@@ -37,7 +37,7 @@ export default function WaveBackground() {
       for (let wi = 0; wi < waves.length - 1; wi++) {
         const w1 = waves[wi];
         const w2 = waves[wi + 1];
-        const fillOpacity = (w1.green || w2.green) ? 0.025 : 0.012;
+        const fillOpacity = (w1.green || w2.green) ? 0.018 : 0.008;
 
         ctx.beginPath();
         for (let x = 0; x <= canvas.width; x += 4) {

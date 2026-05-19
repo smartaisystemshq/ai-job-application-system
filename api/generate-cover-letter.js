@@ -17,13 +17,28 @@ module.exports = async function handler(req, res) {
   const rules = `
 === COVER LETTER RULES ===
 
-WORD LIMIT: Under 250 words. Hard limit — stop at 250 if needed.
+WORD LIMIT: Under 300 words total (body content only, not counting the header). Hard limit.
 
-STRUCTURE (4 paragraphs max):
-1. Opening hook — a specific, compelling reason you're right for THIS role at THIS company. Not "I am writing to apply." Mention something concrete from the JD or company that resonates.
-2. Your strongest relevant achievement — one specific example from your CV that directly addresses the most critical requirement in the JD. Use a number or concrete outcome.
-3. Second supporting point — another brief, specific example that addresses a secondary requirement. Show you've read the full JD, not just the headline.
-4. Close — direct, confident, short. One sentence stating you'd welcome a conversation. No begging, no "I look forward to hearing from you."
+FORMAT — Output as a proper business letter with this exact structure:
+
+[Full Name extracted from CV]
+[Email]  |  [Phone]  |  [Location]
+(leave blank if info not available in the CV — use "[Your Contact Details]" as placeholder)
+
+[Today's date in format: 19 May 2026]
+
+Dear Hiring Manager,
+
+[Opening hook — 2-3 sentences. A specific, compelling reason you're right for THIS role at THIS company. Not "I am writing to apply." Mention something concrete from the JD or company that resonates.]
+
+[Body paragraph 1 — Your strongest relevant achievement. One specific example from the CV that directly addresses the most critical requirement in the JD. Use a number or concrete outcome.]
+
+[Body paragraph 2 — Second supporting point. Another brief, specific example addressing a secondary requirement. Show you've read the full JD, not just the headline.]
+
+[Close — Direct, confident, one sentence stating you'd welcome a conversation. No begging, no clichés.]
+
+Best regards,
+[Full Name]
 
 VOICE: Write as if the candidate is a confident professional who knows their value. Not desperate, not arrogant. Like a brief, direct message from one professional to another.
 
@@ -31,6 +46,7 @@ ABSOLUTELY BANNED — never write these:
 "I am writing to express my interest" / "I am passionate about" / "team player" / "hard worker" / "go-getter" / "I believe I would be a great fit" / "Please find attached my CV" / "I look forward to hearing from you" / "dynamic" / "synergy" / "leverage" / "results-driven" / "detail-oriented" / "fast-paced environment"
 
 REQUIRED:
+- Extract the candidate's name, email, phone, location from their CV for the header
 - Open with something specific and concrete, not a generic statement
 - Name at least one real thing from the JD (a technology, a responsibility, the company's stated mission)
 - Every claim must be backed by brief evidence from the CV
@@ -40,12 +56,12 @@ REQUIRED:
 
 IMPORTANT — PLAIN TEXT FORMATTING (MANDATORY):
 - Return PLAIN TEXT ONLY — absolutely no markdown symbols
-- No #, ##, **, *, __, _, `` in the output
-- Use paragraph breaks between sections — no headers needed for a cover letter
-- No bullet points in a cover letter — flowing paragraph prose only
+- No #, ##, **, *, __, _, \`\` in the output
+- Use blank lines between each section/paragraph
+- No bullet points — flowing paragraph prose only
 - The output must look clean when pasted into any document editor
 
-Return ONLY the cover letter text. No subject line, no "Dear Hiring Manager" salutation unless context clearly supports it, no preamble. Just the letter body.`
+Return ONLY the complete business letter as specified above. No extra commentary.`
 
   try {
     let userContent

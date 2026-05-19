@@ -22,7 +22,11 @@ function CopyButton({ text }) {
 }
 
 function wordCount(text) {
-  return text.trim() ? text.trim().split(/\s+/).length : 0;
+  if (!text.trim()) return 0;
+  // Skip the sender header block — count only letter body words
+  const blocks = text.split(/\n\n+/).filter(b => b.trim());
+  const body = (blocks.length > 1 ? blocks.slice(1) : blocks).join(' ').trim();
+  return body ? body.split(/\s+/).filter(w => w).length : 0;
 }
 
 export default function CoverLetterGenerator() {

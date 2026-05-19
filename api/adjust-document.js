@@ -38,7 +38,7 @@ Apply the requested adjustment while:
 IMPORTANT — PLAIN TEXT FORMATTING:
 - Return PLAIN TEXT ONLY — no markdown symbols (no **, *, #, ##, __, _)
 - For CV: use ALL CAPS for section headers, • for bullets, ─── for dividers
-- For cover letter: flowing prose paragraphs only, no bullets or headers
+- For cover letter: preserve the exact business letter structure from the current document (sender header block at top, date, greeting, body paragraphs, closing). Use blank lines between each section. Flowing prose only — no bullets or markdown headers.
 
 Return ONLY the complete updated ${typeLabel} text — no commentary, no "Here is the updated version:", just the document itself.`
 
