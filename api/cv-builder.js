@@ -4,21 +4,27 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Content-Type', 'application/json')
 
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { action, data } = req.body || {}
-  if (!action) return res.status(400).json({ error: 'action is required.' })
+  try {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'API key not configured' })
+    }
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const { action, data } = req.body || {}
+    if (!action) return res.status(400).json({ error: 'action is required.' })
 
-  let prompt
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-  if (action === 'generate-bullets') {
-    const { jobTitle, company, description, targetRole } = data || {}
-    if (!description) return res.status(400).json({ error: 'description is required.' })
-    prompt = `You are an elite CV writer. Generate exactly 4 CV bullet points for this work experience entry.
+    let prompt
+
+    if (action === 'generate-bullets') {
+      const { jobTitle, company, description, targetRole } = data || {}
+      if (!description) return res.status(400).json({ error: 'description is required.' })
+      prompt = `You are an elite CV writer. Generate exactly 4 CV bullet points for this work experience entry.
 
 Job Title: ${jobTitle || 'Not specified'}
 Company: ${company || 'Not specified'}
@@ -35,10 +41,10 @@ REQUIREMENTS FOR EACH BULLET:
 
 Return exactly 4 bullet points. Each starts with • on its own line. No preamble, no extra text, no numbering.`
 
-  } else if (action === 'suggest-skills') {
-    const { targetRole, existingSkills } = data || {}
-    if (!targetRole) return res.status(400).json({ error: 'targetRole is required.' })
-    prompt = `You are a senior recruiter and career expert. Suggest exactly 10 highly relevant skills for a "${targetRole}" position.
+    } else if (action === 'suggest-skills') {
+      const { targetRole, existingSkills } = data || {}
+      if (!targetRole) return res.status(400).json({ error: 'targetRole is required.' })
+      prompt = `You are a senior recruiter and career expert. Suggest exactly 10 highly relevant skills for a "${targetRole}" position.
 
 Skills the candidate already has listed: ${(existingSkills || []).join(', ') || 'none listed'}
 
@@ -50,17 +56,17 @@ RULES:
 - These should be skills that would impress a recruiter reading the CV for this exact role
 - Return ONLY a comma-separated list of 10 skills, nothing else. No numbering, no bullets, no explanation.`
 
-  } else if (action === 'generate-summary') {
-    const { name, targetRole, experience, education, skills } = data || {}
-    const expText = (experience || [])
-      .filter(e => e.jobTitle || e.company)
-      .map(e => `${e.jobTitle || 'Role'} at ${e.company || 'Company'} (${e.startDate || ''}${e.endDate ? ' – ' + e.endDate : ''})`)
-      .join('; ')
-    const eduText = (education || [])
-      .filter(e => e.degree || e.institution)
-      .map(e => `${e.degree || 'Degree'} from ${e.institution || 'Institution'}`)
-      .join(', ')
-    prompt = `You are an elite CV writer. Write a professional summary section (3 sentences, under 75 words).
+    } else if (action === 'generate-summary') {
+      const { name, targetRole, experience, education, skills } = data || {}
+      const expText = (experience || [])
+        .filter(e => e.jobTitle || e.company)
+        .map(e => `${e.jobTitle || 'Role'} at ${e.company || 'Company'} (${e.startDate || ''}${e.endDate ? ' – ' + e.endDate : ''})`)
+        .join('; ')
+      const eduText = (education || [])
+        .filter(e => e.degree || e.institution)
+        .map(e => `${e.degree || 'Degree'} from ${e.institution || 'Institution'}`)
+        .join(', ')
+      prompt = `You are an elite CV writer. Write a professional summary section (3 sentences, under 75 words).
 
 Candidate name: ${name || 'the candidate'}
 Target role: ${targetRole || 'not specified'}
@@ -80,11 +86,10 @@ PLAIN TEXT ONLY — no markdown, no **, no #. Just the paragraph text.
 
 Return ONLY the summary text. No heading, no "Here is your summary:", just the paragraph.`
 
-  } else {
-    return res.status(400).json({ error: 'Invalid action.' })
-  }
+    } else {
+      return res.status(400).json({ error: 'Invalid action.' })
+    }
 
-  try {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 700,

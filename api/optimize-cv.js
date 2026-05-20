@@ -4,17 +4,23 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Content-Type', 'application/json')
 
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { cv, jobDescription, cvPdf, jdPdf } = req.body || {}
-  if (!jobDescription && !jdPdf) return res.status(400).json({ error: 'jobDescription is required.' })
-  if (!cv && !cvPdf) return res.status(400).json({ error: 'Either cv text or cvPdf is required.' })
+  try {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'API key not configured' })
+    }
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const { cv, jobDescription, cvPdf, jdPdf } = req.body || {}
+    if (!jobDescription && !jdPdf) return res.status(400).json({ error: 'jobDescription is required.' })
+    if (!cv && !cvPdf) return res.status(400).json({ error: 'Either cv text or cvPdf is required.' })
 
-  const instructions = `
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+    const instructions = `
 === OPTIMISATION INSTRUCTIONS ===
 
 GOAL: Produce a CV that a senior recruiter reads and immediately thinks "this person fits the role." Every line must earn its place.
@@ -47,9 +53,11 @@ GOAL: Produce a CV that a senior recruiter reads and immediately thinks "this pe
 8. HUMAN VOICE
    The result must sound like it was written by the candidate, not by an AI. Vary sentence structure. Use the candidate's existing voice as a baseline and elevate it — don't replace it with generic corporate prose.
 
+LANGUAGE: Detect the language of the candidate's CV and respond entirely in that same language. If the CV is in German, write every section in German. If it is in French, respond entirely in French. Do not mix languages under any circumstances.
+
 IMPORTANT — PLAIN TEXT FORMATTING (MANDATORY):
 - Return PLAIN TEXT ONLY — absolutely no markdown symbols
-- No #, ##, ###, **, *, __, _, `` in the output
+- No #, ##, ###, **, *, __, _, \`\` in the output
 - Use ALL CAPS for section headers: PROFESSIONAL SUMMARY, WORK EXPERIENCE, EDUCATION, SKILLS
 - Use • (Unicode bullet •) for bullet points — never use * or - for bullets
 - Use ─── (repeated dashes) as section dividers if needed
@@ -58,7 +66,6 @@ IMPORTANT — PLAIN TEXT FORMATTING (MANDATORY):
 
 Return ONLY the optimised CV — no commentary, no preamble. Just the final polished CV text.`
 
-  try {
     let userContent
 
     if (cvPdf) {

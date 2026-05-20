@@ -4,6 +4,7 @@ import DownloadButtons from '../utils/DownloadButtons';
 import DocumentPreview from '../utils/DocumentPreview';
 import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
 import { stripMarkdown } from '../utils/downloadUtils';
+import { TemplateSelector } from './TemplateSelector';
 
 const LS = { cv: 'jas.cl.cv', jd: 'jas.cl.jd', result: 'jas.cl.result' };
 
@@ -92,6 +93,7 @@ export default function CoverLetterGenerator() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [score, setScore] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState('minimal');
 
   const jdRef = useRef(null);
   const generateRef = useRef(null);
@@ -172,6 +174,9 @@ export default function CoverLetterGenerator() {
         <strong>How it works:</strong> Upload or paste your CV and the job description. Claude writes a compelling, specific cover letter that sounds like a real person — referencing the company's actual requirements with evidence from your background.
       </div>
 
+      {/* Template selector — ABOVE inputs */}
+      <TemplateSelector selectedTemplate={selectedTemplate} onSelect={setSelectedTemplate} />
+
       {/* Input section */}
       <div className="two-col scroll-reveal" style={{ marginBottom: 20 }}>
         <div className="input-card">
@@ -239,6 +244,9 @@ export default function CoverLetterGenerator() {
           }}>
             <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ color: 'var(--accent)' }}>✉</span>Cover Letter
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 2 }}>
+                · {selectedTemplate.charAt(0).toUpperCase() + selectedTemplate.slice(1)} template
+              </span>
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <span style={{
@@ -249,13 +257,13 @@ export default function CoverLetterGenerator() {
               }}>
                 {resultWordCount} words
               </span>
-              <DownloadButtons text={result} filename="cover-letter" isLetter={true} />
+              <DownloadButtons text={result} filename="cover-letter" isLetter={true} template={selectedTemplate} />
               <CopyButton text={result} />
             </div>
           </div>
 
           {/* WYSIWYG document preview — letter mode for flowing paragraphs */}
-          <DocumentPreview text={result} type="letter" />
+          <DocumentPreview text={result} type="letter" template={selectedTemplate} />
 
           <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
             Personalise with specific details (contact names, hiring manager) before sending.

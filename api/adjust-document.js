@@ -10,6 +10,10 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   try {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'API key not configured' })
+    }
+
     const { documentText, instruction, documentType } = req.body || {}
     if (!documentText) return res.status(400).json({ error: 'documentText is required.' })
     if (!instruction) return res.status(400).json({ error: 'instruction is required.' })

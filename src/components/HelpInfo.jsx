@@ -104,7 +104,6 @@ export default function HelpInfo() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [sent, setSent] = useState(false);
-  const [showFallback, setShowFallback] = useState(false);
 
   const handleContact = (e) => {
     e.preventDefault();
@@ -113,34 +112,13 @@ export default function HelpInfo() {
       `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`
     );
     const mailtoLink = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
-
-    try {
-      const win = window.open(mailtoLink, '_blank');
-      if (!win) {
-        window.location.href = mailtoLink;
-      }
-    } catch {
-      window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
-    }
-
+    window.location.href = mailtoLink;
     setSent(true);
     setTimeout(() => setSent(false), 6000);
-
-    // Show fallback after brief delay to catch cases where no client opened
-    setTimeout(() => setShowFallback(true), 1500);
   };
 
   return (
     <div className="page">
-      {showFallback && (
-        <FallbackModal
-          onClose={() => setShowFallback(false)}
-          name={name}
-          email={email}
-          message={message}
-        />
-      )}
-
       <div className="page-header scroll-reveal">
         <h1>Help & Info</h1>
         <p>Answers to common questions and a way to reach the team</p>
@@ -216,6 +194,29 @@ export default function HelpInfo() {
               Open Email Client →
             </button>
           </form>
+
+          {/* Permanent direct-email fallback — always visible */}
+          <div style={{
+            marginTop: 24,
+            padding: '14px 16px',
+            background: 'rgba(29,158,117,0.06)',
+            border: '1px solid rgba(29,158,117,0.18)',
+            borderRadius: 10,
+            textAlign: 'center',
+          }}>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
+              Or email us directly:
+            </p>
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              style={{ fontSize: 14, color: 'var(--accent)', fontWeight: 700, textDecoration: 'none', display: 'block', marginBottom: 4 }}
+            >
+              {CONTACT_EMAIL}
+            </a>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', userSelect: 'all' }}>
+              {CONTACT_EMAIL}
+            </p>
+          </div>
         </div>
       </div>
     </div>

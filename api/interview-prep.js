@@ -4,16 +4,22 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Content-Type', 'application/json')
 
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { jobDescription, jdPdf } = req.body || {}
-  if (!jobDescription && !jdPdf) return res.status(400).json({ error: 'jobDescription is required.' })
+  try {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'API key not configured' })
+    }
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const { jobDescription, jdPdf } = req.body || {}
+    if (!jobDescription && !jdPdf) return res.status(400).json({ error: 'jobDescription is required.' })
 
-  const prompt = `You are an expert interview coach preparing a candidate for the role described in the job description.
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+    const prompt = `You are an expert interview coach preparing a candidate for the role described in the job description.
 
 LANGUAGE RULE: Detect the language of the job description. Write every question and every answer framework in that exact same language. If the job description is in German, respond entirely in German. If it is in English, respond entirely in English. Do not mix languages.
 
@@ -55,7 +61,6 @@ SELECT the 8 most likely questions from these categories (pick the most relevant
 - Situational or case questions relevant to this role's main challenges
 - One motivation or fit question relevant to this company type or sector`
 
-  try {
     let userContent
 
     if (jdPdf) {

@@ -3,6 +3,7 @@ import DownloadButtons from '../utils/DownloadButtons';
 import DocumentPreview from '../utils/DocumentPreview';
 import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
 import { stripMarkdown } from '../utils/downloadUtils';
+import { TemplateSelector } from './TemplateSelector';
 
 const LS_KEY = 'jas.cvb';
 
@@ -217,6 +218,7 @@ export default function CVBuilder() {
   // Adjusted CV text from chatbot (separate from raw buildCVText output)
   const [adjustedCvText, setAdjustedCvText] = useState(null);
   const [cvScore, setCvScore] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState('minimal');
 
   const previewRef = useRef(null);
 
@@ -617,6 +619,9 @@ export default function CVBuilder() {
 
   const renderPreview = () => (
     <div ref={previewRef}>
+      {/* Template selector in preview step */}
+      <TemplateSelector selectedTemplate={selectedTemplate} onSelect={setSelectedTemplate} />
+
       {/* Result toolbar */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -630,13 +635,14 @@ export default function CVBuilder() {
           <DownloadButtons
             text={displayCvText}
             filename={`${(state.personal.name || 'my-cv').toLowerCase().replace(/\s+/g, '-')}`}
+            template={selectedTemplate}
           />
           <CopyButton text={displayCvText} />
         </div>
       </div>
 
       {/* WYSIWYG document preview */}
-      <DocumentPreview text={displayCvText} template="minimal" />
+      <DocumentPreview text={displayCvText} template={selectedTemplate} />
 
       <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
         <button className="btn btn-secondary" onClick={() => setStep(5)}>← Back to Summary</button>

@@ -268,8 +268,7 @@ function TechPage({ lines }) {
 
 // ── Cover letter renderer — business letter format ───────────────────────────
 
-function LetterPage({ text }) {
-  // Parse into blocks of lines (split on blank lines, preserve internal lines)
+function LetterPage({ text, template = 'minimal' }) {
   const rawLines = (text || '').split('\n')
   const blocks = []
   let cur = []
@@ -282,6 +281,13 @@ function LetterPage({ text }) {
 
   if (!blocks.length) return null
 
+  const isModern = template === 'modern' || template === 'tech'
+  const isClassic = template === 'classic'
+  const isExecutive = template === 'executive'
+  const fontFamily = isClassic
+    ? "'Times New Roman', Georgia, serif"
+    : "'Inter', -apple-system, sans-serif"
+
   return (
     <div style={{
       background: '#fff',
@@ -290,31 +296,60 @@ function LetterPage({ text }) {
       padding: '36px 48px',
       boxShadow: '0 20px 70px rgba(0,0,0,0.65), 0 4px 20px rgba(0,0,0,0.35)',
       borderRadius: 2,
-      fontFamily: "'Inter', -apple-system, sans-serif",
+      fontFamily,
       fontSize: 11.5,
       lineHeight: 1.7,
       color: '#2a2a2a',
+      position: 'relative',
+      overflow: 'hidden',
     }}>
+      {/* Template-specific top decoration */}
+      {isModern && (
+        <div style={{ height: 6, background: GREEN, marginLeft: -48, marginRight: -48, marginTop: -36, marginBottom: 16 }} />
+      )}
+
       {blocks.map((blockLines, i) => {
         const joined = blockLines.join(' ')
 
-        // First block: sender info — name is first line, contact is remaining lines
+        // First block: sender info
         if (i === 0) {
           const name = blockLines[0]
           const contact = blockLines.slice(1).join('  |  ')
+
+          if (isClassic) {
+            return (
+              <div key={i} style={{ marginBottom: 16, textAlign: 'center' }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#111', marginBottom: 3 }}>{name}</div>
+                <div style={{ height: 1.5, background: '#333', marginBottom: 1.5 }} />
+                <div style={{ height: 0.5, background: '#999', marginBottom: 6 }} />
+                {contact && <div style={{ fontSize: 10.5, color: '#666', marginBottom: 8 }}>{contact}</div>}
+              </div>
+            )
+          }
+          if (isExecutive) {
+            return (
+              <div key={i} style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#111', marginBottom: 4, letterSpacing: 1.5, textTransform: 'uppercase' }}>{name}</div>
+                <div style={{ height: 2.5, background: GREEN, marginBottom: 6 }} />
+                {contact && <div style={{ fontSize: 10.5, color: '#666', marginBottom: 4 }}>{contact}</div>}
+                <div style={{ height: 0.6, background: '#ddd', marginTop: 6 }} />
+              </div>
+            )
+          }
+          // Minimal / Modern / Tech
           return (
             <div key={i} style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: '#111', marginBottom: 3 }}>{name}</div>
               {contact && <div style={{ fontSize: 10.5, color: '#666' }}>{contact}</div>}
-              <div style={{ height: 0.8, background: '#ddd', marginTop: 10 }} />
+              <div style={{ height: isModern ? 1.5 : 0.8, background: isModern ? GREEN : '#ddd', marginTop: 10 }} />
             </div>
           )
         }
 
-        // Date line (short, early, contains year or month name)
+        // Date line
         if (joined.length < 40 && i <= 2 &&
           /\d{4}|january|february|march|april|may|june|july|august|september|october|november|december|\bjan\b|\bfeb\b|\bmar\b|\bapr\b|\bjun\b|\bjul\b|\baug\b|\bsep\b|\boct\b|\bnov\b|\bdec\b/i.test(joined)) {
-          return <div key={i} style={{ fontSize: 10.5, color: '#666', marginBottom: 18 }}>{joined}</div>
+          return <div key={i} style={{ fontSize: 10.5, color: '#666', marginBottom: 18, textAlign: isClassic ? 'right' : 'left' }}>{joined}</div>
         }
 
         // Greeting / salutation
@@ -322,7 +357,7 @@ function LetterPage({ text }) {
           return <div key={i} style={{ marginBottom: 14 }}>{joined}</div>
         }
 
-        // Closing line (short, toward end, starts with common closing)
+        // Closing line
         if ((i >= blocks.length - 2) && joined.length < 80 &&
           /^(best|kind|sincerely|yours|mit freundlichen|hochachtungsvoll|regards)/i.test(joined)) {
           return (
@@ -332,7 +367,7 @@ function LetterPage({ text }) {
           )
         }
 
-        // Body paragraph — join lines with space
+        // Body paragraph
         return <p key={i} style={{ marginBottom: 14 }}>{joined}</p>
       })}
     </div>
@@ -356,7 +391,7 @@ export default function DocumentPreview({ text, template = 'minimal', maxHeight 
       overflowY: 'auto',
     }}>
       {type === 'letter'
-        ? <LetterPage text={text} />
+        ? <LetterPage text={text} template={template} />
         : template === 'tech'
           ? <TechPage lines={lines} />
           : <StandardPage lines={lines} template={template} />

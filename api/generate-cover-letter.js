@@ -10,6 +10,10 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   try {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'API key not configured' })
+    }
+
     const { cv, jobDescription, cvPdf, jdPdf } = req.body || {}
     if (!jobDescription && !jdPdf) return res.status(400).json({ error: 'jobDescription is required.' })
     if (!cv && !cvPdf) return res.status(400).json({ error: 'Either cv text or cvPdf is required.' })
@@ -55,6 +59,8 @@ REQUIRED:
 - Sounds like a real person, not AI-generated prose
 - No flattery toward the company
 - Varied sentence length — mix short punchy sentences with longer ones
+
+LANGUAGE: Detect the language of the candidate's CV and write the entire cover letter in that same language. If the CV is in German, write the letter in German. If in French, write in French. Do not mix languages.
 
 IMPORTANT — PLAIN TEXT FORMATTING (MANDATORY):
 - Return PLAIN TEXT ONLY — absolutely no markdown symbols
