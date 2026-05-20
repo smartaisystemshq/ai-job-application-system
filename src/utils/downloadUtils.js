@@ -307,6 +307,7 @@ function buildExecutivePDF(text, bodySize) {
 }
 
 function buildTechPDF(text, bodySize) {
+  text = text.replace(/^[-*]\s/gm, '• ')
   const lines = parseDocumentLines(text)
   const GREEN = '#1D9E75'
   const SIDEBAR_BG = '#1a1a1a'
@@ -370,27 +371,9 @@ function buildTechPDF(text, bodySize) {
 
   return {
     pageSize: 'A4',
-    pageMargins: [0, 0, 0, 0],
-    background: [
-      { canvas: [{ type: 'rect', x: 0, y: 0, w: 170, h: 842, color: SIDEBAR_BG }] }
-    ],
+    pageMargins: [40, 36, 40, 36],
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.28 },
-    content: [
-      {
-        columns: [
-          {
-            width: 170,
-            stack: leftContent,
-            margin: [16, 32, 12, 32],
-          },
-          {
-            width: '*',
-            stack: rightContent,
-            margin: [16, 32, 32, 32],
-          },
-        ],
-      },
-    ],
+    content: [...leftContent, ...rightContent],
   }
 }
 
