@@ -112,6 +112,7 @@ export default function InterviewPrep() {
     return saved ? parseQuestions(saved) : [];
   });
   const [loading, setLoading] = useState(false);
+  const [newQuestionsLoading, setNewQuestionsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const resultRef = useRef(null);
@@ -128,9 +129,14 @@ export default function InterviewPrep() {
 
   const canSubmit = jobDescription.trim() || jdPdfBase64;
 
-  const handleGenerate = async () => {
+  const fetchQuestions = async (isNew = false) => {
     if (!canSubmit) { setError('Please paste or upload a job description first.'); return; }
-    setLoading(true); setError(''); setRawResult(''); setQuestions([]);
+    if (isNew) {
+      setNewQuestionsLoading(true);
+    } else {
+      setLoading(true); setRawResult(''); setQuestions([]);
+    }
+    setError('');
     try {
       const res = await fetch('/api/interview-prep', {
         method: 'POST',
@@ -149,8 +155,12 @@ export default function InterviewPrep() {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
+      setNewQuestionsLoading(false);
     }
   };
+
+  const handleGenerate = () => fetchQuestions(false);
+  const handleNewQuestions = () => fetchQuestions(true);
 
   const handleClear = () => {
     setJobDescription('');
@@ -202,13 +212,13 @@ export default function InterviewPrep() {
         <button
           className="btn btn-primary"
           onClick={handleGenerate}
-          disabled={loading || !canSubmit}
+          disabled={loading || newQuestionsLoading || !canSubmit}
           style={{ minWidth: 180 }}
         >
           {loading ? <><span className="spinner"></span> Generating...</> : '◈ Generate Questions'}
         </button>
         {(jobDescription || jdFile || rawResult) && (
-          <button className="btn btn-secondary" onClick={handleClear} disabled={loading}>Clear</button>
+          <button className="btn btn-secondary" onClick={handleClear} disabled={loading || newQuestionsLoading}>Clear</button>
         )}
       </div>
 
@@ -240,6 +250,20 @@ export default function InterviewPrep() {
           <p style={{ marginTop: 16, fontSize: 12, color: 'var(--text-muted)' }}>
             Practise answering each question out loud and prepare 1-2 specific examples (STAR method works well).
           </p>
+
+          {/* New Interview Questions button */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24, marginBottom: 8 }}>
+            <button
+              className="btn btn-secondary"
+              onClick={handleNewQuestions}
+              disabled={newQuestionsLoading || loading || !canSubmit}
+              style={{ minWidth: 240, padding: '11px 28px' }}
+            >
+              {newQuestionsLoading
+                ? <><span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }}></span> Generating new questions…</>
+                : '↺ New Interview Questions'}
+            </button>
+          </div>
 
           <MiniChatbot currentDocument={rawResult} onUpdate={handleAdjustUpdate} />
         </div>
