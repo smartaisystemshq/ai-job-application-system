@@ -5,12 +5,15 @@ import { stripMarkdown } from '../utils/downloadUtils';
 const LS = { jd: 'jas.ip.jd', rawResult: 'jas.ip.rawResult' };
 
 function parseQuestions(raw) {
+  if (!raw) return [];
+
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed;
   } catch {}
 
-  const blocks = raw.split(/\n(?=\d{1,2}[.)]\s)/).filter(Boolean);
+  // Split on lines that start with a number (1. or 1) or **1. etc.)
+  const blocks = raw.split(/\n(?=\*{0,2}\d{1,2}[.)]\s)/).filter(Boolean);
 
   if (blocks.length >= 4) {
     const questions = [];
@@ -19,12 +22,14 @@ function parseQuestions(raw) {
       if (lines.length === 0) continue;
 
       const questionText = lines[0]
-        .replace(/^\d{1,2}[.)]\s+/, '')
-        .replace(/^\*\*/, '').replace(/\*\*$/, '')
+        .replace(/^\*{1,2}/, '')           // leading **
+        .replace(/\*{1,2}$/, '')           // trailing **
+        .replace(/^\d{1,2}[.)]\s+/, '')    // leading number
+        .replace(/^\*{1,2}/, '')           // any ** after number removal
         .trim();
 
       const rest = lines.slice(1).join('\n')
-        .replace(/^\s*\*?\*?(answer framework|framework|how to answer|suggested approach|antwort-leitfaden|hinweis|tipps?)[:\s]*/i, '')
+        .replace(/^\s*\*{0,2}(answer framework|framework|how to answer|suggested approach|antwort-leitfaden|hinweis|tipps?)\*{0,2}[:\s]*/i, '')
         .trim();
 
       if (questionText) {
@@ -67,7 +72,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Adjustment failed');
-      onUpdate(stripMarkdown(data.result));
+      onUpdate(data.result);
       setInput('');
     } catch (err) {
       setError(err.message || 'Failed to apply adjustment. Please try again.');

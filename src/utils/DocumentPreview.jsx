@@ -29,7 +29,7 @@ const TEMPLATE_STYLES = {
     headerText: { fontSize: 11, fontWeight: 700, color: GREEN, marginBottom: 3, marginTop: 14 },
     headerLine: { height: 1.5, background: GREEN, marginBottom: 5 },
     headerColor: GREEN,
-    bullet: { text: '▸', color: GREEN },
+    bullet: { text: '•', color: GREEN },
     bodyColor: '#2a2a2a',
     divider: { height: 1, background: '#e0e0e0', margin: '5px 0 7px' },
   },
@@ -55,7 +55,7 @@ const TEMPLATE_STYLES = {
     headerText: { fontSize: 11, fontWeight: 700, color: '#111', marginBottom: 3, marginTop: 14, letterSpacing: 0.4 },
     headerLine: { height: 0.6, background: '#aaa', marginBottom: 5 },
     headerColor: '#111',
-    bullet: { text: '—', color: '#777' },
+    bullet: { text: '•', color: '#777' },
     bodyColor: '#2a2a2a',
     divider: { height: 1, background: '#ccc', margin: '5px 0 7px' },
   },
@@ -247,7 +247,7 @@ function TechPage({ lines }) {
             case 'bullet':
               return (
                 <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 2.5 }}>
-                  <span style={{ color: GREEN, flexShrink: 0, fontSize: 12, lineHeight: '16px' }}>▸</span>
+                  <span style={{ color: GREEN, flexShrink: 0, fontSize: 12, lineHeight: '16px' }}>•</span>
                   <span style={{ fontSize: 11 }}>{line.text}</span>
                 </div>
               )

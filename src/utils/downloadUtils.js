@@ -133,49 +133,58 @@ export function parseDocumentLines(text) {
   return result
 }
 
-function getOptimalFontSize(text) {
+function getScalingParams(text) {
   const lines = parseDocumentLines(text)
   let effective = 0
   const CPL = 90
 
   for (const l of lines) {
-    if (l.type === 'empty') { effective += 0.3; continue }
+    if (l.type === 'empty') { effective += 0.25; continue }
     if (l.type === 'divider') continue
-    if (l.type === 'name') { effective += 2.5; continue }
-    if (l.type === 'contact') { effective += 1.1; continue }
-    if (l.type === 'header') { effective += 2.0; continue }
+    if (l.type === 'name') { effective += 2.2; continue }
+    if (l.type === 'contact') { effective += 1.0; continue }
+    if (l.type === 'header') { effective += 1.8; continue }
     effective += Math.max(1, Math.ceil((l.text?.length || 0) / CPL))
   }
 
-  if (effective <= 53) return 10.5
-  if (effective <= 56) return 10.0
-  if (effective <= 60) return 9.5
-  if (effective <= 65) return 9.0
-  return 8.5
+  // Returns { bodySize, margins, lineHeight, headerSpacingBefore, headerSpacingAfter }
+  if (effective <= 50)  return { bodySize: 10.5, margins: [40,36,40,36], lineHeight: 1.28, hSpB: 8, hSpA: 3 }
+  if (effective <= 54)  return { bodySize: 10.0, margins: [40,34,40,34], lineHeight: 1.26, hSpB: 7, hSpA: 2 }
+  if (effective <= 58)  return { bodySize: 9.5,  margins: [38,32,38,32], lineHeight: 1.24, hSpB: 6, hSpA: 2 }
+  if (effective <= 63)  return { bodySize: 9.0,  margins: [36,28,36,28], lineHeight: 1.22, hSpB: 5, hSpA: 2 }
+  if (effective <= 69)  return { bodySize: 8.5,  margins: [34,24,34,24], lineHeight: 1.20, hSpB: 4, hSpA: 1 }
+  if (effective <= 76)  return { bodySize: 8.0,  margins: [32,20,32,20], lineHeight: 1.18, hSpB: 3, hSpA: 1 }
+  return                       { bodySize: 7.5,  margins: [30,18,30,18], lineHeight: 1.16, hSpB: 2, hSpA: 1 }
+}
+
+function getOptimalFontSize(text) {
+  return getScalingParams(text).bodySize
 }
 
 // ── Template-specific PDF builders ──────────────────────────────────────────
 
-function buildMinimalPDF(text, bodySize) {
+function buildMinimalPDF(text, sp) {
+  const { bodySize, margins, lineHeight, hSpB, hSpA } = sp
   const lines = parseDocumentLines(text)
   const content = []
   const nameSize = Math.round(bodySize + 7)
   const contactSize = bodySize - 1.5
   const headerSize = bodySize + 0.5
+  const pw = 515 - (40 - margins[0]) * 2
 
   for (const line of lines) {
     switch (line.type) {
       case 'empty':
-        content.push({ text: ' ', fontSize: bodySize * 0.5, margin: [0, 0, 0, 0] }); break
+        content.push({ text: ' ', fontSize: bodySize * 0.4, margin: [0, 0, 0, 0] }); break
       case 'divider':
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: 515, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 3] }); break
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: pw, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 2] }); break
       case 'name':
-        content.push({ text: line.text, fontSize: nameSize, bold: true, color: '#111111', margin: [0, 0, 0, 3] }); break
+        content.push({ text: line.text, fontSize: nameSize, bold: true, color: '#111111', margin: [0, 0, 0, 2] }); break
       case 'contact':
         content.push({ text: line.text, fontSize: contactSize, color: '#555555', margin: [0, 0, 0, 1] }); break
       case 'header':
-        content.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', margin: [0, 8, 0, 1] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.6, lineColor: '#888888' }], margin: [0, 0, 0, 3] }); break
+        content.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', margin: [0, hSpB, 0, 1] })
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 0.6, lineColor: '#888888' }], margin: [0, 0, 0, hSpA] }); break
       case 'bullet':
         content.push({ columns: [{ text: '•', width: 10, fontSize: bodySize, color: '#333333' }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [4, 1, 0, 1] }); break
       case 'body':
@@ -184,78 +193,82 @@ function buildMinimalPDF(text, bodySize) {
   }
 
   return {
-    pageSize: 'A4', pageMargins: [40, 36, 40, 36],
-    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.28 },
+    pageSize: 'A4', pageMargins: margins,
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content,
   }
 }
 
-function buildModernPDF(text, bodySize) {
+function buildModernPDF(text, sp) {
+  const { bodySize, margins, lineHeight, hSpB, hSpA } = sp
   const lines = parseDocumentLines(text)
   const content = []
   const nameSize = Math.round(bodySize + 7)
   const contactSize = bodySize - 1.5
   const headerSize = bodySize + 0.5
   const GREEN = '#1D9E75'
+  const pw = 515 - (40 - margins[0]) * 2
 
-  // Green top accent bar
-  content.push({ canvas: [{ type: 'rect', x: 0, y: 0, w: 515, h: 4, r: 0, color: GREEN }], margin: [0, 0, 0, 8] })
+  content.push({ canvas: [{ type: 'rect', x: 0, y: 0, w: pw, h: 4, r: 0, color: GREEN }], margin: [0, 0, 0, 6] })
 
   for (const line of lines) {
     switch (line.type) {
       case 'empty':
-        content.push({ text: ' ', fontSize: bodySize * 0.5, margin: [0, 0, 0, 0] }); break
+        content.push({ text: ' ', fontSize: bodySize * 0.4, margin: [0, 0, 0, 0] }); break
       case 'divider':
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: 515, y2: 1, lineWidth: 0.4, lineColor: '#dddddd' }], margin: [0, 2, 0, 3] }); break
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: pw, y2: 1, lineWidth: 0.4, lineColor: '#dddddd' }], margin: [0, 2, 0, 2] }); break
       case 'name':
-        content.push({ text: line.text, fontSize: nameSize, bold: true, color: '#111111', margin: [0, 0, 0, 3] }); break
+        content.push({ text: line.text, fontSize: nameSize, bold: true, color: '#111111', margin: [0, 0, 0, 2] }); break
       case 'contact':
         content.push({ text: line.text, fontSize: contactSize, color: '#666666', margin: [0, 0, 0, 1] }); break
       case 'header':
-        content.push({ text: line.text, fontSize: headerSize, bold: true, color: GREEN, margin: [0, 10, 0, 1] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.0, lineColor: GREEN }], margin: [0, 0, 0, 4] }); break
+        content.push({ text: line.text, fontSize: headerSize, bold: true, color: GREEN, margin: [0, hSpB, 0, 1] })
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 1.0, lineColor: GREEN }], margin: [0, 0, 0, hSpA] }); break
       case 'bullet':
-        content.push({ columns: [{ text: '▸', width: 12, fontSize: bodySize, color: GREEN }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [4, 1, 0, 1] }); break
+        content.push({ columns: [{ text: '•', width: 12, fontSize: bodySize, color: GREEN }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [4, 1, 0, 1] }); break
       case 'body':
         content.push({ text: line.text, fontSize: bodySize, color: '#2a2a2a', margin: [0, 1, 0, 1] }); break
     }
   }
 
   return {
-    pageSize: 'A4', pageMargins: [40, 36, 40, 36],
-    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.28 },
+    pageSize: 'A4', pageMargins: margins,
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content,
   }
 }
 
-function buildClassicPDF(text, bodySize) {
+function buildClassicPDF(text, sp) {
+  const { bodySize, margins, lineHeight, hSpB, hSpA } = sp
   const lines = parseDocumentLines(text)
   const content = []
   const nameSize = Math.round(bodySize + 8)
   const contactSize = bodySize - 1.5
   const headerSize = bodySize + 0.5
+  const pw = 515 - (40 - margins[0]) * 2
+  const hw = pw / 2
 
   for (const line of lines) {
     switch (line.type) {
       case 'empty':
-        content.push({ text: ' ', fontSize: bodySize * 0.5, margin: [0, 0, 0, 0] }); break
+        content.push({ text: ' ', fontSize: bodySize * 0.4, margin: [0, 0, 0, 0] }); break
       case 'divider':
         content.push({
           columns: [
-            { canvas: [{ type: 'line', x1: 0, y1: 1, x2: 240, y2: 1, lineWidth: 0.5, lineColor: '#999999' }] },
-            { canvas: [{ type: 'line', x1: 0, y1: 1, x2: 240, y2: 1, lineWidth: 0.5, lineColor: '#999999' }] },
+            { canvas: [{ type: 'line', x1: 0, y1: 1, x2: hw, y2: 1, lineWidth: 0.5, lineColor: '#999999' }] },
+            { canvas: [{ type: 'line', x1: 0, y1: 1, x2: hw, y2: 1, lineWidth: 0.5, lineColor: '#999999' }] },
           ],
-          margin: [0, 2, 0, 3],
+          margin: [0, 2, 0, 2],
         }); break
       case 'name':
         content.push({ text: line.text, fontSize: nameSize, bold: true, color: '#111111', alignment: 'center', margin: [0, 0, 0, 2] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.5, lineColor: '#333333' }], margin: [0, 0, 0, 1] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#333333' }], margin: [0, 2, 0, 3] }); break
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 1.5, lineColor: '#333333' }], margin: [0, 0, 0, 1] })
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 0.5, lineColor: '#333333' }], margin: [0, 2, 0, 2] }); break
       case 'contact':
         content.push({ text: line.text, fontSize: contactSize, color: '#555555', alignment: 'center', margin: [0, 0, 0, 1] }); break
       case 'header':
-        content.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', margin: [0, 10, 0, 2] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.8, lineColor: '#555555' }], margin: [0, 0, 0, 4] }); break
+        content.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', margin: [0, hSpB, 0, 1] })
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 0.8, lineColor: '#555555' }], margin: [0, 0, 0, hSpA] }); break
       case 'bullet':
         content.push({ columns: [{ text: '•', width: 10, fontSize: bodySize, color: '#333333' }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [8, 1, 0, 1] }); break
       case 'body':
@@ -264,126 +277,114 @@ function buildClassicPDF(text, bodySize) {
   }
 
   return {
-    pageSize: 'A4', pageMargins: [44, 38, 44, 38],
-    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.30 },
+    pageSize: 'A4', pageMargins: margins,
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content,
   }
 }
 
-function buildExecutivePDF(text, bodySize) {
+function buildExecutivePDF(text, sp) {
+  const { bodySize, margins, lineHeight, hSpB, hSpA } = sp
   const lines = parseDocumentLines(text)
   const content = []
   const nameSize = Math.round(bodySize + 8)
   const contactSize = bodySize - 1.5
   const headerSize = bodySize + 0.5
   const GREEN = '#1D9E75'
+  const pw = 515 - (40 - margins[0]) * 2
 
   for (const line of lines) {
     switch (line.type) {
       case 'empty':
-        content.push({ text: ' ', fontSize: bodySize * 0.5, margin: [0, 0, 0, 0] }); break
+        content.push({ text: ' ', fontSize: bodySize * 0.4, margin: [0, 0, 0, 0] }); break
       case 'divider':
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: 515, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 3] }); break
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: pw, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 2] }); break
       case 'name':
-        content.push({ text: line.text.toUpperCase(), fontSize: nameSize, bold: true, color: '#111111', letterSpacing: 2, margin: [0, 0, 0, 4] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.5, lineColor: GREEN }], margin: [0, 0, 0, 6] }); break
+        content.push({ text: line.text.toUpperCase(), fontSize: nameSize, bold: true, color: '#111111', letterSpacing: 2, margin: [0, 0, 0, 3] })
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 1.5, lineColor: GREEN }], margin: [0, 0, 0, 4] }); break
       case 'contact':
         content.push({ text: line.text, fontSize: contactSize, color: '#555555', margin: [0, 0, 0, 1] }); break
       case 'header':
-        content.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', characterSpacing: 0.5, margin: [0, 10, 0, 1] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.6, lineColor: '#aaaaaa' }], margin: [0, 0, 0, 4] }); break
+        content.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', characterSpacing: 0.5, margin: [0, hSpB, 0, 1] })
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 0.6, lineColor: '#aaaaaa' }], margin: [0, 0, 0, hSpA] }); break
       case 'bullet':
-        content.push({ columns: [{ text: '—', width: 12, fontSize: bodySize, color: '#666666' }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [4, 1, 0, 1] }); break
+        content.push({ columns: [{ text: '•', width: 12, fontSize: bodySize, color: '#666666' }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [4, 1, 0, 1] }); break
       case 'body':
         content.push({ text: line.text, fontSize: bodySize, color: '#2a2a2a', margin: [0, 1, 0, 1] }); break
     }
   }
 
   return {
-    pageSize: 'A4', pageMargins: [46, 40, 46, 40],
-    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.32 },
+    pageSize: 'A4', pageMargins: margins,
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content,
   }
 }
 
-function buildTechPDF(text, bodySize) {
-  text = text.replace(/^[-*]\s/gm, '• ')
+function buildTechPDF(text, sp) {
+  const { bodySize, margins, lineHeight, hSpB, hSpA } = sp
   const lines = parseDocumentLines(text)
   const GREEN = '#1D9E75'
-  const SIDEBAR_BG = '#1a1a1a'
   const nameSize = Math.round(bodySize + 6)
   const contactSize = bodySize - 2
   const headerSize = bodySize + 0.5
+  const pw = 515 - (40 - margins[0]) * 2
 
-  const leftLines = []
-  const rightLines = []
-  let inSkills = false
+  const content = []
 
+  // Dark header band: name + contact on dark background
+  const headerBand = []
   for (const line of lines) {
-    if (line.type === 'name' || line.type === 'contact') {
-      leftLines.push(line)
-    } else if (line.type === 'header' && (line.text === 'SKILLS' || line.text === 'CORE COMPETENCIES' || line.text === 'TECHNICAL SKILLS')) {
-      inSkills = true
-      leftLines.push(line)
-    } else if (inSkills && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
-      leftLines.push(line)
-    } else {
-      inSkills = false
-      rightLines.push(line)
+    if (line.type === 'name') {
+      headerBand.push({ text: line.text, fontSize: nameSize, bold: true, color: '#ffffff', margin: [0, 0, 0, 2] })
+    } else if (line.type === 'contact') {
+      headerBand.push({ text: line.text, fontSize: contactSize, color: '#aaaaaa', margin: [0, 0, 0, 1] })
     }
   }
-
-  const leftContent = []
-  for (const line of leftLines) {
-    switch (line.type) {
-      case 'name':
-        leftContent.push({ text: line.text, fontSize: nameSize - 2, bold: true, color: '#ffffff', margin: [0, 0, 0, 4] }); break
-      case 'contact':
-        leftContent.push({ text: line.text, fontSize: contactSize, color: '#aaaaaa', margin: [0, 0, 0, 2] }); break
-      case 'header':
-        leftContent.push({ text: line.text, fontSize: bodySize - 0.5, bold: true, color: GREEN, margin: [0, 10, 0, 3] })
-        leftContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 135, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, 4] }); break
-      case 'bullet':
-        leftContent.push({ text: '• ' + line.text, fontSize: bodySize - 1, color: '#cccccc', margin: [0, 1, 0, 1] }); break
-      case 'body':
-        leftContent.push({ text: line.text, fontSize: bodySize - 1, color: '#cccccc', margin: [0, 1, 0, 1] }); break
-      case 'empty':
-        leftContent.push({ text: ' ', fontSize: bodySize * 0.4, margin: [0, 0, 0, 0] }); break
-    }
+  if (headerBand.length) {
+    content.push({
+      table: { widths: [pw], body: [[{ stack: headerBand, fillColor: '#1a1a1a', margin: [10, 10, 10, 10] }]] },
+      layout: 'noBorders',
+      margin: [0, 0, 0, 8],
+    })
   }
 
-  const rightContent = []
-  for (const line of rightLines) {
+  // Green accent line
+  content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 2, lineColor: GREEN }], margin: [0, 0, 0, hSpB || 6] })
+
+  // Body content
+  for (const line of lines) {
+    if (line.type === 'name' || line.type === 'contact') continue
     switch (line.type) {
       case 'empty':
-        rightContent.push({ text: ' ', fontSize: bodySize * 0.5, margin: [0, 0, 0, 0] }); break
+        content.push({ text: ' ', fontSize: bodySize * 0.4, margin: [0, 0, 0, 0] }); break
       case 'divider':
-        rightContent.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: 355, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 3] }); break
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: pw, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 2] }); break
       case 'header':
-        rightContent.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', margin: [0, 8, 0, 1] })
-        rightContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 355, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, 3] }); break
+        content.push({ text: line.text, fontSize: headerSize, bold: true, color: GREEN, margin: [0, hSpB, 0, 1] })
+        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, hSpA] }); break
       case 'bullet':
-        rightContent.push({ columns: [{ text: '▸', width: 10, fontSize: bodySize, color: GREEN }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [2, 1, 0, 1] }); break
+        content.push({ columns: [{ text: '•', width: 10, fontSize: bodySize, color: GREEN }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [4, 1, 0, 1] }); break
       case 'body':
-        rightContent.push({ text: line.text, fontSize: bodySize, color: '#2a2a2a', margin: [0, 1, 0, 1] }); break
+        content.push({ text: line.text, fontSize: bodySize, color: '#2a2a2a', margin: [0, 1, 0, 1] }); break
     }
   }
 
   return {
     pageSize: 'A4',
-    pageMargins: [40, 36, 40, 36],
-    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.28 },
-    content: [...leftContent, ...rightContent],
+    pageMargins: margins,
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
+    content,
   }
 }
 
-function buildPDFDocDef(text, bodySize, template) {
+function buildPDFDocDef(text, sp, template) {
   switch (template) {
-    case 'modern':    return buildModernPDF(text, bodySize)
-    case 'classic':   return buildClassicPDF(text, bodySize)
-    case 'executive': return buildExecutivePDF(text, bodySize)
-    case 'tech':      return buildTechPDF(text, bodySize)
-    default:          return buildMinimalPDF(text, bodySize)
+    case 'modern':    return buildModernPDF(text, sp)
+    case 'classic':   return buildClassicPDF(text, sp)
+    case 'executive': return buildExecutivePDF(text, sp)
+    case 'tech':      return buildTechPDF(text, sp)
+    default:          return buildMinimalPDF(text, sp)
   }
 }
 
@@ -486,10 +487,10 @@ function buildCoverLetterPDFDocDef(text, bodySize, template = 'minimal') {
 export async function downloadAsPDF(text, filename, template = 'minimal', isLetter = false) {
   const cleanText = stripMarkdown(text)
   const pdfMake = await loadPdfMake()
-  const bodySize = isLetter ? 11 : getOptimalFontSize(cleanText)
+  const sp = isLetter ? { bodySize: 11, margins: [60,50,60,50], lineHeight: 1.6, hSpB: 0, hSpA: 0 } : getScalingParams(cleanText)
   const docDef = isLetter
-    ? buildCoverLetterPDFDocDef(cleanText, bodySize, template)
-    : buildPDFDocDef(cleanText, bodySize, template)
+    ? buildCoverLetterPDFDocDef(cleanText, sp.bodySize, template)
+    : buildPDFDocDef(cleanText, sp, template)
 
   // pdfmake 0.3.x: getBlob() returns a Promise, not a callback
   const pdf = pdfMake.createPdf(docDef)
@@ -674,7 +675,7 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
         }
         case 'bullet':
           children.push(new Paragraph({
-            children: [new TextRun({ text: (template === 'executive' ? '—  ' : '•  ') + line.text, size: bodyHalfPt, font: 'Calibri', color: textColor })],
+            children: [new TextRun({ text: '•  ' + line.text, size: bodyHalfPt, font: 'Calibri', color: textColor })],
             indent: { left: 280 },
             spacing: { after: 40 },
           })); break

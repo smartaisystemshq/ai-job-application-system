@@ -29,10 +29,21 @@ module.exports = async function handler(req, res) {
 - For cover letter: preserve the exact business letter structure from the current document (sender header block at top, date, greeting, body paragraphs, closing). Use blank lines between each section. Flowing prose only — no bullets or markdown headers.`
     } else if (documentType === 'interview-questions') {
       typeLabel = 'interview preparation document'
-      formatInstructions = `IMPORTANT — PLAIN TEXT FORMATTING:
-- Return PLAIN TEXT ONLY — no markdown symbols (no **, *, #, ##, __, _)
-- Preserve the numbered question format: each question starts with its number and period, followed by the question text, then a blank line, then the answer framework
-- Maintain the same structure and number of questions unless the request explicitly changes it`
+      formatInstructions = `IMPORTANT — OUTPUT FORMAT (follow exactly):
+- Return PLAIN TEXT ONLY — absolutely no markdown symbols (no **, *, #, ##, __, _)
+- Output exactly 8 questions using this format for each:
+
+1. [Question text here]
+Answer Framework: [Framework text here]
+
+2. [Question text here]
+Answer Framework: [Framework text here]
+
+(continue for all 8 questions)
+
+- Each question MUST start on a new line with its number followed by a period and a space (e.g. "1. ")
+- Do NOT use bold, headers, bullets, or any other formatting
+- Keep exactly 8 questions unless the request explicitly asks for a different number`
     } else {
       typeLabel = 'CV'
       formatInstructions = `IMPORTANT — PLAIN TEXT FORMATTING:
