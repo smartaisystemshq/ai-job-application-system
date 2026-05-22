@@ -321,90 +321,111 @@ function buildExecutivePDF(text, sp) {
   }
 }
 
-function buildTechPDF(text, sp) {
-  const { bodySize, margins, lineHeight, hSpB, hSpA } = sp
+const SHARP_SKILLS_RE = /^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES)$/
+
+function buildSharpPDF(text, sp) {
+  const { bodySize, lineHeight, hSpB, hSpA } = sp
   const lines = parseDocumentLines(text)
   const GREEN = '#1D9E75'
   const DARK = '#1a1a1a'
-  const nameSize = Math.round(bodySize + 7)
+  const nameSize = Math.round(bodySize + 5)
   const contactSize = bodySize - 1.5
   const headerSize = bodySize + 0.5
-  const pw = 515 - (40 - margins[0]) * 2
 
-  const content = []
+  // Fixed tight margins for two-column layout
+  const pageMargins = [20, 20, 20, 20]
+  const totalW = 555          // 595 - 40
+  const leftW = Math.round(totalW * 0.25)   // 139
+  const rightW = totalW - leftW              // 416
 
-  // Dark full-width header band: name + contact in white
-  const headerStack = []
-  for (const line of lines) {
-    if (line.type === 'name') {
-      headerStack.push({ text: line.text, fontSize: nameSize, bold: true, color: '#ffffff', margin: [0, 0, 0, 4] })
-    } else if (line.type === 'contact') {
-      headerStack.push({ text: line.text, fontSize: contactSize, color: '#aaaaaa', margin: [0, 0, 0, 2] })
-    }
-  }
-  if (headerStack.length) {
-    content.push({
-      table: { widths: [pw], body: [[{ stack: headerStack, fillColor: DARK, margin: [14, 14, 14, 12] }]] },
-      layout: 'noBorders',
-      margin: [0, 0, 0, 0],
-    })
-  }
-
-  // Thin green accent line
-  content.push({ canvas: [{ type: 'rect', x: 0, y: 0, w: pw, h: 2, r: 0, color: GREEN }], margin: [0, 0, 0, hSpB || 6] })
-
-  // Body content — skills collected inline as comma-separated text
+  // Split: sidebar = name, contact, skills; main = everything else
+  const sideLines = []
+  const mainLines = []
   let inSkills = false
-  const skillsBullets = []
-
-  const flushSkills = () => {
-    if (skillsBullets.length > 0) {
-      content.push({ text: skillsBullets.join('  •  '), fontSize: bodySize, color: '#333333', margin: [0, 1, 0, hSpB || 4] })
-      skillsBullets.length = 0
-    }
-    inSkills = false
-  }
 
   for (const line of lines) {
-    if (line.type === 'name' || line.type === 'contact') continue
-
-    // Leaving skills section: flush before handling the new header
-    if (inSkills && line.type === 'header' &&
-        !/^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES)$/.test(line.text)) {
-      flushSkills()
+    if (line.type === 'name' || line.type === 'contact') {
+      sideLines.push(line)
+    } else if (line.type === 'header' && SHARP_SKILLS_RE.test(line.text)) {
+      inSkills = true
+      sideLines.push(line)
+    } else if (inSkills && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
+      sideLines.push(line)
+    } else {
+      inSkills = false
+      mainLines.push(line)
     }
+  }
 
-    // Collect skills content
-    if (inSkills && (line.type === 'bullet' || line.type === 'body')) {
-      skillsBullets.push(line.text)
-      continue
+  // Left (sidebar) stack
+  const sideInnerW = leftW - 16
+  const sideStack = []
+  for (const line of sideLines) {
+    switch (line.type) {
+      case 'name':
+        sideStack.push({ text: line.text, fontSize: nameSize, bold: true, color: '#ffffff', margin: [0, 0, 0, 3] })
+        sideStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: sideInnerW, y2: 0, lineWidth: 1, lineColor: GREEN }], margin: [0, 0, 0, 5] })
+        break
+      case 'contact':
+        sideStack.push({ text: line.text, fontSize: contactSize, color: '#aaaaaa', margin: [0, 0, 0, 2] })
+        break
+      case 'header':
+        sideStack.push({ text: line.text, fontSize: bodySize, bold: true, color: '#ffffff', margin: [0, hSpB || 6, 0, 2] })
+        sideStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: sideInnerW, y2: 0, lineWidth: 0.6, lineColor: GREEN }], margin: [0, 0, 0, hSpA || 2] })
+        break
+      case 'bullet':
+        sideStack.push({ text: '• ' + line.text, fontSize: bodySize - 0.5, color: '#cccccc', margin: [0, 1, 0, 1] })
+        break
+      case 'body':
+        sideStack.push({ text: line.text, fontSize: bodySize - 0.5, color: '#cccccc', margin: [0, 1, 0, 1] })
+        break
+      case 'empty':
+        sideStack.push({ text: ' ', fontSize: bodySize * 0.3, margin: [0, 0, 0, 0] })
+        break
     }
-    if (inSkills && line.type === 'empty') continue
+  }
+  if (sideStack.length === 0) sideStack.push({ text: '' })
 
+  // Right (main) stack
+  const mainInnerW = rightW - 18
+  const mainStack = []
+  for (const line of mainLines) {
     switch (line.type) {
       case 'empty':
-        content.push({ text: ' ', fontSize: bodySize * 0.4, margin: [0, 0, 0, 0] }); break
-      case 'divider':
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: pw, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 2] }); break
-      case 'header': {
-        if (/^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES)$/.test(line.text)) inSkills = true
-        content.push({ text: line.text, fontSize: headerSize, bold: true, color: GREEN, margin: [0, hSpB, 0, 1] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, hSpA] })
+        mainStack.push({ text: ' ', fontSize: bodySize * 0.4, margin: [0, 0, 0, 0] })
         break
-      }
+      case 'divider':
+        mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: mainInnerW, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 2] })
+        break
+      case 'header':
+        // Monochrome: dark bold text with thin green underline
+        mainStack.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', margin: [0, hSpB || 6, 0, 1] })
+        mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: mainInnerW, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, hSpA || 2] })
+        break
       case 'bullet':
-        content.push({ columns: [{ text: '•', width: 10, fontSize: bodySize, color: GREEN }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [4, 1, 0, 1] }); break
+        mainStack.push({ columns: [{ text: '•', width: 10, fontSize: bodySize, color: '#444444' }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [4, 1, 0, 1] })
+        break
       case 'body':
-        content.push({ text: line.text, fontSize: bodySize, color: '#2a2a2a', margin: [0, 1, 0, 1] }); break
+        mainStack.push({ text: line.text, fontSize: bodySize, color: '#2a2a2a', margin: [0, 1, 0, 1] })
+        break
     }
   }
-  if (inSkills) flushSkills()
+  if (mainStack.length === 0) mainStack.push({ text: '' })
 
   return {
     pageSize: 'A4',
-    pageMargins: margins,
+    pageMargins,
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
-    content,
+    content: [{
+      table: {
+        widths: [leftW, rightW],
+        body: [[
+          { stack: sideStack, fillColor: DARK, margin: [8, 10, 8, 10] },
+          { stack: mainStack, margin: [10, 10, 8, 10] },
+        ]],
+      },
+      layout: 'noBorders',
+    }],
   }
 }
 
@@ -413,7 +434,7 @@ function buildPDFDocDef(text, sp, template) {
     case 'modern':    return buildModernPDF(text, sp)
     case 'classic':   return buildClassicPDF(text, sp)
     case 'executive': return buildExecutivePDF(text, sp)
-    case 'tech':      return buildTechPDF(text, sp)
+    case 'sharp':     return buildSharpPDF(text, sp)
     default:          return buildMinimalPDF(text, sp)
   }
 }
@@ -435,7 +456,7 @@ function buildCoverLetterPDFDocDef(text, bodySize, template = 'minimal') {
   const headerSize = bodySize + 1
   const smallSize = bodySize - 1
   const GREEN = '#1D9E75'
-  const isModern = template === 'modern' || template === 'tech'
+  const isModern = template === 'modern' || template === 'sharp'
   const isClassic = template === 'classic'
   const isExecutive = template === 'executive'
 
@@ -560,7 +581,7 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
     if (cur.length) blocks.push(cur)
 
     const GREEN_WORD = '1D9E75'
-    const isModern = template === 'modern' || template === 'tech'
+    const isModern = template === 'modern' || template === 'sharp'
     const isClassic = template === 'classic'
     const isExecutive = template === 'executive'
     const letterFont = isClassic ? 'Georgia' : 'Calibri'
@@ -695,8 +716,8 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
             spacing: { before: 60, after: 60 },
           })); break
         case 'header': {
-          const headerColor = isDarkBg ? accentColor : (template === 'modern' ? GREEN : headingColor)
-          const borderColor = isDarkBg ? accentColor : (template === 'modern' ? GREEN : '888888')
+          const headerColor = isDarkBg ? (template === 'sharp' ? 'ffffff' : accentColor) : (template === 'modern' ? GREEN : headingColor)
+          const borderColor = isDarkBg ? accentColor : ((template === 'modern' || template === 'sharp') ? GREEN : '888888')
           children.push(new Paragraph({
             children: [new TextRun({ text: line.text, bold: true, size: headerHalfPt, font: 'Calibri', color: headerColor })],
             border: { bottom: { style: BorderStyle.SINGLE, size: (template === 'modern' || isDarkBg) ? 10 : 6, color: borderColor, space: 1 } },
@@ -723,7 +744,7 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
 
   let sections
 
-  if (template === 'tech') {
+  if (template === 'sharp') {
     const leftLines = []
     const rightLines = []
     let inSkills = false
@@ -731,7 +752,7 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
     for (const line of lines) {
       if (line.type === 'name' || line.type === 'contact') {
         leftLines.push(line)
-      } else if (line.type === 'header' && (line.text === 'SKILLS' || line.text === 'CORE COMPETENCIES' || line.text === 'TECHNICAL SKILLS')) {
+      } else if (line.type === 'header' && SHARP_SKILLS_RE.test(line.text)) {
         inSkills = true
         leftLines.push(line)
       } else if (inSkills && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {

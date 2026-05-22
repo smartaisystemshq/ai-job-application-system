@@ -147,9 +147,11 @@ function StandardPage({ lines, template }) {
   )
 }
 
-// ── Two-column tech page ───────────────────────────────────────────────────────
+// ── Two-column sharp page ─────────────────────────────────────────────────────
 
-function TechPage({ lines }) {
+const SHARP_SKILLS_RE = /^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES)$/
+
+function SharpPage({ lines }) {
   const leftLines = []
   const rightLines = []
   let inSkills = false
@@ -157,10 +159,7 @@ function TechPage({ lines }) {
   for (const line of lines) {
     if (line.type === 'name' || line.type === 'contact') {
       leftLines.push(line)
-    } else if (
-      line.type === 'header' &&
-      (line.text === 'SKILLS' || line.text === 'CORE COMPETENCIES' || line.text === 'TECHNICAL SKILLS')
-    ) {
+    } else if (line.type === 'header' && SHARP_SKILLS_RE.test(line.text)) {
       inSkills = true
       leftLines.push(line)
     } else if (inSkills && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
@@ -180,11 +179,11 @@ function TechPage({ lines }) {
       borderRadius: 2,
       overflow: 'hidden',
     }}>
-      {/* Dark sidebar */}
+      {/* Dark sidebar — 25% */}
       <div style={{
         background: SIDEBAR_DARK,
-        width: '36%',
-        padding: '24px 16px',
+        width: '25%',
+        padding: '24px 14px',
         fontFamily: "'Inter', sans-serif",
         flexShrink: 0,
       }}>
@@ -193,30 +192,30 @@ function TechPage({ lines }) {
             case 'name':
               return (
                 <div key={i}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 4, lineHeight: 1.2 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 4, lineHeight: 1.2 }}>
                     {line.text}
                   </div>
                   <div style={{ height: 1.5, background: GREEN, marginBottom: 10 }} />
                 </div>
               )
             case 'contact':
-              return <div key={i} style={{ fontSize: 9, color: '#aaa', marginBottom: 2, lineHeight: 1.4 }}>{line.text}</div>
+              return <div key={i} style={{ fontSize: 8.5, color: '#aaa', marginBottom: 2, lineHeight: 1.4 }}>{line.text}</div>
             case 'header':
               return (
                 <div key={i} style={{ marginTop: 12, marginBottom: 5 }}>
-                  <div style={{ fontSize: 9.5, fontWeight: 700, color: GREEN, marginBottom: 2, letterSpacing: 0.3 }}>{line.text}</div>
-                  <div style={{ height: 0.8, background: GREEN, opacity: 0.5, marginBottom: 5 }} />
+                  <div style={{ fontSize: 9, fontWeight: 700, color: '#ffffff', marginBottom: 2, letterSpacing: 0.3 }}>{line.text}</div>
+                  <div style={{ height: 0.8, background: GREEN, marginBottom: 5 }} />
                 </div>
               )
             case 'bullet':
               return (
                 <div key={i} style={{ display: 'flex', gap: 5, marginBottom: 2 }}>
-                  <span style={{ color: GREEN, fontSize: 10, flexShrink: 0 }}>•</span>
-                  <span style={{ fontSize: 9.5, color: '#ccc', lineHeight: 1.4 }}>{line.text}</span>
+                  <span style={{ color: '#aaa', fontSize: 9, flexShrink: 0 }}>•</span>
+                  <span style={{ fontSize: 9, color: '#ccc', lineHeight: 1.4 }}>{line.text}</span>
                 </div>
               )
             case 'body':
-              return <div key={i} style={{ fontSize: 9.5, color: '#ccc', marginBottom: 2, lineHeight: 1.4 }}>{line.text}</div>
+              return <div key={i} style={{ fontSize: 9, color: '#ccc', marginBottom: 2, lineHeight: 1.4 }}>{line.text}</div>
             case 'empty':
               return <div key={i} style={{ height: 4 }} />
             default:
@@ -225,7 +224,7 @@ function TechPage({ lines }) {
         })}
       </div>
 
-      {/* White main content */}
+      {/* White main content — 75% */}
       <div style={{
         background: '#fff',
         flex: 1,
@@ -247,7 +246,7 @@ function TechPage({ lines }) {
             case 'bullet':
               return (
                 <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 2.5 }}>
-                  <span style={{ color: GREEN, flexShrink: 0, fontSize: 12, lineHeight: '16px' }}>•</span>
+                  <span style={{ color: '#555', flexShrink: 0, fontSize: 12, lineHeight: '16px' }}>•</span>
                   <span style={{ fontSize: 11 }}>{line.text}</span>
                 </div>
               )
@@ -281,7 +280,7 @@ function LetterPage({ text, template = 'minimal' }) {
 
   if (!blocks.length) return null
 
-  const isModern = template === 'modern' || template === 'tech'
+  const isModern = template === 'modern' || template === 'sharp'
   const isClassic = template === 'classic'
   const isExecutive = template === 'executive'
   const fontFamily = isClassic
@@ -392,8 +391,8 @@ export default function DocumentPreview({ text, template = 'minimal', maxHeight 
     }}>
       {type === 'letter'
         ? <LetterPage text={text} template={template} />
-        : template === 'tech'
-          ? <TechPage lines={lines} />
+        : template === 'sharp'
+          ? <SharpPage lines={lines} />
           : <StandardPage lines={lines} template={template} />
       }
     </div>

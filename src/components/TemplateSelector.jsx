@@ -97,29 +97,29 @@ function TemplatePreviewExecutive() {
   )
 }
 
-function TemplatePreviewTech() {
+function TemplatePreviewSharp() {
   const G = '#1D9E75'
   const DARK = '#1a1a1a'
   return (
     <div style={{ height: 88, overflow: 'hidden', borderRadius: 6, display: 'flex' }}>
-      <div style={{ background: DARK, width: '28%', padding: '10px 9px', flexShrink: 0 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', marginBottom: 3 }}>JOHN SMITH</div>
-        <div style={{ height: 1, background: G, marginBottom: 5 }} />
-        <div style={{ fontSize: 7, color: '#aaa', marginBottom: 4 }}>john@email.com</div>
-        <div style={{ fontSize: 8, fontWeight: 700, color: G, marginBottom: 2 }}>SKILLS</div>
-        <div style={{ height: 0.5, background: G, opacity: 0.5, marginBottom: 3 }} />
-        {['Python, TypeScript', 'AWS, Docker', 'PostgreSQL', 'Agile / TDD'].map((s, i) => (
-          <div key={i} style={{ fontSize: 7, color: '#ccc', marginBottom: 2 }}>• {s}</div>
+      <div style={{ background: DARK, width: '25%', padding: '10px 8px', flexShrink: 0 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: '#fff', marginBottom: 2 }}>JOHN SMITH</div>
+        <div style={{ height: 1, background: G, marginBottom: 4 }} />
+        <div style={{ fontSize: 6.5, color: '#aaa', marginBottom: 4 }}>john@email.com</div>
+        <div style={{ fontSize: 7.5, fontWeight: 700, color: '#fff', marginBottom: 1 }}>SKILLS</div>
+        <div style={{ height: 0.5, background: G, marginBottom: 3 }} />
+        {['Python, TypeScript', 'AWS, Docker', 'React'].map((s, i) => (
+          <div key={i} style={{ fontSize: 6.5, color: '#ccc', marginBottom: 2 }}>• {s}</div>
         ))}
       </div>
       <div style={{ background: '#fff', flex: 1, padding: '10px 8px' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: '#111', marginBottom: 3 }}>WORK EXPERIENCE</div>
-        <div style={{ height: 0.8, background: G, marginBottom: 5 }} />
-        <div style={{ fontSize: 7.5, color: '#333', marginBottom: 4 }}>Senior Engineer | FinTech | 2021–2023</div>
-        {['Built fraud detection saving £800K/yr', 'Led 5 engineers across 3 services'].map((t, i) => (
-          <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 3 }}>
-            <span style={{ color: G, fontSize: 8, flexShrink: 0 }}>▸</span>
-            <span style={{ fontSize: 7.5, color: '#333' }}>{t}</span>
+        <div style={{ fontSize: 9.5, fontWeight: 700, color: '#111', marginBottom: 1 }}>WORK EXPERIENCE</div>
+        <div style={{ height: 0.8, background: G, marginBottom: 4 }} />
+        <div style={{ fontSize: 7, color: '#333', marginBottom: 3 }}>Senior Engineer | FinTech | 2021–2023</div>
+        {['Built fraud detection saving £800K/yr', 'Led 5 engineers'].map((t, i) => (
+          <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 2.5 }}>
+            <span style={{ color: '#555', fontSize: 7, flexShrink: 0 }}>•</span>
+            <span style={{ fontSize: 7, color: '#333' }}>{t}</span>
           </div>
         ))}
       </div>
@@ -132,7 +132,7 @@ export const TEMPLATES = [
   { id: 'modern',    name: 'Modern',    description: 'Green accents · bold dividers · contemporary',       Preview: TemplatePreviewModern  },
   { id: 'classic',   name: 'Classic',   description: 'Centred name · serif feel · universally accepted',  Preview: TemplatePreviewClassic },
   { id: 'executive', name: 'Executive', description: 'Uppercase name · premium spacing · senior roles',   Preview: TemplatePreviewExecutive },
-  { id: 'tech',      name: 'Tech',      description: 'Dark sidebar for skills · white panel for XP',      Preview: TemplatePreviewTech    },
+  { id: 'sharp',     name: 'Sharp',     description: 'Dark sidebar · monochrome headers · corporate',     Preview: TemplatePreviewSharp   },
 ]
 
 export function TemplateSelector({ selectedTemplate, onSelect, className = '' }) {
