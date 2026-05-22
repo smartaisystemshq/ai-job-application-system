@@ -10,37 +10,20 @@ export default function WaveBackground() {
     let animId;
     let t = 0;
 
-    // Particle wave layers — back to front
-    // Same yRatio/amp/freq/speed as original; dots replace lines
-    const layers = [
-      // Layer 4 — deepest, barely visible
-      { yRatio: 0.10, amp: 10, freq: 0.0028, speed: 0.004, color: '2,20,9',    opacity: 0.35, radius: 0.7, spacing: 32, pulseSpd: 0.007, pulseAmt: 0.12 },
-      { yRatio: 0.30, amp: 12, freq: 0.0022, speed: 0.003, color: '2,20,9',    opacity: 0.35, radius: 0.7, spacing: 32, pulseSpd: 0.006, pulseAmt: 0.12 },
-      { yRatio: 0.52, amp: 14, freq: 0.0030, speed: 0.004, color: '2,20,9',    opacity: 0.35, radius: 0.7, spacing: 32, pulseSpd: 0.008, pulseAmt: 0.12 },
-      { yRatio: 0.72, amp: 10, freq: 0.0025, speed: 0.003, color: '2,20,9',    opacity: 0.35, radius: 0.7, spacing: 32, pulseSpd: 0.007, pulseAmt: 0.12 },
-      { yRatio: 0.90, amp: 12, freq: 0.0032, speed: 0.004, color: '2,20,9',    opacity: 0.35, radius: 0.7, spacing: 32, pulseSpd: 0.009, pulseAmt: 0.12 },
-
-      // Layer 3 — back, dark green
-      { yRatio: 0.08, amp: 16, freq: 0.0038, speed: 0.008, color: '5,46,28',   opacity: 0.50, radius: 1.1, spacing: 24, pulseSpd: 0.011, pulseAmt: 0.18 },
-      { yRatio: 0.22, amp: 22, freq: 0.0052, speed: 0.009, color: '5,46,28',   opacity: 0.50, radius: 1.1, spacing: 24, pulseSpd: 0.010, pulseAmt: 0.18 },
-      { yRatio: 0.38, amp: 18, freq: 0.0034, speed: 0.007, color: '5,46,28',   opacity: 0.50, radius: 1.1, spacing: 24, pulseSpd: 0.013, pulseAmt: 0.18 },
-      { yRatio: 0.55, amp: 26, freq: 0.0044, speed: 0.009, color: '5,46,28',   opacity: 0.50, radius: 1.1, spacing: 24, pulseSpd: 0.011, pulseAmt: 0.18 },
-      { yRatio: 0.72, amp: 20, freq: 0.0060, speed: 0.008, color: '5,46,28',   opacity: 0.50, radius: 1.1, spacing: 24, pulseSpd: 0.014, pulseAmt: 0.18 },
-      { yRatio: 0.88, amp: 24, freq: 0.0042, speed: 0.010, color: '5,46,28',   opacity: 0.50, radius: 1.1, spacing: 24, pulseSpd: 0.012, pulseAmt: 0.18 },
-
+    // 4 depth layers — back to front
+    // Each layer generates many closely-spaced wave lines for dense coverage
+    // n = line count, amp = wave amplitude (px), freq = spatial freq,
+    // speed = animation speed, op = opacity, lw = line width,
+    // ps = per-line phase spread (radians) for visual variety
+    const groups = [
+      // Layer 4 — deepest, barely visible, very slow
+      { rgb: '2,20,9',      n: 50, amp: 20, freq: 0.0020, speed: 0.003, op: 0.055, lw: 0.35, ps: 0.9 },
+      // Layer 3 — back, dark green, slow
+      { rgb: '5,46,28',     n: 55, amp: 30, freq: 0.0030, speed: 0.008, op: 0.095, lw: 0.65, ps: 1.3 },
       // Layer 2 — mid green
-      { yRatio: 0.14, amp: 32, freq: 0.0058, speed: 0.020, color: '10,102,64', opacity: 0.65, radius: 1.6, spacing: 18, pulseSpd: 0.018, pulseAmt: 0.22 },
-      { yRatio: 0.30, amp: 24, freq: 0.0040, speed: 0.024, color: '10,102,64', opacity: 0.65, radius: 1.6, spacing: 18, pulseSpd: 0.020, pulseAmt: 0.22 },
-      { yRatio: 0.47, amp: 38, freq: 0.0048, speed: 0.018, color: '10,102,64', opacity: 0.65, radius: 1.6, spacing: 18, pulseSpd: 0.016, pulseAmt: 0.22 },
-      { yRatio: 0.63, amp: 28, freq: 0.0066, speed: 0.022, color: '10,102,64', opacity: 0.65, radius: 1.6, spacing: 18, pulseSpd: 0.022, pulseAmt: 0.22 },
-      { yRatio: 0.79, amp: 34, freq: 0.0044, speed: 0.020, color: '10,102,64', opacity: 0.65, radius: 1.6, spacing: 18, pulseSpd: 0.019, pulseAmt: 0.22 },
-
-      // Layer 1 — front, brightest, fastest
-      { yRatio: 0.06, amp: 42, freq: 0.0062, speed: 0.034, color: '29,158,117', opacity: 0.88, radius: 2.2, spacing: 14, pulseSpd: 0.028, pulseAmt: 0.28 },
-      { yRatio: 0.26, amp: 30, freq: 0.0046, speed: 0.038, color: '29,158,117', opacity: 0.88, radius: 2.2, spacing: 14, pulseSpd: 0.032, pulseAmt: 0.28 },
-      { yRatio: 0.44, amp: 48, freq: 0.0054, speed: 0.032, color: '29,158,117', opacity: 0.88, radius: 2.2, spacing: 14, pulseSpd: 0.026, pulseAmt: 0.28 },
-      { yRatio: 0.62, amp: 36, freq: 0.0040, speed: 0.036, color: '29,158,117', opacity: 0.88, radius: 2.2, spacing: 14, pulseSpd: 0.030, pulseAmt: 0.28 },
-      { yRatio: 0.82, amp: 44, freq: 0.0050, speed: 0.030, color: '29,158,117', opacity: 0.88, radius: 2.2, spacing: 14, pulseSpd: 0.025, pulseAmt: 0.28 },
+      { rgb: '10,102,64',   n: 45, amp: 44, freq: 0.0042, speed: 0.019, op: 0.155, lw: 1.25, ps: 2.1 },
+      // Layer 1 — front, bright green, fastest
+      { rgb: '29,158,117',  n: 40, amp: 56, freq: 0.0055, speed: 0.032, op: 0.285, lw: 2.1,  ps: 3.2 },
     ];
 
     const resize = () => {
@@ -52,23 +35,25 @@ export default function WaveBackground() {
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const W = canvas.width;
+      const H = canvas.height;
 
-      for (const layer of layers) {
-        const count = Math.ceil(canvas.width / layer.spacing) + 1;
-        for (let i = 0; i < count; i++) {
-          const x = i * layer.spacing;
-          const y = canvas.height * layer.yRatio +
-            Math.sin(x * layer.freq + t * layer.speed) * layer.amp;
+      for (const g of groups) {
+        ctx.lineWidth = g.lw;
+        ctx.strokeStyle = `rgba(${g.rgb},${g.op})`;
 
-          // Per-particle phase offset makes pulsing feel organic
-          const pulse = 1 + layer.pulseAmt * Math.sin(t * layer.pulseSpd + i * 0.7);
-          const r = layer.radius * pulse;
-          const op = layer.opacity * (0.75 + 0.25 * pulse);
+        for (let i = 0; i < g.n; i++) {
+          // Distribute lines evenly across full screen height
+          const yBase = H * (i / (g.n - 1));
+          // Each line gets a distinct phase so they look like independent waves
+          const phase = i * g.ps;
 
           ctx.beginPath();
-          ctx.arc(x, y, r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${layer.color},${op})`;
-          ctx.fill();
+          for (let x = 0; x <= W; x += 4) {
+            const y = yBase + Math.sin(x * g.freq + t * g.speed + phase) * g.amp;
+            x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.stroke();
         }
       }
 
