@@ -102,7 +102,7 @@ function TemplatePreviewTech() {
   const DARK = '#1a1a1a'
   return (
     <div style={{ height: 88, overflow: 'hidden', borderRadius: 6, display: 'flex' }}>
-      <div style={{ background: DARK, width: '36%', padding: '10px 9px', flexShrink: 0 }}>
+      <div style={{ background: DARK, width: '28%', padding: '10px 9px', flexShrink: 0 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', marginBottom: 3 }}>JOHN SMITH</div>
         <div style={{ height: 1, background: G, marginBottom: 5 }} />
         <div style={{ fontSize: 7, color: '#aaa', marginBottom: 4 }}>john@email.com</div>

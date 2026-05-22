@@ -6,6 +6,17 @@ export default defineConfig({
   optimizeDeps: {
     include: ['pdfmake/build/pdfmake', 'pdfmake/build/vfs_fonts'],
   },
+  build: {
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-pdf': ['pdfmake/build/pdfmake', 'pdfmake/build/vfs_fonts'],
+          'vendor-docx': ['docx'],
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       '/api': {

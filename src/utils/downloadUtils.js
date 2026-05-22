@@ -322,57 +322,108 @@ function buildExecutivePDF(text, sp) {
 }
 
 function buildTechPDF(text, sp) {
-  const { bodySize, margins, lineHeight, hSpB, hSpA } = sp
+  const { bodySize, lineHeight, hSpB, hSpA } = sp
   const lines = parseDocumentLines(text)
   const GREEN = '#1D9E75'
-  const nameSize = Math.round(bodySize + 6)
-  const contactSize = bodySize - 2
+  const DARK = '#1a1a1a'
+  const nameSize = Math.round(bodySize + 5)
+  const contactSize = bodySize - 1.5
   const headerSize = bodySize + 0.5
-  const pw = 515 - (40 - margins[0]) * 2
 
-  const content = []
+  // Tight margins for two-column layout
+  const pageMargins = [18, 18, 18, 18]
+  // A4 usable width at these margins: 595 - 36 = 559pt
+  const totalW = 559
+  const leftW = Math.round(totalW * 0.28)
+  const rightW = totalW - leftW
 
-  // Dark header band: name + contact on dark background
-  const headerBand = []
+  // Split lines: sidebar (name, contact, SKILLS section) vs main column
+  const leftLines = []
+  const rightLines = []
+  let inSkills = false
+
   for (const line of lines) {
-    if (line.type === 'name') {
-      headerBand.push({ text: line.text, fontSize: nameSize, bold: true, color: '#ffffff', margin: [0, 0, 0, 2] })
-    } else if (line.type === 'contact') {
-      headerBand.push({ text: line.text, fontSize: contactSize, color: '#aaaaaa', margin: [0, 0, 0, 1] })
+    if (line.type === 'name' || line.type === 'contact') {
+      leftLines.push(line)
+    } else if (
+      line.type === 'header' &&
+      /^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES)$/.test(line.text)
+    ) {
+      inSkills = true
+      leftLines.push(line)
+    } else if (inSkills && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
+      leftLines.push(line)
+    } else {
+      inSkills = false
+      rightLines.push(line)
     }
   }
-  if (headerBand.length) {
-    content.push({
-      table: { widths: [pw], body: [[{ stack: headerBand, fillColor: '#1a1a1a', margin: [10, 10, 10, 10] }]] },
-      layout: 'noBorders',
-      margin: [0, 0, 0, 8],
-    })
+
+  // Build left (sidebar) stack
+  const leftStack = []
+  for (const line of leftLines) {
+    switch (line.type) {
+      case 'name':
+        leftStack.push({ text: line.text, fontSize: nameSize, bold: true, color: '#ffffff', margin: [0, 0, 0, 3] })
+        leftStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: leftW - 16, y2: 0, lineWidth: 1, lineColor: GREEN }], margin: [0, 0, 0, 5] })
+        break
+      case 'contact':
+        leftStack.push({ text: line.text, fontSize: contactSize, color: '#aaaaaa', margin: [0, 0, 0, 2] })
+        break
+      case 'header':
+        leftStack.push({ text: line.text, fontSize: headerSize, bold: true, color: GREEN, margin: [0, hSpB || 6, 0, 2] })
+        leftStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: leftW - 16, y2: 0, lineWidth: 0.5, lineColor: GREEN }], margin: [0, 0, 0, (hSpA || 2) + 1] })
+        break
+      case 'bullet':
+        leftStack.push({ text: '• ' + line.text, fontSize: bodySize - 0.5, color: '#cccccc', margin: [0, 1, 0, 1] })
+        break
+      case 'body':
+        leftStack.push({ text: line.text, fontSize: bodySize - 0.5, color: '#cccccc', margin: [0, 1, 0, 1] })
+        break
+      case 'empty':
+        leftStack.push({ text: ' ', fontSize: bodySize * 0.35, margin: [0, 0, 0, 0] })
+        break
+    }
   }
 
-  // Green accent line
-  content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 2, lineColor: GREEN }], margin: [0, 0, 0, hSpB || 6] })
-
-  // Body content
-  for (const line of lines) {
-    if (line.type === 'name' || line.type === 'contact') continue
+  // Build right (main) stack
+  const rightStack = []
+  for (const line of rightLines) {
     switch (line.type) {
       case 'empty':
-        content.push({ text: ' ', fontSize: bodySize * 0.4, margin: [0, 0, 0, 0] }); break
+        rightStack.push({ text: ' ', fontSize: bodySize * 0.4, margin: [0, 0, 0, 0] })
+        break
       case 'divider':
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: pw, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 2] }); break
+        rightStack.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: rightW - 16, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 2] })
+        break
       case 'header':
-        content.push({ text: line.text, fontSize: headerSize, bold: true, color: GREEN, margin: [0, hSpB, 0, 1] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, hSpA] }); break
+        rightStack.push({ text: line.text, fontSize: headerSize, bold: true, color: GREEN, margin: [0, hSpB || 6, 0, 1] })
+        rightStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: rightW - 16, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, hSpA || 2] })
+        break
       case 'bullet':
-        content.push({ columns: [{ text: '•', width: 10, fontSize: bodySize, color: GREEN }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [4, 1, 0, 1] }); break
+        rightStack.push({ columns: [{ text: '▸', width: 10, fontSize: bodySize, color: GREEN }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [4, 1, 0, 1] })
+        break
       case 'body':
-        content.push({ text: line.text, fontSize: bodySize, color: '#2a2a2a', margin: [0, 1, 0, 1] }); break
+        rightStack.push({ text: line.text, fontSize: bodySize, color: '#2a2a2a', margin: [0, 1, 0, 1] })
+        break
     }
   }
+
+  const content = [{
+    table: {
+      widths: [leftW, rightW],
+      heights: ['*'],
+      body: [[
+        { stack: leftStack, fillColor: DARK, margin: [8, 10, 8, 10] },
+        { stack: rightStack, margin: [10, 10, 8, 10] },
+      ]],
+    },
+    layout: 'noBorders',
+  }]
 
   return {
     pageSize: 'A4',
-    pageMargins: margins,
+    pageMargins,
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content,
   }
