@@ -24,14 +24,14 @@ export default function WaveBackground() {
 
     // Downward curve that kicks in from CURVE_START toward the right
     const CURVE_START = 0.42;
-    const CURVE_STRENGTH = 0.10;
+    const CURVE_STRENGTH = 0.25;
 
     // 3 depth layers — more lines, higher amplitude → interweaving / crossing
     // ps = per-line phase spread (higher → more phase diversity → more crossings)
     const layers = [
-      { rgb: '5,46,28',    n: 28, amp: 36, freq: 0.0026, speed: 0.006, op: 0.10, lw: 0.6,  ps: 1.4 },
-      { rgb: '10,102,64',  n: 25, amp: 50, freq: 0.0036, speed: 0.016, op: 0.17, lw: 1.2,  ps: 2.0 },
-      { rgb: '29,158,117', n: 20, amp: 66, freq: 0.0048, speed: 0.030, op: 0.30, lw: 2.0,  ps: 2.8 },
+      { rgb: '5,46,28',    n: 28, amp: 36, freq: 0.0026, speed: 0.003, op: 0.10, lw: 0.6,  ps: 1.4 },
+      { rgb: '10,102,64',  n: 25, amp: 50, freq: 0.0036, speed: 0.008, op: 0.17, lw: 1.2,  ps: 2.0 },
+      { rgb: '29,158,117', n: 20, amp: 66, freq: 0.0048, speed: 0.015, op: 0.30, lw: 2.0,  ps: 2.8 },
     ];
 
     const resize = () => {
@@ -77,8 +77,8 @@ export default function WaveBackground() {
 
         ctx.lineWidth = layer.lw;
 
-        // Horizontal gradient: full opacity from left to ~58% width, fades to transparent at ~83%
-        const grad = ctx.createLinearGradient(W * 0.58, 0, W * 0.83, 0);
+        // Gradient: full opacity until ~88% width, short fade to transparent at right edge
+        const grad = ctx.createLinearGradient(W * 0.88, 0, W, 0);
         grad.addColorStop(0, `rgba(${layer.rgb},${layer.op})`);
         grad.addColorStop(1, `rgba(${layer.rgb},0)`);
         ctx.strokeStyle = grad;
