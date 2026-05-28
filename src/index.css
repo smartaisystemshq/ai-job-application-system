@@ -945,3 +945,85 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text-primary
   color: var(--text-muted);
   white-space: nowrap;
 }
+
+/* ─── Mobile responsiveness (375px–768px) ─── */
+@media (max-width: 768px) {
+  /* Touch target minimums */
+  .btn { min-height: 44px; }
+  .btn-sm { min-height: 38px; }
+  .upload-btn { min-height: 44px; padding: 10px 16px; }
+  .faq-question { min-height: 48px; }
+
+  /* Page layout */
+  .page { padding: 16px 14px; overflow-x: hidden; }
+  .page-header h1 { font-size: 21px; }
+
+  /* Dashboard header: stack h1 and Add button */
+  .page-header.flex.justify-between { flex-wrap: wrap; gap: 12px; }
+  .page-header.flex.justify-between .btn { width: 100%; justify-content: center; }
+
+  /* Generate button row: full-width button */
+  .generate-row { flex-direction: column !important; align-items: stretch !important; }
+  .generate-row .btn { width: 100% !important; min-width: unset !important; justify-content: center; }
+
+  /* Result toolbar: allow wrapping */
+  .result-toolbar { flex-wrap: wrap; gap: 8px; }
+
+  /* Mini chatbot: wrap input + button when needed */
+  .mini-chatbot-row { flex-wrap: wrap; }
+  .mini-chatbot-row .btn { min-width: 90px; }
+
+  /* Result box: constrain height on mobile */
+  .result-box { max-height: 360px; }
+
+  /* Template row: touch-friendly horizontal scroll */
+  .template-row { -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; }
+  .template-card-h { scroll-snap-align: start; }
+
+  /* Health score links: wrap to avoid overflow */
+  .health-score-links { flex-wrap: wrap !important; gap: 8px !important; }
+
+  /* Modal: fit viewport */
+  .modal-overlay { padding: 10px; align-items: flex-end; }
+  .modal { max-width: 100% !important; border-radius: var(--radius) var(--radius) 0 0; }
+
+  /* Stats row */
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+
+  /* Table: ensure horizontal scroll on small screens */
+  .table-wrapper { border-radius: var(--radius-sm); }
+
+  /* Email: word-break to prevent overflow */
+  .email-break { word-break: break-all; font-size: 14px !important; }
+
+  /* No horizontal scroll for entire body */
+  body { overflow-x: hidden; }
+
+  /* Prevent card overflow */
+  .card { overflow-x: hidden; }
+
+  /* Download buttons: ensure visibility */
+  .download-row { flex-wrap: wrap !important; }
+
+  /* Step indicator on mobile */
+  .step-indicator { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+}
+
+@media (max-width: 480px) {
+  .page { padding: 12px 12px; }
+  .page-header h1 { font-size: 19px; }
+
+  /* CV Builder nav buttons */
+  .cv-builder-nav { gap: 8px; }
+  .cv-builder-nav .btn { padding: 10px 16px; font-size: 13px; }
+
+  /* Interview prep buttons: stack on very small screens */
+  .interview-btn-row { flex-wrap: wrap; }
+  .interview-btn-row .btn { flex: 1; min-width: 140px; }
+
+  /* Result header: stack label + buttons */
+  .result-header { flex-direction: column; align-items: flex-start !important; }
+
+  /* Word count badge: always visible */
+  .word-count-badge { display: inline-flex !important; }
+}

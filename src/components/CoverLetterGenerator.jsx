@@ -212,7 +212,7 @@ export default function CoverLetterGenerator() {
       )}
 
       {/* Generate button — directly below inputs */}
-      <div ref={generateRef} className="scroll-reveal" style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 32, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div ref={generateRef} className="scroll-reveal generate-row" style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 32, alignItems: 'center', flexWrap: 'wrap' }}>
         <button
           className="btn btn-primary"
           onClick={handleGenerate}

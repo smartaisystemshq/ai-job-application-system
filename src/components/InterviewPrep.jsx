@@ -213,7 +213,7 @@ export default function InterviewPrep() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 28 }} className="scroll-reveal">
+      <div style={{ display: 'flex', gap: 10, marginBottom: 28, flexWrap: 'wrap' }} className="scroll-reveal interview-btn-row">
         <button
           className="btn btn-primary"
           onClick={handleGenerate}

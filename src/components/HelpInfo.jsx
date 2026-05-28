@@ -102,7 +102,7 @@ export default function HelpInfo() {
               <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 14 }}>
                 Send me an email — I reply personally and usually within 24 hours.
               </p>
-              <p style={{
+              <p className="email-break" style={{
                 fontSize: 15, fontWeight: 700, color: 'var(--accent)',
                 letterSpacing: '0.01em', userSelect: 'all',
                 fontFamily: 'inherit',

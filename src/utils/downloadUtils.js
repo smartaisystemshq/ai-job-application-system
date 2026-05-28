@@ -321,7 +321,7 @@ function buildExecutivePDF(text, sp) {
   }
 }
 
-const SHARP_SKILLS_RE = /^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES)$/
+const SHARP_SIDEBAR_HEADERS_RE = /^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES|PERSONAL STRENGTHS|STRENGTHS|PERSÖNLICHE STÄRKEN|STÄRKEN|SOFT SKILLS|KEY STRENGTHS)$/
 
 function buildSharpPDF(text, sp) {
   const { bodySize, lineHeight, hSpB, hSpA } = sp
@@ -338,21 +338,21 @@ function buildSharpPDF(text, sp) {
   const leftW = Math.round(totalW * 0.25)   // 139
   const rightW = totalW - leftW              // 416
 
-  // Split: sidebar = name, contact, skills; main = everything else
+  // Split: sidebar = name, contact, skills, personal strengths; main = everything else
   const sideLines = []
   const mainLines = []
-  let inSkills = false
+  let inSidebarSection = false
 
   for (const line of lines) {
     if (line.type === 'name' || line.type === 'contact') {
       sideLines.push(line)
-    } else if (line.type === 'header' && SHARP_SKILLS_RE.test(line.text)) {
-      inSkills = true
+    } else if (line.type === 'header' && SHARP_SIDEBAR_HEADERS_RE.test(line.text)) {
+      inSidebarSection = true
       sideLines.push(line)
-    } else if (inSkills && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
+    } else if (inSidebarSection && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
       sideLines.push(line)
     } else {
-      inSkills = false
+      inSidebarSection = false
       mainLines.push(line)
     }
   }
@@ -360,27 +360,37 @@ function buildSharpPDF(text, sp) {
   // Left (sidebar) stack
   const sideInnerW = leftW - 16
   const sideStack = []
+  let lastSideType = null
   for (const line of sideLines) {
     switch (line.type) {
       case 'name':
         sideStack.push({ text: line.text, fontSize: nameSize, bold: true, color: '#ffffff', margin: [0, 0, 0, 3] })
         sideStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: sideInnerW, y2: 0, lineWidth: 1, lineColor: GREEN }], margin: [0, 0, 0, 5] })
+        lastSideType = 'name'
         break
       case 'contact':
         sideStack.push({ text: line.text, fontSize: contactSize, color: '#aaaaaa', margin: [0, 0, 0, 2] })
+        lastSideType = 'contact'
         break
       case 'header':
-        sideStack.push({ text: line.text, fontSize: bodySize, bold: true, color: '#ffffff', margin: [0, hSpB || 6, 0, 2] })
+        if (lastSideType && lastSideType !== 'name') {
+          sideStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: sideInnerW, y2: 0, lineWidth: 0.5, lineColor: GREEN }], margin: [0, 5, 0, 4] })
+        }
+        sideStack.push({ text: line.text, fontSize: bodySize, bold: true, color: '#ffffff', margin: [0, lastSideType === 'name' ? (hSpB || 6) : 1, 0, 2] })
         sideStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: sideInnerW, y2: 0, lineWidth: 0.6, lineColor: GREEN }], margin: [0, 0, 0, hSpA || 2] })
+        lastSideType = 'header'
         break
       case 'bullet':
         sideStack.push({ text: '• ' + line.text, fontSize: bodySize - 0.5, color: '#cccccc', margin: [0, 1, 0, 1] })
+        lastSideType = 'bullet'
         break
       case 'body':
         sideStack.push({ text: line.text, fontSize: bodySize - 0.5, color: '#cccccc', margin: [0, 1, 0, 1] })
+        lastSideType = 'body'
         break
       case 'empty':
         sideStack.push({ text: ' ', fontSize: bodySize * 0.3, margin: [0, 0, 0, 0] })
+        lastSideType = 'empty'
         break
     }
   }
@@ -747,18 +757,18 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
   if (template === 'sharp') {
     const leftLines = []
     const rightLines = []
-    let inSkills = false
+    let inSidebarSection = false
 
     for (const line of lines) {
       if (line.type === 'name' || line.type === 'contact') {
         leftLines.push(line)
-      } else if (line.type === 'header' && SHARP_SKILLS_RE.test(line.text)) {
-        inSkills = true
+      } else if (line.type === 'header' && SHARP_SIDEBAR_HEADERS_RE.test(line.text)) {
+        inSidebarSection = true
         leftLines.push(line)
-      } else if (inSkills && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
+      } else if (inSidebarSection && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
         leftLines.push(line)
       } else {
-        inSkills = false
+        inSidebarSection = false
         rightLines.push(line)
       }
     }

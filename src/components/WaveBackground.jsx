@@ -15,12 +15,16 @@ export default function WaveBackground() {
     let scrollY = 0;
     const ripples = [];
 
-    // Focused mid-screen band
-    const BAND_CENTER = 0.50;  // centred vertically
-    const BAND_HALF   = 0.27;  // band spans 54% of screen height
+    // Focused band — starts top-left, curves down toward right, fades out at right-centre
+    const BAND_CENTER = 0.42;  // slightly above centre
+    const BAND_HALF   = 0.20;  // narrower band (40% of screen height)
 
-    // 7° diagonal tilt: each x pixel shifts y by this slope, centred at W/2
-    const TILT = Math.tan(7 * Math.PI / 180); // ≈ 0.1228
+    // 9° diagonal tilt: each x pixel shifts y by this slope, centred at W/2
+    const TILT = Math.tan(9 * Math.PI / 180); // ≈ 0.1584
+
+    // Downward curve that kicks in from CURVE_START toward the right
+    const CURVE_START = 0.42;
+    const CURVE_STRENGTH = 0.10;
 
     // 3 depth layers — more lines, higher amplitude → interweaving / crossing
     // ps = per-line phase spread (higher → more phase diversity → more crossings)
@@ -71,8 +75,13 @@ export default function WaveBackground() {
         const layer = layers[li];
         const depthFactor = (li + 1) / layers.length;
 
-        ctx.lineWidth   = layer.lw;
-        ctx.strokeStyle = `rgba(${layer.rgb},${layer.op})`;
+        ctx.lineWidth = layer.lw;
+
+        // Horizontal gradient: full opacity from left to ~58% width, fades to transparent at ~83%
+        const grad = ctx.createLinearGradient(W * 0.58, 0, W * 0.83, 0);
+        grad.addColorStop(0, `rgba(${layer.rgb},${layer.op})`);
+        grad.addColorStop(1, `rgba(${layer.rgb},0)`);
+        ctx.strokeStyle = grad;
 
         for (let i = 0; i < layer.n; i++) {
           const frac  = layer.n === 1 ? 0.5 : i / (layer.n - 1);
@@ -85,8 +94,12 @@ export default function WaveBackground() {
             // Diagonal tilt centred at mid-screen
             const diag = (x - W * 0.5) * TILT;
 
+            // Downward curve: quadratic ramp starting at CURVE_START, peaks at right edge
+            const curveNorm = Math.max(0, x / W - CURVE_START) / (1 - CURVE_START);
+            const curveDrop = curveNorm * curveNorm * CURVE_STRENGTH * H;
+
             // Primary wave + secondary harmonic for organic feel
-            let y = yFlat + diag
+            let y = yFlat + diag + curveDrop
               + Math.sin(x * layer.freq + t * layer.speed + phase) * layer.amp
               + Math.sin(x * layer.freq * 2.1 + t * layer.speed * 1.6 + phase * 0.8) * layer.amp * 0.22;
 

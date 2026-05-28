@@ -687,7 +687,7 @@ export default function CVBuilder() {
       </div>
 
       {state.step <= 5 && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
+        <div className="cv-builder-nav" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
           <button
             className="btn btn-secondary"
             onClick={() => setStep(state.step - 1)}

@@ -33,7 +33,7 @@ export default function DownloadButtons({ text, filename = 'document', template 
   }
 
   return (
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', ...style }}>
+    <div className="download-row" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', ...style }}>
       <button
         className="btn btn-secondary btn-sm"
         onClick={handlePDF}

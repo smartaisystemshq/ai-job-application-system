@@ -34,7 +34,7 @@ function HealthScore({ applications }) {
       <div style={{ background: 'var(--bg-tertiary)', borderRadius: 100, height: 8, overflow: 'hidden' }}>
         <div style={{ width: `${score}%`, height: '100%', background: barColor, borderRadius: 100, transition: 'width 0.8s ease' }} />
       </div>
-      <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>
+      <div className="health-score-links" style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>
         <span style={{ color: applications.length >= 5 ? 'var(--accent)' : 'var(--text-muted)' }}>
           {applications.length >= 5 ? '✓' : '○'} 5+ applications tracked
         </span>

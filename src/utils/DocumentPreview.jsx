@@ -149,25 +149,36 @@ function StandardPage({ lines, template }) {
 
 // ── Two-column sharp page ─────────────────────────────────────────────────────
 
-const SHARP_SKILLS_RE = /^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES)$/
+const SHARP_SIDEBAR_HEADERS_RE = /^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES|PERSONAL STRENGTHS|STRENGTHS|PERSÖNLICHE STÄRKEN|STÄRKEN|SOFT SKILLS|KEY STRENGTHS)$/
 
 function SharpPage({ lines }) {
   const leftLines = []
   const rightLines = []
-  let inSkills = false
+  let inSidebarSection = false
 
   for (const line of lines) {
     if (line.type === 'name' || line.type === 'contact') {
       leftLines.push(line)
-    } else if (line.type === 'header' && SHARP_SKILLS_RE.test(line.text)) {
-      inSkills = true
+    } else if (line.type === 'header' && SHARP_SIDEBAR_HEADERS_RE.test(line.text)) {
+      inSidebarSection = true
       leftLines.push(line)
-    } else if (inSkills && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
+    } else if (inSidebarSection && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
       leftLines.push(line)
     } else {
-      inSkills = false
+      inSidebarSection = false
       rightLines.push(line)
     }
+  }
+
+  // Pre-process leftLines: insert thin dividers before each header (except after name)
+  const leftLinesWithDividers = []
+  let lastLeftType = null
+  for (const line of leftLines) {
+    if (line.type === 'header' && lastLeftType && lastLeftType !== 'name') {
+      leftLinesWithDividers.push({ type: 'sidebar-divider' })
+    }
+    leftLinesWithDividers.push(line)
+    lastLeftType = line.type
   }
 
   return (
@@ -187,8 +198,10 @@ function SharpPage({ lines }) {
         fontFamily: "'Inter', sans-serif",
         flexShrink: 0,
       }}>
-        {leftLines.map((line, i) => {
+        {leftLinesWithDividers.map((line, i) => {
           switch (line.type) {
+            case 'sidebar-divider':
+              return <div key={i} style={{ height: 0.5, background: GREEN, margin: '6px 0 5px' }} />
             case 'name':
               return (
                 <div key={i}>
@@ -202,7 +215,7 @@ function SharpPage({ lines }) {
               return <div key={i} style={{ fontSize: 8.5, color: '#aaa', marginBottom: 2, lineHeight: 1.4 }}>{line.text}</div>
             case 'header':
               return (
-                <div key={i} style={{ marginTop: 12, marginBottom: 5 }}>
+                <div key={i} style={{ marginTop: 4, marginBottom: 5 }}>
                   <div style={{ fontSize: 9, fontWeight: 700, color: '#ffffff', marginBottom: 2, letterSpacing: 0.3 }}>{line.text}</div>
                   <div style={{ height: 0.8, background: GREEN, marginBottom: 5 }} />
                 </div>
