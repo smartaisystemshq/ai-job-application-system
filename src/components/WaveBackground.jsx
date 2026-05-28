@@ -15,16 +15,12 @@ export default function WaveBackground() {
     let scrollY = 0;
     const ripples = [];
 
-    // Focused band — starts top-left, curves down toward right, fades out at right-centre
-    const BAND_CENTER = 0.42;  // slightly above centre
-    const BAND_HALF   = 0.20;  // narrower band (40% of screen height)
+    // Band enters centre-left (50% H) and exits toward top-right (~17% H)
+    const BAND_CENTER = 0.50;  // vertical centre of band at the left edge
+    const BAND_HALF   = 0.20;  // band spans 40% of screen height at entry
 
-    // 9° diagonal tilt: each x pixel shifts y by this slope, centred at W/2
-    const TILT = Math.tan(9 * Math.PI / 180); // ≈ 0.1584
-
-    // Downward curve that kicks in from CURVE_START toward the right
-    const CURVE_START = 0.42;
-    const CURVE_STRENGTH = 0.25;
+    // Quadratic upward rise: flows mostly straight, then curves sharply to top-right
+    const EXIT_OFFSET = 0.33;  // total rise as fraction of H (50% → 17%)
 
     // 3 depth layers — more lines, higher amplitude → interweaving / crossing
     // ps = per-line phase spread (higher → more phase diversity → more crossings)
@@ -77,8 +73,8 @@ export default function WaveBackground() {
 
         ctx.lineWidth = layer.lw;
 
-        // Gradient: full opacity until ~88% width, short fade to transparent at right edge
-        const grad = ctx.createLinearGradient(W * 0.88, 0, W, 0);
+        // Gradient: full opacity until ~94% width, short fade to transparent at right edge
+        const grad = ctx.createLinearGradient(W * 0.94, 0, W, 0);
         grad.addColorStop(0, `rgba(${layer.rgb},${layer.op})`);
         grad.addColorStop(1, `rgba(${layer.rgb},0)`);
         ctx.strokeStyle = grad;
@@ -91,15 +87,12 @@ export default function WaveBackground() {
 
           ctx.beginPath();
           for (let x = 0; x <= W; x += 4) {
-            // Diagonal tilt centred at mid-screen
-            const diag = (x - W * 0.5) * TILT;
-
-            // Downward curve: quadratic ramp starting at CURVE_START, peaks at right edge
-            const curveNorm = Math.max(0, x / W - CURVE_START) / (1 - CURVE_START);
-            const curveDrop = curveNorm * curveNorm * CURVE_STRENGTH * H;
+            // Quadratic rise: flows straight-ish at first, curves up sharply toward top-right
+            const tx = x / W;
+            const rise = tx * tx * EXIT_OFFSET * H;
 
             // Primary wave + secondary harmonic for organic feel
-            let y = yFlat + diag + curveDrop
+            let y = yFlat - rise
               + Math.sin(x * layer.freq + t * layer.speed + phase) * layer.amp
               + Math.sin(x * layer.freq * 2.1 + t * layer.speed * 1.6 + phase * 0.8) * layer.amp * 0.22;
 
