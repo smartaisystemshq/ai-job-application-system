@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import FileUploadField from './FileUploadField';
 import { stripMarkdown } from '../utils/downloadUtils';
+import LockedContent from './LockedContent';
 
 const LS = { jd: 'jas.ip.jd', rawResult: 'jas.ip.rawResult' };
 
@@ -106,7 +107,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
   );
 }
 
-export default function InterviewPrep() {
+export default function InterviewPrep({ unlocked, onUnlock }) {
   const [jobDescription, setJobDescription] = useState(() => localStorage.getItem(LS.jd) || '');
   const [jdFile, setJdFile] = useState(null);
   const [jdPdfBase64, setJdPdfBase64] = useState('');
@@ -236,41 +237,43 @@ export default function InterviewPrep() {
 
       {questions.length > 0 && !loading && (
         <div ref={resultRef}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, padding: '12px 16px', background: 'rgba(29,158,117,0.06)', border: '1px solid rgba(29,158,117,0.2)', borderRadius: 12 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ color: 'var(--accent)' }}>◈</span>
-              {questions.length} Interview Questions
-            </h2>
-            <CopyButton text={rawResult} />
-          </div>
-
-          {questions.map((q, i) => (
-            <div key={i} className="question-item scroll-reveal" style={{ animationDelay: `${i * 0.04}s` }}>
-              <div className="question-number">Question {i + 1}</div>
-              <div className="question-text">{q.question}</div>
-              {q.framework && <div className="question-framework">{q.framework}</div>}
+          <LockedContent unlocked={unlocked} onUnlock={onUnlock}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, padding: '12px 16px', background: 'rgba(29,158,117,0.06)', border: '1px solid rgba(29,158,117,0.2)', borderRadius: 12 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: 'var(--accent)' }}>◈</span>
+                {questions.length} Interview Questions
+              </h2>
+              <CopyButton text={rawResult} />
             </div>
-          ))}
 
-          <p style={{ marginTop: 16, fontSize: 12, color: 'var(--text-muted)' }}>
-            Practise answering each question out loud and prepare 1-2 specific examples (STAR method works well).
-          </p>
+            {questions.map((q, i) => (
+              <div key={i} className="question-item scroll-reveal" style={{ animationDelay: `${i * 0.04}s` }}>
+                <div className="question-number">Question {i + 1}</div>
+                <div className="question-text">{q.question}</div>
+                {q.framework && <div className="question-framework">{q.framework}</div>}
+              </div>
+            ))}
 
-          {/* New Interview Questions button */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24, marginBottom: 8 }}>
-            <button
-              className="btn btn-secondary"
-              onClick={handleNewQuestions}
-              disabled={newQuestionsLoading || loading || !canSubmit}
-              style={{ minWidth: 240, padding: '11px 28px' }}
-            >
-              {newQuestionsLoading
-                ? <><span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }}></span> Generating new questions…</>
-                : '↺ New Interview Questions'}
-            </button>
-          </div>
+            <p style={{ marginTop: 16, fontSize: 12, color: 'var(--text-muted)' }}>
+              Practise answering each question out loud and prepare 1-2 specific examples (STAR method works well).
+            </p>
 
-          <MiniChatbot currentDocument={rawResult} onUpdate={handleAdjustUpdate} />
+            {/* New Interview Questions button */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24, marginBottom: 8 }}>
+              <button
+                className="btn btn-secondary"
+                onClick={handleNewQuestions}
+                disabled={newQuestionsLoading || loading || !canSubmit}
+                style={{ minWidth: 240, padding: '11px 28px' }}
+              >
+                {newQuestionsLoading
+                  ? <><span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }}></span> Generating new questions…</>
+                  : '↺ New Interview Questions'}
+              </button>
+            </div>
+
+            <MiniChatbot currentDocument={rawResult} onUpdate={handleAdjustUpdate} />
+          </LockedContent>
         </div>
       )}
     </div>

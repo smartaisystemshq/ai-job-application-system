@@ -5,6 +5,7 @@ import DocumentPreview from '../utils/DocumentPreview';
 import ScoreCard, { calculateAttractivenessScore, KeywordMatch } from './ScoreCard';
 import { stripMarkdown } from '../utils/downloadUtils';
 import { TEMPLATES, TemplateSelector } from './TemplateSelector';
+import LockedContent from './LockedContent';
 
 const LS = { cv: 'jas.cvo.cv', jd: 'jas.cvo.jd', result: 'jas.cvo.result' };
 
@@ -72,7 +73,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
   );
 }
 
-export default function CVOptimizer() {
+export default function CVOptimizer({ unlocked, onUnlock }) {
   const [cv, setCv] = useState(() => localStorage.getItem(LS.cv) || '');
   const [cvFile, setCvFile] = useState(null);
   const [cvPdfBase64, setCvPdfBase64] = useState('');
@@ -229,35 +230,37 @@ export default function CVOptimizer() {
 
       {result && !loading && (
         <div ref={resultRef}>
-          {/* Result toolbar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            marginBottom: 12, flexWrap: 'wrap', gap: 8,
-          }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ color: 'var(--accent)' }}>✦</span>Optimized CV
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 2 }}>
-                · {TEMPLATES.find(t => t.id === selectedTemplate)?.name} template
-              </span>
-            </h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <DownloadButtons text={result} filename="optimized-cv" template={selectedTemplate} />
-              <CopyButton text={result} />
+          <LockedContent unlocked={unlocked} onUnlock={onUnlock}>
+            {/* Result toolbar */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginBottom: 12, flexWrap: 'wrap', gap: 8,
+            }}>
+              <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: 'var(--accent)' }}>✦</span>Optimized CV
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 2 }}>
+                  · {TEMPLATES.find(t => t.id === selectedTemplate)?.name} template
+                </span>
+              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <DownloadButtons text={result} filename="optimized-cv" template={selectedTemplate} />
+                <CopyButton text={result} />
+              </div>
             </div>
-          </div>
 
-          {/* WYSIWYG document preview */}
-          <DocumentPreview text={result} template={selectedTemplate} />
+            {/* WYSIWYG document preview */}
+            <DocumentPreview text={result} template={selectedTemplate} />
 
-          <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
-            Review and personalise before submitting your application.
-          </p>
+            <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+              Review and personalise before submitting your application.
+            </p>
 
-          {score !== null && <ScoreCard score={score} />}
+            {score !== null && <ScoreCard score={score} />}
 
-          <KeywordMatch cvText={result} jdText={jobDescription} />
+            <KeywordMatch cvText={result} jdText={jobDescription} />
 
-          <MiniChatbot currentDocument={result} onUpdate={handleAdjustUpdate} />
+            <MiniChatbot currentDocument={result} onUpdate={handleAdjustUpdate} />
+          </LockedContent>
         </div>
       )}
     </div>

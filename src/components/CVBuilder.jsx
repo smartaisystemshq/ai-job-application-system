@@ -4,6 +4,7 @@ import DocumentPreview from '../utils/DocumentPreview';
 import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
 import { stripMarkdown } from '../utils/downloadUtils';
 import { TemplateSelector } from './TemplateSelector';
+import LockedContent from './LockedContent';
 
 const LS_KEY = 'jas.cvb';
 
@@ -207,7 +208,7 @@ function buildCVText({ personal, experience, education, skills, summary }) {
 }
 
 // ── Main Component ──────────────────────────────────────────────
-export default function CVBuilder() {
+export default function CVBuilder({ unlocked, onUnlock }) {
   const [state, setState] = useState(load);
   const [skillInput, setSkillInput] = useState('');
   const [suggestedSkills, setSuggestedSkills] = useState([]);
@@ -619,48 +620,50 @@ export default function CVBuilder() {
 
   const renderPreview = () => (
     <div ref={previewRef}>
-      {/* Template selector in preview step */}
-      <TemplateSelector selectedTemplate={selectedTemplate} onSelect={setSelectedTemplate} />
+      <LockedContent unlocked={unlocked} onUnlock={onUnlock}>
+        {/* Template selector in preview step */}
+        <TemplateSelector selectedTemplate={selectedTemplate} onSelect={setSelectedTemplate} />
 
-      {/* Result toolbar */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: 12, flexWrap: 'wrap', gap: 8,
-      }}>
-        <div>
-          <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 2 }}>Your CV</h2>
-          <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Download as PDF or Word, or copy the text.</p>
+        {/* Result toolbar */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginBottom: 12, flexWrap: 'wrap', gap: 8,
+        }}>
+          <div>
+            <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 2 }}>Your CV</h2>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Download as PDF or Word, or copy the text.</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <DownloadButtons
+              text={displayCvText}
+              filename={`${(state.personal.name || 'my-cv').toLowerCase().replace(/\s+/g, '-')}`}
+              template={selectedTemplate}
+            />
+            <CopyButton text={displayCvText} />
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <DownloadButtons
-            text={displayCvText}
-            filename={`${(state.personal.name || 'my-cv').toLowerCase().replace(/\s+/g, '-')}`}
-            template={selectedTemplate}
-          />
-          <CopyButton text={displayCvText} />
+
+        {/* WYSIWYG document preview */}
+        <DocumentPreview text={displayCvText} template={selectedTemplate} />
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+          <button className="btn btn-secondary" onClick={() => setStep(5)}>← Back to Summary</button>
+          <button className="btn btn-ghost" onClick={startOver} style={{ marginLeft: 'auto', color: 'var(--danger)' }}>
+            Start Over
+          </button>
         </div>
-      </div>
 
-      {/* WYSIWYG document preview */}
-      <DocumentPreview text={displayCvText} template={selectedTemplate} />
+        {cvScore !== null && <ScoreCard score={cvScore} />}
 
-      <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-        <button className="btn btn-secondary" onClick={() => setStep(5)}>← Back to Summary</button>
-        <button className="btn btn-ghost" onClick={startOver} style={{ marginLeft: 'auto', color: 'var(--danger)' }}>
-          Start Over
-        </button>
-      </div>
-
-      {cvScore !== null && <ScoreCard score={cvScore} />}
-
-      <MiniChatbot
-        currentDocument={displayCvText}
-        onUpdate={(newText) => {
-          setAdjustedCvText(newText);
-          setCvScore(calculateAttractivenessScore(newText));
-          setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
-        }}
-      />
+        <MiniChatbot
+          currentDocument={displayCvText}
+          onUpdate={(newText) => {
+            setAdjustedCvText(newText);
+            setCvScore(calculateAttractivenessScore(newText));
+            setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+          }}
+        />
+      </LockedContent>
     </div>
   );
 

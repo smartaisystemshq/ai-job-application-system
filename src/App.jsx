@@ -8,12 +8,15 @@ import InterviewPrep from './components/InterviewPrep';
 import CVBuilder from './components/CVBuilder';
 import HelpInfo from './components/HelpInfo';
 import { PAGES } from './constants';
+import { isUnlocked } from './utils/accessControl';
 
 export default function App() {
   const [activePage, setActivePage] = useState(PAGES.DASHBOARD);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [pageKey, setPageKey] = useState(0);
+  const [unlocked, setUnlocked] = useState(() => isUnlocked());
+  const handleUnlock = () => setUnlocked(true);
 
   const navigate = (page) => {
     if (page === activePage) return;
@@ -58,6 +61,8 @@ export default function App() {
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(c => !c)}
         mobileOpen={mobileSidebarOpen}
+        unlocked={unlocked}
+        onUnlock={handleUnlock}
       />
 
       <div className={`main-wrapper${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
@@ -84,10 +89,10 @@ export default function App() {
         <main style={{ flex: 1, position: 'relative', zIndex: 1 }}>
           <div key={pageKey} className="page-transition">
             {activePage === PAGES.DASHBOARD    && <Dashboard />}
-            {activePage === PAGES.CV_OPTIMIZER && <CVOptimizer />}
-            {activePage === PAGES.COVER_LETTER && <CoverLetterGenerator />}
-            {activePage === PAGES.INTERVIEW_PREP && <InterviewPrep />}
-            {activePage === PAGES.CV_BUILDER   && <CVBuilder />}
+            {activePage === PAGES.CV_OPTIMIZER && <CVOptimizer unlocked={unlocked} onUnlock={handleUnlock} />}
+            {activePage === PAGES.COVER_LETTER && <CoverLetterGenerator unlocked={unlocked} onUnlock={handleUnlock} />}
+            {activePage === PAGES.INTERVIEW_PREP && <InterviewPrep unlocked={unlocked} onUnlock={handleUnlock} />}
+            {activePage === PAGES.CV_BUILDER   && <CVBuilder unlocked={unlocked} onUnlock={handleUnlock} />}
             {activePage === PAGES.HELP_INFO    && <HelpInfo />}
           </div>
         </main>

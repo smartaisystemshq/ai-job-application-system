@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PAGES } from '../constants';
+import { unlockApp } from '../utils/accessControl';
 
 function DashboardIcon() {
   return (
@@ -81,7 +82,72 @@ const NAV_ITEMS = [
   { id: PAGES.HELP_INFO,     label: 'Help & Info',   description: 'FAQ and contact support',        Icon: HelpIcon },
 ];
 
-export default function Sidebar({ activePage, onNavigate, collapsed, onToggleCollapse, mobileOpen }) {
+function SidebarUnlock({ onUnlock }) {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleUnlock = async () => {
+    if (!code.trim() || loading) return;
+    setLoading(true);
+    setError('');
+    try {
+      const valid = await unlockApp(code.trim());
+      if (valid) {
+        onUnlock?.();
+        setOpen(false);
+        setCode('');
+      } else {
+        setError('Invalid code.');
+      }
+    } catch {
+      setError('Error. Try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ padding: '8px 10px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+      <button
+        onClick={() => { setOpen(o => !o); setError(''); }}
+        style={{
+          width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+          color: 'var(--accent)', fontSize: 12, fontWeight: 600, textAlign: 'left',
+          padding: '6px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6,
+        }}
+        title="Enter access code"
+      >
+        <span style={{ fontSize: 14 }}>🔓</span>
+        <span>Enter Access Code</span>
+      </button>
+      {open && (
+        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <input
+            className="input"
+            placeholder="Access code..."
+            value={code}
+            onChange={e => setCode(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && !loading && handleUnlock()}
+            disabled={loading}
+            style={{ fontSize: 13, padding: '6px 10px' }}
+          />
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={handleUnlock}
+            disabled={loading || !code.trim()}
+          >
+            {loading ? <span className="spinner" style={{ width: 12, height: 12, borderTopColor: 'white' }} /> : 'Unlock'}
+          </button>
+          {error && <p style={{ fontSize: 11, color: '#f87171', margin: 0 }}>{error}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function Sidebar({ activePage, onNavigate, collapsed, onToggleCollapse, mobileOpen, unlocked, onUnlock }) {
   return (
     <aside className={`sidebar${collapsed ? ' sidebar-collapsed' : ''}${mobileOpen ? ' sidebar-mobile-open' : ''}`}>
       {/* Brand */}
@@ -122,6 +188,11 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggleCol
           );
         })}
       </nav>
+
+      {/* Unlock section — visible only when collapsed is false and not yet unlocked */}
+      {!collapsed && !unlocked && (
+        <SidebarUnlock onUnlock={onUnlock} />
+      )}
 
       {/* Collapse toggle */}
       <div style={{ padding: '10px 10px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>

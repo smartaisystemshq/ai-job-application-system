@@ -5,6 +5,7 @@ import DocumentPreview from '../utils/DocumentPreview';
 import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
 import { stripMarkdown } from '../utils/downloadUtils';
 import { TemplateSelector } from './TemplateSelector';
+import LockedContent from './LockedContent';
 
 const LS = { cv: 'jas.cl.cv', jd: 'jas.cl.jd', result: 'jas.cl.result' };
 
@@ -80,7 +81,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
   );
 }
 
-export default function CoverLetterGenerator() {
+export default function CoverLetterGenerator({ unlocked, onUnlock }) {
   const [cv, setCv] = useState(() => localStorage.getItem(LS.cv) || '');
   const [cvFile, setCvFile] = useState(null);
   const [cvPdfBase64, setCvPdfBase64] = useState('');
@@ -237,41 +238,43 @@ export default function CoverLetterGenerator() {
 
       {result && !loading && (
         <div ref={resultRef}>
-          {/* Result toolbar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            marginBottom: 12, flexWrap: 'wrap', gap: 8,
-          }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ color: 'var(--accent)' }}>✉</span>Cover Letter
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 2 }}>
-                · {selectedTemplate.charAt(0).toUpperCase() + selectedTemplate.slice(1)} template
-              </span>
-            </h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <span style={{
-                fontSize: 12, fontWeight: 600,
-                color: resultWordCount > 300 ? '#f87171' : 'var(--accent)',
-                background: resultWordCount > 300 ? 'rgba(239,68,68,0.1)' : 'var(--accent-dim)',
-                padding: '3px 8px', borderRadius: 100,
-              }}>
-                {resultWordCount} words
-              </span>
-              <DownloadButtons text={result} filename="cover-letter" isLetter={true} template={selectedTemplate} />
-              <CopyButton text={result} />
+          <LockedContent unlocked={unlocked} onUnlock={onUnlock}>
+            {/* Result toolbar */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginBottom: 12, flexWrap: 'wrap', gap: 8,
+            }}>
+              <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: 'var(--accent)' }}>✉</span>Cover Letter
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 2 }}>
+                  · {selectedTemplate.charAt(0).toUpperCase() + selectedTemplate.slice(1)} template
+                </span>
+              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{
+                  fontSize: 12, fontWeight: 600,
+                  color: resultWordCount > 300 ? '#f87171' : 'var(--accent)',
+                  background: resultWordCount > 300 ? 'rgba(239,68,68,0.1)' : 'var(--accent-dim)',
+                  padding: '3px 8px', borderRadius: 100,
+                }}>
+                  {resultWordCount} words
+                </span>
+                <DownloadButtons text={result} filename="cover-letter" isLetter={true} template={selectedTemplate} />
+                <CopyButton text={result} />
+              </div>
             </div>
-          </div>
 
-          {/* WYSIWYG document preview — letter mode for flowing paragraphs */}
-          <DocumentPreview text={result} type="letter" template={selectedTemplate} />
+            {/* WYSIWYG document preview — letter mode for flowing paragraphs */}
+            <DocumentPreview text={result} type="letter" template={selectedTemplate} />
 
-          <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
-            Personalise with specific details (contact names, hiring manager) before sending.
-          </p>
+            <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+              Personalise with specific details (contact names, hiring manager) before sending.
+            </p>
 
-          {score !== null && <ScoreCard score={score} />}
+            {score !== null && <ScoreCard score={score} />}
 
-          <MiniChatbot currentDocument={result} onUpdate={handleAdjustUpdate} />
+            <MiniChatbot currentDocument={result} onUpdate={handleAdjustUpdate} />
+          </LockedContent>
         </div>
       )}
     </div>
