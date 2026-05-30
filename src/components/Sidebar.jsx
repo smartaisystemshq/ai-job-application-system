@@ -109,21 +109,17 @@ function SidebarUnlock({ onUnlock }) {
   };
 
   return (
-    <div style={{ padding: '8px 10px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+    <div style={{ padding: '10px 10px 14px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
       <button
         onClick={() => { setOpen(o => !o); setError(''); }}
-        style={{
-          width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-          color: 'var(--accent)', fontSize: 12, fontWeight: 600, textAlign: 'left',
-          padding: '6px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6,
-        }}
+        className="unlock-cta-btn"
         title="Enter access code"
       >
-        <span style={{ fontSize: 14 }}>🔓</span>
-        <span>Enter Access Code</span>
+        <span style={{ fontSize: 15, lineHeight: 1 }}>🔒</span>
+        <span>Unlock Full Access</span>
       </button>
       {open && (
-        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
           <input
             className="input"
             placeholder="Access code..."
@@ -143,6 +139,36 @@ function SidebarUnlock({ onUnlock }) {
           {error && <p style={{ fontSize: 11, color: '#f87171', margin: 0 }}>{error}</p>}
         </div>
       )}
+      <style>{`
+        .unlock-cta-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          padding: 9px 14px;
+          border-radius: 100px;
+          border: 1px solid rgba(29,158,117,0.5);
+          background: rgba(29,158,117,0.08);
+          color: #1D9E75;
+          font-family: inherit;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          letter-spacing: 0.01em;
+          box-shadow: 0 0 10px rgba(29,158,117,0.15);
+          transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+        }
+        .unlock-cta-btn:hover {
+          background: rgba(29,158,117,0.16);
+          border-color: rgba(29,158,117,0.8);
+          box-shadow: 0 0 18px rgba(29,158,117,0.35);
+          transform: scale(1.03);
+        }
+        .unlock-cta-btn:active {
+          transform: scale(0.97);
+        }
+      `}</style>
     </div>
   );
 }
