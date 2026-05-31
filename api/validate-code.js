@@ -9,6 +9,8 @@ module.exports = function handler(req, res) {
   const { code } = req.body || {};
   if (!code || typeof code !== 'string') return res.status(200).json({ valid: false });
 
+  console.log('ENV CODES:', process.env.VALID_ACCESS_CODES);
+
   const codesEnv = process.env.VALID_ACCESS_CODES || '';
   console.log('[validate-code] VALID_ACCESS_CODES present:', codesEnv.length > 0);
   console.log('[validate-code] Raw value:', codesEnv);
