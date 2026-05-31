@@ -91,7 +91,7 @@ export default function Paywall({ onUnlock }) {
 
         {/* CTA Button */}
         <a
-          href="https://smartaisystemshq.gumroad.com/l/webapp"
+          href="https://systemsbyniklas.gumroad.com/l/zilhaq"
           target="_blank"
           rel="noopener noreferrer"
           style={{
