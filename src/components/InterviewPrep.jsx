@@ -185,95 +185,132 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
   };
 
   return (
-    <div className="page">
-      <div className="page-header scroll-reveal">
-        <h1>Interview Prep</h1>
-        <p>Paste or upload the job description and get the 8 most likely interview questions with answer frameworks</p>
-      </div>
-
-      <div className="section-desc scroll-reveal">
-        <strong>How it works:</strong> Provide the job description and Claude generates the 8 most likely interview questions with specific answer frameworks — not generic tips, but role-tailored guidance on what interviewers are actually testing for. Language matches the job description automatically.
-      </div>
-
-      <div className="card scroll-reveal" style={{ marginBottom: 20 }}>
-        <FileUploadField
-          label="Job Description"
-          value={jobDescription}
-          onChange={setJobDescription}
-          onFileSelect={handleJdFileSelect}
-          onFileRemove={handleJdFileRemove}
-          file={jdFile}
-          placeholder="Paste the full job description here — include responsibilities, requirements, and any 'nice to have' skills..."
-          rows={10}
-        />
-      </div>
-
-      {error && (
-        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 'var(--radius-sm)', color: '#f87171', fontSize: 14, marginBottom: 16 }}>
-          {error}
+    <div>
+      {/* ── Section A: Hero ── */}
+      <div className="tool-hero scroll-reveal">
+        <div className="tool-hero-badge">
+          <span>◎</span><span>INTERVIEW PREP</span>
         </div>
-      )}
+        <h1 className="tool-hero-h1">
+          Walk in <span className="tool-kw">prepared</span> for any interview
+        </h1>
+        <p className="tool-hero-sub">
+          Paste the job description and AI generates the 8 most likely interview questions — each with a short answer framework so you know exactly how to respond.
+        </p>
+      </div>
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 28, flexWrap: 'wrap' }} className="scroll-reveal interview-btn-row">
-        <button
-          className="btn btn-primary"
-          onClick={handleGenerate}
-          disabled={loading || newQuestionsLoading || !canSubmit}
-          style={{ minWidth: 180 }}
-        >
-          {loading ? <><span className="spinner"></span> Generating...</> : '◈ Generate Questions'}
-        </button>
-        {(jobDescription || jdFile || rawResult) && (
-          <button className="btn btn-secondary" onClick={handleClear} disabled={loading || newQuestionsLoading}>Clear</button>
+      {/* ── Section B: How it works ── */}
+      <div className="tool-steps-wrap scroll-reveal">
+        <div className="tool-step"><div className="tool-step-num">1</div><span className="tool-step-text">Paste job description</span></div>
+        <span className="tool-step-arrow">→</span>
+        <div className="tool-step"><div className="tool-step-num">2</div><span className="tool-step-text">Get 8 questions</span></div>
+        <span className="tool-step-arrow">→</span>
+        <div className="tool-step"><div className="tool-step-num">3</div><span className="tool-step-text">Practice with frameworks</span></div>
+      </div>
+
+      {/* ── Section C: Divider ── */}
+      <div className="tool-divider" />
+
+      {/* ── Section D: Input area (single, max-width 480px) ── */}
+      <div className="tool-section" style={{ padding: '0 40px 32px' }}>
+        <div style={{ maxWidth: 480, margin: '0 auto' }}>
+          <div className="input-card scroll-reveal">
+            <FileUploadField
+              label="Job Description"
+              value={jobDescription}
+              onChange={setJobDescription}
+              onFileSelect={handleJdFileSelect}
+              onFileRemove={handleJdFileRemove}
+              file={jdFile}
+              placeholder="Paste the full job description here — include responsibilities, requirements, and any 'nice to have' skills..."
+              rows={10}
+            />
+          </div>
+        </div>
+
+        {error && (
+          <div style={{ maxWidth: 480, margin: '12px auto 0', padding: '12px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 'var(--radius-sm)', color: '#f87171', fontSize: 14 }}>
+            {error}
+          </div>
         )}
       </div>
 
-      {loading && (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 0', gap: 16 }}>
-          <div className="spinner-lg"></div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Analyzing the role and building your interview prep...</p>
-        </div>
-      )}
-
-      {questions.length > 0 && !loading && (
-        <div ref={resultRef}>
-          <LockedContent unlocked={unlocked} onUnlock={onUnlock}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, padding: '12px 16px', background: 'rgba(29,158,117,0.06)', border: '1px solid rgba(29,158,117,0.2)', borderRadius: 12 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ color: 'var(--accent)' }}>◈</span>
-                {questions.length} Interview Questions
-              </h2>
-              <CopyButton text={rawResult} />
-            </div>
-
-            {questions.map((q, i) => (
-              <div key={i} className="question-item scroll-reveal" style={{ animationDelay: `${i * 0.04}s` }}>
-                <div className="question-number">Question {i + 1}</div>
-                <div className="question-text">{q.question}</div>
-                {q.framework && <div className="question-framework">{q.framework}</div>}
-              </div>
-            ))}
-
-            <p style={{ marginTop: 16, fontSize: 12, color: 'var(--text-muted)' }}>
-              Practise answering each question out loud and prepare 1-2 specific examples (STAR method works well).
-            </p>
-
-            {/* New Interview Questions button */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24, marginBottom: 8 }}>
-              <button
-                className="btn btn-secondary"
-                onClick={handleNewQuestions}
-                disabled={newQuestionsLoading || loading || !canSubmit}
-                style={{ minWidth: 240, padding: '11px 28px' }}
-              >
-                {newQuestionsLoading
-                  ? <><span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }}></span> Generating new questions…</>
-                  : '↺ New Interview Questions'}
+      {/* ── Section E: Generate button ── */}
+      <div className="tool-section" style={{ padding: '0 40px 32px' }}>
+        <div style={{ maxWidth: 480, margin: '0 auto' }}>
+          <button
+            className="tool-generate-btn"
+            onClick={handleGenerate}
+            disabled={loading || newQuestionsLoading || !canSubmit}
+          >
+            {loading ? <><span className="spinner"></span> Generating…</> : '◈ Generate Questions'}
+          </button>
+          {(jobDescription || jdFile || rawResult) && (
+            <div style={{ textAlign: 'center', marginTop: 10 }}>
+              <button className="btn btn-ghost" onClick={handleClear} disabled={loading || newQuestionsLoading} style={{ fontSize: 13 }}>
+                Clear
               </button>
             </div>
+          )}
+        </div>
 
-            <MiniChatbot currentDocument={rawResult} onUpdate={handleAdjustUpdate} />
-          </LockedContent>
+        {loading && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 0', gap: 16 }}>
+            <div className="spinner-lg" />
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Analyzing the role and building your interview prep…</p>
+          </div>
+        )}
+      </div>
+
+      {/* ── Section F: Tip ── */}
+      <div className="tool-section" style={{ padding: '0 40px 60px' }}>
+        <div className="tool-tip-box">
+          <span>💡</span>
+          <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> Need different questions? Hit 'New Interview Questions' below for a fresh set. Or use the chat to adjust the existing ones.</span>
+        </div>
+      </div>
+
+      {/* ── Section G: Result ── */}
+      {questions.length > 0 && !loading && (
+        <div className="tool-section" style={{ padding: '0 40px 80px', marginTop: 40 }}>
+          <div ref={resultRef}>
+            <LockedContent unlocked={unlocked} onUnlock={onUnlock}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, padding: '12px 16px', background: 'rgba(29,158,117,0.06)', border: '1px solid rgba(29,158,117,0.2)', borderRadius: 12 }}>
+                <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ color: 'var(--accent)' }}>◈</span>
+                  {questions.length} Interview Questions
+                </h2>
+                <CopyButton text={rawResult} />
+              </div>
+
+              {questions.map((q, i) => (
+                <div key={i} className="question-item scroll-reveal" style={{ animationDelay: `${i * 0.04}s` }}>
+                  <div className="question-number">Question {i + 1}</div>
+                  <div className="question-text">{q.question}</div>
+                  {q.framework && <div className="question-framework">{q.framework}</div>}
+                </div>
+              ))}
+
+              <p style={{ marginTop: 16, fontSize: 12, color: 'var(--text-muted)' }}>
+                Practise answering each question out loud and prepare 1-2 specific examples (STAR method works well).
+              </p>
+
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24, marginBottom: 8 }}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleNewQuestions}
+                  disabled={newQuestionsLoading || loading || !canSubmit}
+                  style={{ minWidth: 240, padding: '11px 28px' }}
+                >
+                  {newQuestionsLoading
+                    ? <><span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }}></span> Generating new questions…</>
+                    : '↺ New Interview Questions'}
+                </button>
+              </div>
+
+              <MiniChatbot currentDocument={rawResult} onUpdate={handleAdjustUpdate} />
+            </LockedContent>
+          </div>
         </div>
       )}
     </div>

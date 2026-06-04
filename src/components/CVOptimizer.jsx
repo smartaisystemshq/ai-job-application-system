@@ -157,110 +157,142 @@ export default function CVOptimizer({ unlocked, onUnlock }) {
   };
 
   return (
-    <div className="page">
-      <div className="page-header scroll-reveal">
-        <h1>CV Optimizer</h1>
-        <p>Paste or upload your CV and job description — Claude tailors your CV to maximise ATS score and recruiter impact</p>
+    <div>
+      {/* ── Section A: Hero ── */}
+      <div className="tool-hero scroll-reveal">
+        <div className="tool-hero-badge">
+          <span>✦</span><span>CV OPTIMIZER</span>
+        </div>
+        <h1 className="tool-hero-h1">
+          Tailor your <span className="tool-kw">CV</span> to any job in seconds
+        </h1>
+        <p className="tool-hero-sub">
+          Upload your CV and the job description — AI rewrites your CV with the exact keywords recruiters and ATS systems look for. You get an interview-ready version in under a minute.
+        </p>
+        <p className="tool-ats-note">
+          ATS = the software companies use to filter CVs before a human ever sees them. Our AI makes sure yours gets through.
+        </p>
       </div>
 
-      <div className="section-desc scroll-reveal">
-        <strong>How it works:</strong> Provide your CV and the target job description (text or PDF/DOCX). Claude rewrites your CV with keyword alignment, quantified achievements, and ATS-friendly formatting tailored to the specific role.
+      {/* ── Section B: How it works ── */}
+      <div className="tool-steps-wrap scroll-reveal">
+        <div className="tool-step"><div className="tool-step-num">1</div><span className="tool-step-text">Upload CV</span></div>
+        <span className="tool-step-arrow">→</span>
+        <div className="tool-step"><div className="tool-step-num">2</div><span className="tool-step-text">Paste job description</span></div>
+        <span className="tool-step-arrow">→</span>
+        <div className="tool-step"><div className="tool-step-num">3</div><span className="tool-step-text">Get tailored CV</span></div>
       </div>
 
-      {/* Template selector — ABOVE inputs */}
-      <TemplateSelector selectedTemplate={selectedTemplate} onSelect={setSelectedTemplate} />
+      {/* ── Section C: Divider ── */}
+      <div className="tool-divider" />
 
-      {/* Input section */}
-      <div className="two-col scroll-reveal" style={{ marginBottom: 20 }}>
-        <div className="input-card">
-          <FileUploadField
-            label="Your CV"
-            value={cv}
-            onChange={setCv}
-            onFileSelect={handleCvFileSelect}
-            onFileRemove={handleCvFileRemove}
-            file={cvFile}
-            placeholder="Paste your full CV here..."
-            rows={14}
-          />
-        </div>
-        <div className="input-card" ref={jdRef}>
-          <FileUploadField
-            label="Job Description"
-            value={jobDescription}
-            onChange={setJobDescription}
-            onFileSelect={handleJdFileSelect}
-            onFileRemove={handleJdFileRemove}
-            file={jdFile}
-            placeholder="Paste the full job description here..."
-            rows={14}
-          />
-        </div>
-      </div>
+      {/* ── Section D: Input area ── */}
+      <div className="tool-section" style={{ padding: '0 40px 32px' }}>
+        <TemplateSelector selectedTemplate={selectedTemplate} onSelect={setSelectedTemplate} />
 
-      {error && (
-        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 'var(--radius-sm)', color: '#f87171', fontSize: 14, marginBottom: 16 }}>
-          {error}
+        <div className="two-col scroll-reveal" style={{ marginBottom: 20 }}>
+          <div className="input-card">
+            <FileUploadField
+              label="Your CV"
+              value={cv}
+              onChange={setCv}
+              onFileSelect={handleCvFileSelect}
+              onFileRemove={handleCvFileRemove}
+              file={cvFile}
+              placeholder="Paste your full CV here..."
+              rows={14}
+            />
+          </div>
+          <div className="input-card" ref={jdRef}>
+            <FileUploadField
+              label="Job Description"
+              value={jobDescription}
+              onChange={setJobDescription}
+              onFileSelect={handleJdFileSelect}
+              onFileRemove={handleJdFileRemove}
+              file={jdFile}
+              placeholder="Paste the full job description here..."
+              rows={14}
+            />
+          </div>
         </div>
-      )}
 
-      {/* Generate button — directly below inputs */}
-      <div ref={generateRef} className="scroll-reveal generate-row" style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 32, alignItems: 'center', flexWrap: 'wrap' }}>
-        <button
-          className="btn btn-primary"
-          onClick={handleOptimize}
-          disabled={loading || !canSubmit}
-          style={{ minWidth: 200, padding: '13px 32px', fontSize: 15 }}
-        >
-          {loading ? <><span className="spinner"></span> Optimizing...</> : '✦ Optimize CV'}
-        </button>
-        {(cv || cvFile || jobDescription || jdFile || result) && (
-          <button className="btn btn-ghost" onClick={handleClear} disabled={loading} style={{ fontSize: 13 }}>
-            Clear All
-          </button>
+        {error && (
+          <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 'var(--radius-sm)', color: '#f87171', fontSize: 14, marginBottom: 16 }}>
+            {error}
+          </div>
         )}
       </div>
 
-      {loading && (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 0', gap: 16 }}>
-          <div className="spinner-lg"></div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Analyzing job requirements and tailoring your CV…</p>
-        </div>
-      )}
-
-      {result && !loading && (
-        <div ref={resultRef}>
-          <LockedContent unlocked={unlocked} onUnlock={onUnlock}>
-            {/* Result toolbar */}
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              marginBottom: 12, flexWrap: 'wrap', gap: 8,
-            }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ color: 'var(--accent)' }}>✦</span>Optimized CV
-                <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 2 }}>
-                  · {TEMPLATES.find(t => t.id === selectedTemplate)?.name} template
-                </span>
-              </h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <DownloadButtons text={result} filename="optimized-cv" template={selectedTemplate} />
-                <CopyButton text={result} />
-              </div>
+      {/* ── Section E: Generate button ── */}
+      <div className="tool-section" style={{ padding: '0 40px 32px' }}>
+        <div ref={generateRef}>
+          <button
+            className="tool-generate-btn"
+            onClick={handleOptimize}
+            disabled={loading || !canSubmit}
+          >
+            {loading ? <><span className="spinner"></span> Optimizing…</> : '✦ Optimize CV'}
+          </button>
+          {(cv || cvFile || jobDescription || jdFile || result) && (
+            <div style={{ textAlign: 'center', marginTop: 10 }}>
+              <button className="btn btn-ghost" onClick={handleClear} disabled={loading} style={{ fontSize: 13 }}>
+                Clear All
+              </button>
             </div>
+          )}
+        </div>
 
-            {/* WYSIWYG document preview */}
-            <DocumentPreview text={result} template={selectedTemplate} />
+        {loading && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 0', gap: 16 }}>
+            <div className="spinner-lg" />
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Analyzing job requirements and tailoring your CV…</p>
+          </div>
+        )}
+      </div>
 
-            <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
-              Review and personalise before submitting your application.
-            </p>
+      {/* ── Section F: Tip ── */}
+      <div className="tool-section" style={{ padding: '0 40px 60px' }}>
+        <div className="tool-tip-box">
+          <span>💡</span>
+          <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> Templates appear after optimization — pick what suits your industry. Want to adjust? Use the AI chat below the result.</span>
+        </div>
+      </div>
 
-            {score !== null && <ScoreCard score={score} />}
+      {/* ── Section G: Result ── */}
+      {result && !loading && (
+        <div className="tool-section" style={{ padding: '0 40px 80px', marginTop: 40 }}>
+          <div ref={resultRef}>
+            <LockedContent unlocked={unlocked} onUnlock={onUnlock}>
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                marginBottom: 12, flexWrap: 'wrap', gap: 8,
+              }}>
+                <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ color: 'var(--accent)' }}>✦</span>Optimized CV
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 2 }}>
+                    · {TEMPLATES.find(t => t.id === selectedTemplate)?.name} template
+                  </span>
+                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <DownloadButtons text={result} filename="optimized-cv" template={selectedTemplate} />
+                  <CopyButton text={result} />
+                </div>
+              </div>
 
-            <KeywordMatch cvText={result} jdText={jobDescription} />
+              <DocumentPreview text={result} template={selectedTemplate} />
 
-            <MiniChatbot currentDocument={result} onUpdate={handleAdjustUpdate} />
-          </LockedContent>
+              <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+                Review and personalise before submitting your application.
+              </p>
+
+              {score !== null && <ScoreCard score={score} />}
+
+              <KeywordMatch cvText={result} jdText={jobDescription} />
+
+              <MiniChatbot currentDocument={result} onUpdate={handleAdjustUpdate} />
+            </LockedContent>
+          </div>
         </div>
       )}
     </div>

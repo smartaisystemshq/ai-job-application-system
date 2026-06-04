@@ -825,6 +825,184 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text-primary
   .home-features-grid { grid-template-columns: 1fr; }
 }
 
+/* ─── Tool pages shared layout ─── */
+.tool-hero {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 60px 40px 32px;
+  text-align: center;
+}
+
+.tool-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(29,158,117,0.07);
+  border: 1px solid rgba(29,158,117,0.15);
+  border-radius: 100px;
+  padding: 5px 14px;
+  margin-bottom: 24px;
+  font-size: 10px;
+  color: rgba(29,158,117,0.8);
+  letter-spacing: 0.7px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.tool-hero-h1 {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -1px;
+  margin-bottom: 14px;
+  color: #e2ede8;
+}
+
+.tool-kw {
+  color: #1D9E75;
+  text-shadow: 0 0 22px rgba(29,158,117,0.45);
+}
+
+.tool-hero-sub {
+  font-size: 15px;
+  color: rgba(226,237,232,0.5);
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+.tool-ats-note {
+  font-size: 12px;
+  color: rgba(226,237,232,0.4);
+  text-align: center;
+  max-width: 480px;
+  margin: 14px auto 0;
+  line-height: 1.6;
+}
+
+.tool-steps-wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 40px 40px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.tool-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tool-step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(29,158,117,0.1);
+  border: 1px solid rgba(29,158,117,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #1D9E75;
+  flex-shrink: 0;
+}
+
+.tool-step-text {
+  font-size: 12px;
+  color: rgba(226,237,232,0.55);
+}
+
+.tool-step-arrow {
+  color: rgba(29,158,117,0.4);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.tool-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(29,158,117,0.14), transparent);
+  margin: 0 40px 48px;
+}
+
+.tool-section {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.tool-tip-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(29,158,117,0.05);
+  border: 1px solid rgba(29,158,117,0.11);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 12px;
+  color: rgba(226,237,232,0.5);
+  line-height: 1.6;
+}
+
+.tool-generate-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #1D9E75, #0f6e4e);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 0 26px rgba(29,158,117,0.28);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.tool-generate-btn:hover:not(:disabled) {
+  box-shadow: 0 0 40px rgba(29,158,117,0.48);
+  transform: translateY(-1px);
+}
+.tool-generate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Override input-card for tool upload areas */
+.input-card {
+  background: var(--bg-card);
+  border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 28px 22px;
+  transition: border-color var(--transition), background var(--transition);
+}
+.input-card:hover { border-color: var(--accent); background: rgba(29,158,117,0.04); }
+.input-card:focus-within { border-color: rgba(29,158,117,0.35); }
+.input-card .label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2ede8;
+  margin-bottom: 4px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+@media (max-width: 640px) {
+  .tool-hero { padding: 40px 20px 24px; }
+  .tool-hero-h1 { font-size: 26px; letter-spacing: -0.5px; }
+  .tool-hero-sub { font-size: 14px; }
+  .tool-steps-wrap { padding: 0 20px 32px; gap: 12px; }
+  .tool-divider { margin: 0 20px 36px; }
+  .tool-section { padding-left: 16px !important; padding-right: 16px !important; }
+}
+
 /* ─── Utilities ─── */
 .flex            { display: flex; }
 .flex-col        { flex-direction: column; }
