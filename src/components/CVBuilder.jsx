@@ -31,33 +31,111 @@ function load() {
 function newExp() { return { id: Date.now(), jobTitle: '', company: '', startDate: '', endDate: '', isCurrent: false, description: '', bullets: '' }; }
 function newEdu() { return { id: Date.now() + 1, degree: '', institution: '', year: '', field: '' }; }
 
-// ── Step Indicator ──────────────────────────────────────────────
-function StepIndicator({ step }) {
-  const steps = ['Personal', 'Experience', 'Education', 'Skills', 'Summary'];
+// ── Step Progress Bar ────────────────────────────────────────────
+const STEP_NAMES = ['Personal Info', 'Experience', 'Education', 'Skills', 'Summary'];
+
+function StepProgressBar({ step }) {
+  const progress = (step / 5) * 100;
   return (
-    <div className="step-indicator">
-      {steps.map((label, i) => {
-        const n = i + 1;
-        const done = n < step;
-        const active = n === step;
-        return (
-          <React.Fragment key={n}>
-            <div className="step-item">
-              <div className={`step-circle${done ? ' done' : active ? ' active' : ''}`}>
+    <div className="tool-section" style={{ padding: '0 40px 40px' }}>
+      <div style={{ position: 'relative', height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 3, marginBottom: 16 }}>
+        <div style={{
+          position: 'absolute', left: 0, top: 0, height: '100%',
+          borderRadius: 3, background: '#1D9E75',
+          width: `${progress}%`,
+          transition: 'width 0.4s ease',
+        }} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        {STEP_NAMES.map((label, i) => {
+          const n = i + 1;
+          const done = n < step;
+          const active = n === step;
+          return (
+            <div key={n} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+              <div style={{
+                width: 28, height: 28,
+                borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: done ? 12 : 11,
+                fontWeight: 700,
+                flexShrink: 0,
+                ...(done
+                  ? { background: '#1D9E75', color: 'white', border: 'none' }
+                  : active
+                  ? { background: 'rgba(29,158,117,0.15)', border: '2px solid #1D9E75', color: '#1D9E75' }
+                  : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(226,237,232,0.35)' }
+                ),
+              }}>
                 {done ? '✓' : n}
               </div>
-              <span className="step-label">{label}</span>
+              <span style={{
+                fontSize: 11,
+                color: (done || active) ? '#e2ede8' : 'rgba(226,237,232,0.35)',
+                whiteSpace: 'nowrap',
+              }}>
+                {label}
+              </span>
             </div>
-            {i < steps.length - 1 && (
-              <div className={`step-line${done ? ' done' : ''}`} />
-            )}
-          </React.Fragment>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
 
+// ── Step header ──────────────────────────────────────────────────
+function StepHeader({ step }) {
+  const titles = [
+    <>Tell us about <span className="tool-kw">yourself</span></>,
+    <>Your work <span className="tool-kw">experience</span></>,
+    <>Your <span className="tool-kw">education</span></>,
+    <>Your <span className="tool-kw">skills</span></>,
+    <>Professional <span className="tool-kw">summary</span></>,
+  ];
+  const descs = [
+    'Basic contact info — this goes at the top of your CV.',
+    'Add your jobs, internships, and relevant experience. AI helps write strong bullet points from your descriptions.',
+    "Degrees, courses, training — add what's relevant to the roles you're applying for.",
+    'Type your skills and AI suggests more based on your target role. Click green suggestions to add them.',
+    "AI generates a strong summary based on everything you've entered. Review it and adjust if needed.",
+  ];
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <h2 style={{ fontSize: 20, fontWeight: 700, color: '#e2ede8', marginBottom: 6, lineHeight: 1.3 }}>
+        {titles[step - 1]}
+      </h2>
+      <p style={{ fontSize: 13, color: 'rgba(226,237,232,0.45)', lineHeight: 1.6 }}>
+        {descs[step - 1]}
+      </p>
+    </div>
+  );
+}
+
+// ── Tip box ──────────────────────────────────────────────────────
+const STEP_TIPS = [
+  'Tip: Only your name and email are required. Add more contact info for a more professional CV.',
+  'Tip: Focus on achievements over responsibilities. AI helps you write strong action-oriented bullet points.',
+  'Tip: Add your most relevant education first. Courses and certifications count too.',
+  'Tip: Click the green AI suggestions to add them. Aim for 6-10 skills that match your target role.',
+  'Tip: This summary is your elevator pitch. Keep it 3-4 sentences — AI generates a strong one based on your input.',
+];
+
+function TipBox({ step }) {
+  const tip = STEP_TIPS[step - 1];
+  const colon = tip.indexOf(':');
+  return (
+    <div className="tool-tip-box" style={{ marginBottom: 24 }}>
+      <span>💡</span>
+      <span>
+        <strong style={{ color: '#1D9E75' }}>{tip.slice(0, colon + 1)}</strong>
+        {tip.slice(colon + 1)}
+      </span>
+    </div>
+  );
+}
+
+// ── Shared helpers ────────────────────────────────────────────────
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
   return (
@@ -83,7 +161,7 @@ function ErrBox({ msg }) {
   );
 }
 
-// ── Mini Chatbot ────────────────────────────────────────────────
+// ── Mini Chatbot ─────────────────────────────────────────────────
 function MiniChatbot({ currentDocument, onUpdate }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -147,7 +225,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
   );
 }
 
-// ── CV Text Generator ───────────────────────────────────────────
+// ── CV Text Generator ────────────────────────────────────────────
 function buildCVText({ personal, experience, education, skills, summary }) {
   const { name, email, phone, street, city, postalCode, country, linkedin, portfolio } = personal;
   const lines = [];
@@ -207,7 +285,7 @@ function buildCVText({ personal, experience, education, skills, summary }) {
   return lines.join('\n');
 }
 
-// ── Main Component ──────────────────────────────────────────────
+// ── Main Component ───────────────────────────────────────────────
 export default function CVBuilder({ unlocked, onUnlock }) {
   const [state, setState] = useState(load);
   const [skillInput, setSkillInput] = useState('');
@@ -216,7 +294,6 @@ export default function CVBuilder({ unlocked, onUnlock }) {
   const [skillsLoading, setSkillsLoading] = useState(false);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [apiError, setApiError] = useState('');
-  // Adjusted CV text from chatbot (separate from raw buildCVText output)
   const [adjustedCvText, setAdjustedCvText] = useState(null);
   const [cvScore, setCvScore] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState('minimal');
@@ -227,7 +304,6 @@ export default function CVBuilder({ unlocked, onUnlock }) {
     localStorage.setItem(LS_KEY, JSON.stringify(state));
   }, [state]);
 
-  // Clear adjustedCvText when user goes back from preview
   useEffect(() => {
     if (state.step !== 6) setAdjustedCvText(null);
   }, [state.step]);
@@ -339,9 +415,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
 
   const renderStep1 = () => (
     <div>
-      <h2 className="step-title">Personal Information</h2>
-      <p className="step-subtitle">Basic contact details and your target role (used to guide AI suggestions in later steps).</p>
-      <div className="two-col" style={{ marginTop: 20 }}>
+      <div className="two-col">
         <div className="form-group">
           <label className="label">Full Name *</label>
           <input className="input" placeholder="Jane Smith" value={state.personal.name} onChange={e => setP('name', e.target.value)} />
@@ -403,9 +477,6 @@ export default function CVBuilder({ unlocked, onUnlock }) {
 
   const renderStep2 = () => (
     <div>
-      <h2 className="step-title">Work Experience</h2>
-      <p className="step-subtitle">Add each role you want to include. Claude can generate strong bullet points from a short description.</p>
-
       {state.experience.length === 0 && (
         <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)', marginTop: 16 }}>
           <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.4 }}>💼</div>
@@ -473,9 +544,6 @@ export default function CVBuilder({ unlocked, onUnlock }) {
 
   const renderStep3 = () => (
     <div>
-      <h2 className="step-title">Education</h2>
-      <p className="step-subtitle">Add your degrees, diplomas, or certifications.</p>
-
       {state.education.length === 0 && (
         <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)', marginTop: 16 }}>
           <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.4 }}>🎓</div>
@@ -518,10 +586,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
 
   const renderStep4 = () => (
     <div>
-      <h2 className="step-title">Skills</h2>
-      <p className="step-subtitle">Add your key skills. Type and press Enter (or comma) to add each one. Use the AI button to get suggestions — click each one to add it.</p>
-
-      <div style={{ display: 'flex', gap: 10, marginTop: 20, marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
         <input
           className="input"
           placeholder="Type a skill and press Enter..."
@@ -588,10 +653,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
 
   const renderStep5 = () => (
     <div>
-      <h2 className="step-title">Professional Summary</h2>
-      <p className="step-subtitle">Generate a 3-4 sentence summary from your profile, or write your own.</p>
-
-      <div style={{ display: 'flex', gap: 10, marginTop: 20, marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
         <button
           className="btn btn-primary"
           onClick={generateSummary}
@@ -621,10 +683,8 @@ export default function CVBuilder({ unlocked, onUnlock }) {
   const renderPreview = () => (
     <div ref={previewRef}>
       <LockedContent unlocked={unlocked} onUnlock={onUnlock}>
-        {/* Template selector in preview step */}
         <TemplateSelector selectedTemplate={selectedTemplate} onSelect={setSelectedTemplate} />
 
-        {/* Result toolbar */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           marginBottom: 12, flexWrap: 'wrap', gap: 8,
@@ -643,7 +703,6 @@ export default function CVBuilder({ unlocked, onUnlock }) {
           </div>
         </div>
 
-        {/* WYSIWYG document preview */}
         <DocumentPreview text={displayCvText} template={selectedTemplate} />
 
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
@@ -668,44 +727,86 @@ export default function CVBuilder({ unlocked, onUnlock }) {
   );
 
   return (
-    <div className="page">
-      <div className="page-header scroll-reveal">
-        <h1>CV Builder</h1>
-        <p>Build a professional CV from scratch in 5 guided steps — with AI assistance at every stage</p>
+    <div className="cvb-wrap">
+
+      {/* ── Section A: Hero ── */}
+      <div className="tool-hero scroll-reveal">
+        <div className="tool-hero-badge">
+          <span>◈</span><span>CV BUILDER</span>
+        </div>
+        <h1 className="tool-hero-h1">
+          Build a professional <span className="tool-kw">CV</span> from scratch
+        </h1>
+        <p className="tool-hero-sub">
+          No CV yet? No problem. AI guides you through 5 simple steps — enter your info, and we build a polished, ready-to-send CV at the end.
+        </p>
+        <p className="tool-ats-note">
+          Takes about 5 minutes. You can download your CV as PDF or Word when finished.
+        </p>
       </div>
 
-      <div className="section-desc scroll-reveal">
-        <strong>No existing CV?</strong> This wizard guides you step by step: add your personal info, work history, education, and skills. Claude generates bullet points, suggests skills, and writes your summary — then shows a clean formatted CV you can download as PDF or Word.
-      </div>
+      {/* ── Section B: Divider ── */}
+      <div className="tool-divider" style={{ margin: '24px 40px 40px' }} />
 
-      {state.step <= 5 && <StepIndicator step={state.step} />}
+      {/* ── Section C: Progress bar (steps 1–5 only) ── */}
+      {state.step <= 5 && <StepProgressBar step={state.step} />}
 
-      <div className="card" style={{ minHeight: 300 }}>
-        {state.step === 1 && renderStep1()}
-        {state.step === 2 && renderStep2()}
-        {state.step === 3 && renderStep3()}
-        {state.step === 4 && renderStep4()}
-        {state.step === 5 && renderStep5()}
-        {state.step === 6 && renderPreview()}
-      </div>
-
+      {/* ── Sections D + G + E: Form card, tip box, nav ── */}
       {state.step <= 5 && (
-        <div className="cv-builder-nav" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
-          <button
-            className="btn btn-secondary"
-            onClick={() => setStep(state.step - 1)}
-            disabled={state.step === 1}
-          >
-            ← Back
-          </button>
-          <button
-            className="btn btn-primary"
-            onClick={() => setStep(state.step < 5 ? state.step + 1 : 6)}
-          >
-            {state.step === 5 ? 'Preview CV →' : 'Next →'}
-          </button>
+        <div className="tool-section" style={{ padding: '0 40px 32px' }}>
+
+          {/* Form card */}
+          <div className="cvb-form-card scroll-reveal">
+            <StepHeader step={state.step} />
+            {state.step === 1 && renderStep1()}
+            {state.step === 2 && renderStep2()}
+            {state.step === 3 && renderStep3()}
+            {state.step === 4 && renderStep4()}
+            {state.step === 5 && renderStep5()}
+          </div>
+
+          {/* Tip box */}
+          <TipBox step={state.step} />
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button
+              className="cvb-btn-prev"
+              onClick={() => setStep(state.step - 1)}
+              disabled={state.step === 1}
+            >
+              ← Previous
+            </button>
+            <span style={{ fontSize: 12, color: 'rgba(226,237,232,0.38)' }}>
+              Step {state.step} of 5
+            </span>
+            <button
+              className="cvb-btn-next"
+              onClick={() => setStep(state.step < 5 ? state.step + 1 : 6)}
+            >
+              {state.step === 5 ? 'Preview CV →' : 'Next →'}
+            </button>
+          </div>
+
         </div>
       )}
+
+      {/* ── Section F: Preview (step 6) ── */}
+      {state.step === 6 && (
+        <div className="tool-section" style={{ padding: '0 40px 80px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 32 }} className="scroll-reveal">
+            <div style={{ fontSize: 32, marginBottom: 10 }}>🎉</div>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: '#e2ede8', marginBottom: 6 }}>
+              Your CV is ready!
+            </h2>
+            <p style={{ fontSize: 13, color: 'rgba(226,237,232,0.45)' }}>
+              Download it as PDF or Word, or adjust it with the AI chat below.
+            </p>
+          </div>
+          {renderPreview()}
+        </div>
+      )}
+
     </div>
   );
 }

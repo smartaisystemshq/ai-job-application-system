@@ -1347,6 +1347,78 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text-primary
   .step-indicator { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
 }
 
+/* ─── CV Builder Redesign ─── */
+.cvb-wrap .input,
+.cvb-wrap .textarea {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #e2ede8;
+  height: auto;
+}
+.cvb-wrap .input:focus,
+.cvb-wrap .textarea:focus {
+  border-color: #1D9E75;
+  box-shadow: 0 0 8px rgba(29,158,117,0.15);
+  background: rgba(255,255,255,0.06);
+}
+.cvb-wrap .label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(226,237,232,0.6);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.cvb-form-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 36px 32px;
+  margin-bottom: 24px;
+}
+.cvb-btn-prev {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 10px 20px;
+  color: rgba(226,237,232,0.55);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.18s ease, color 0.18s ease;
+}
+.cvb-btn-prev:hover:not(:disabled) {
+  border-color: rgba(29,158,117,0.3);
+  color: rgba(226,237,232,0.75);
+}
+.cvb-btn-prev:disabled { opacity: 0.3; cursor: not-allowed; }
+.cvb-btn-next {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #1D9E75, #0f6e4e);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 0 20px rgba(29,158,117,0.25);
+  transition: all 0.2s ease;
+}
+.cvb-btn-next:hover {
+  box-shadow: 0 0 32px rgba(29,158,117,0.45);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .cvb-form-card { padding: 24px 18px; }
+  .cvb-btn-prev, .cvb-btn-next { padding: 9px 14px; font-size: 13px; }
+}
+
 @media (max-width: 480px) {
   .page { padding: 12px 12px; }
   .page-header h1 { font-size: 19px; }
