@@ -11,7 +11,7 @@ const FEATURES = [
   'Pay once — use forever',
 ];
 
-export default function Paywall({ onUnlock }) {
+export default function Paywall({ onUnlock, onClose }) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -57,7 +57,25 @@ export default function Paywall({ onUnlock }) {
         width: '100%',
         maxHeight: '90vh',
         overflowY: 'auto',
+        position: 'relative',
       }}>
+        {/* Close button (optional) */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            style={{
+              position: 'absolute', top: 14, right: 14,
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'rgba(255,255,255,0.4)', fontSize: 20, lineHeight: 1,
+              padding: '4px 8px', borderRadius: 6,
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+            aria-label="Close"
+          >×</button>
+        )}
+
         {/* Brand */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
           <img
