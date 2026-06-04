@@ -193,8 +193,6 @@ export default function CoverLetterGenerator({ unlocked, onUnlock }) {
 
       {/* ── Section D: Input area ── */}
       <div className="tool-section" style={{ padding: '0 40px 32px' }}>
-        <TemplateSelector selectedTemplate={selectedTemplate} onSelect={setSelectedTemplate} />
-
         <div className="two-col scroll-reveal" style={{ marginBottom: 20 }}>
           <div className="input-card">
             <FileUploadField
@@ -303,6 +301,13 @@ export default function CoverLetterGenerator({ unlocked, onUnlock }) {
 
               <MiniChatbot currentDocument={result} onUpdate={handleAdjustUpdate} />
             </LockedContent>
+
+            <div className="tool-tip-box" style={{ marginTop: 20, marginBottom: 16 }}>
+              <span>💡</span>
+              <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> Choose a template below to change the look of your cover letter — pick what suits your industry best.</span>
+            </div>
+
+            <TemplateSelector selectedTemplate={selectedTemplate} onSelect={setSelectedTemplate} />
           </div>
         </div>
       )}

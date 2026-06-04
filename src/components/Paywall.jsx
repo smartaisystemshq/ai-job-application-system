@@ -59,21 +59,21 @@ export default function Paywall({ onUnlock, onClose }) {
         overflowY: 'auto',
         position: 'relative',
       }}>
-        {/* Close button (optional) */}
+        {/* Close button */}
         {onClose && (
           <button
             onClick={onClose}
             style={{
-              position: 'absolute', top: 14, right: 14,
+              position: 'absolute', top: 14, right: 16,
               background: 'none', border: 'none', cursor: 'pointer',
-              color: 'rgba(255,255,255,0.4)', fontSize: 20, lineHeight: 1,
-              padding: '4px 8px', borderRadius: 6,
+              color: 'rgba(226,237,232,0.4)', fontSize: 16, lineHeight: 1,
+              padding: '4px 6px', borderRadius: 6,
               transition: 'color 0.15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#e2ede8'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(226,237,232,0.4)'; }}
             aria-label="Close"
-          >×</button>
+          >✕</button>
         )}
 
         {/* Brand */}

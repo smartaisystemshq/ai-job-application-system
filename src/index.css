@@ -938,41 +938,54 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text-primary
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  background: rgba(29,158,117,0.05);
-  border: 1px solid rgba(29,158,117,0.11);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-left: 3px solid #1D9E75;
   border-radius: 10px;
-  padding: 14px 18px;
+  padding: 14px 18px 14px 20px;
   font-size: 12px;
   color: rgba(226,237,232,0.5);
   line-height: 1.6;
 }
 
+@keyframes toolBtnShimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
 .tool-generate-btn {
   width: 100%;
   padding: 15px;
-  background: linear-gradient(135deg, #1D9E75, #0f6e4e);
-  border: none;
+  background: linear-gradient(135deg, #1D9E75 0%, #0d7a5a 50%, #1D9E75 100%);
+  background-size: 200% 100%;
+  animation: toolBtnShimmer 3s linear infinite;
+  border: 1px solid rgba(29,158,117,0.4);
   border-radius: 12px;
   color: white;
   font-size: 15px;
   font-weight: 600;
+  letter-spacing: 0.3px;
   cursor: pointer;
   font-family: inherit;
-  box-shadow: 0 0 26px rgba(29,158,117,0.28);
-  transition: all 0.2s ease;
+  box-shadow: 0 0 24px rgba(29,158,117,0.35), inset 0 1px 0 rgba(255,255,255,0.1);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: all 0.25s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
 }
 .tool-generate-btn:hover:not(:disabled) {
-  box-shadow: 0 0 40px rgba(29,158,117,0.48);
+  box-shadow: 0 0 40px rgba(29,158,117,0.55), inset 0 1px 0 rgba(255,255,255,0.15);
   transform: translateY(-1px);
+  animation-duration: 1s;
 }
 .tool-generate-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+  animation: none;
 }
 
 /* Override input-card for tool upload areas */
