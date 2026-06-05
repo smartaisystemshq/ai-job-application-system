@@ -243,7 +243,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
             onClick={handleGenerate}
             disabled={loading || newQuestionsLoading || !canSubmit}
           >
-            {loading ? <><span className="spinner"></span> Generating…</> : '◈ Generate Questions'}
+            {loading ? <><span className="spinner"></span> Generating…</> : '✦ Generate Questions'}
           </button>
           {(jobDescription || jdFile || rawResult) && (
             <div style={{ textAlign: 'center', marginTop: 10 }}>

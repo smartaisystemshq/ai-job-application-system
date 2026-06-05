@@ -235,7 +235,7 @@ export default function CoverLetterGenerator({ unlocked, onUnlock }) {
             onClick={handleGenerate}
             disabled={loading || !canSubmit}
           >
-            {loading ? <><span className="spinner"></span> Generating…</> : '✉ Generate Cover Letter'}
+            {loading ? <><span className="spinner"></span> Generating…</> : '✦ Generate Cover Letter'}
           </button>
           {(cv || cvFile || jobDescription || jdFile || result) && (
             <div style={{ textAlign: 'center', marginTop: 10 }}>
