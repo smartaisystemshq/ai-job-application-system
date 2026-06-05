@@ -1542,3 +1542,22 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text-primary
   .dash-app-card > div:last-child { align-self: flex-start; flex-wrap: wrap; }
   .dash-empty { padding: 40px 20px; }
 }
+
+/* ─── FAQ Social Cards ─── */
+.faq-social-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 24px 32px;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  width: 200px;
+  transition: all 0.2s;
+}
+.faq-social-card:hover {
+  border-color: rgba(29,158,117,0.25);
+  background: rgba(29,158,117,0.04);
+  transform: translateY(-2px);
+}
