@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { LanguageProvider } from './context/LanguageContext';
 import TopNav from './components/TopNav';
 import WaveBackground from './components/WaveBackground';
 import Home from './components/Home';
@@ -41,6 +42,7 @@ export default function App() {
   }, [activePage]);
 
   return (
+    <LanguageProvider>
     <div style={{ position: 'relative', minHeight: '100vh' }}>
       <WaveBackground />
 
@@ -77,5 +79,6 @@ export default function App() {
         </footer>
       </div>
     </div>
+    </LanguageProvider>
   );
 }
