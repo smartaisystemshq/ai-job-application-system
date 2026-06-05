@@ -1,5 +1,40 @@
 import React, { useEffect, useRef } from 'react';
 
+const PARTICLE_COUNT = 180;
+const MOUSE_RADIUS   = 120;
+const MAX_FORCE      = 0.4;
+const BURST_COUNT    = 8;
+const BURST_DURATION = 600; // ms
+
+const COLORS = [
+  { rgb: { r: 29,  g: 158, b: 117 }, threshold: 0.70 }, // #1D9E75  70%
+  { rgb: { r: 168, g: 240, b: 216 }, threshold: 0.90 }, // #a8f0d8  20%
+  { rgb: { r: 226, g: 237, b: 232 }, threshold: 1.00 }, // #e2ede8  10%
+];
+
+function rnd(min, max) { return min + Math.random() * (max - min); }
+
+function pickColor() {
+  const r = Math.random();
+  return r < 0.70 ? COLORS[0] : r < 0.90 ? COLORS[1] : COLORS[2];
+}
+
+function mkParticle(W, H) {
+  const radius = rnd(0.3, 2.2);
+  return {
+    x: Math.random() * W,
+    y: Math.random() * H,
+    radius,
+    opacity:    rnd(0.08, 0.65),
+    speedX:     rnd(-0.08, 0.08),
+    speedY:     rnd(-0.12, -0.02),
+    pulsePhase: Math.random() * Math.PI * 2,
+    pulseSpeed: rnd(0.004, 0.018),
+    rgb:        pickColor().rgb,
+    glowRadius: radius * rnd(2.5, 5),
+  };
+}
+
 export default function WaveBackground() {
   const canvasRef = useRef(null);
 
@@ -7,131 +42,135 @@ export default function WaveBackground() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+
     let animId;
-    let t = 0;
-
-    // Interaction state — unchanged
-    let mouseX = -1, mouseY = -1;
-    let scrollY = 0;
-    const ripples = [];
-
-    // Band enters centre-left (50% H) and exits toward top-right (~17% H)
-    const BAND_CENTER = 0.50;  // vertical centre of band at the left edge
-    const BAND_HALF   = 0.20;  // band spans 40% of screen height at entry
-
-    // Quadratic upward rise: flows mostly straight, then curves sharply to top-right
-    const EXIT_OFFSET = 0.33;  // total rise as fraction of H (50% → 17%)
-
-    // 3 depth layers — more lines, higher amplitude → interweaving / crossing
-    // ps = per-line phase spread (higher → more phase diversity → more crossings)
-    const layers = [
-      { rgb: '5,46,28',    n: 28, amp: 36, freq: 0.0026, speed: 0.003, op: 0.10, lw: 0.6,  ps: 1.4 },
-      { rgb: '10,102,64',  n: 25, amp: 50, freq: 0.0036, speed: 0.008, op: 0.17, lw: 1.2,  ps: 2.0 },
-      { rgb: '29,158,117', n: 20, amp: 66, freq: 0.0048, speed: 0.015, op: 0.30, lw: 2.0,  ps: 2.8 },
-    ];
+    let particles = [];
+    let bursts    = [];
+    const mouse   = { x: -9999, y: -9999 };
+    let scrollBoost = 0;
+    let lastScrollY = window.scrollY;
 
     const resize = () => {
       canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
+      particles = Array.from({ length: PARTICLE_COUNT }, () =>
+        mkParticle(canvas.width, canvas.height)
+      );
     };
+
+    const onMouseMove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY; };
+
+    const onScroll = () => {
+      const delta = window.scrollY - lastScrollY;
+      lastScrollY = window.scrollY;
+      scrollBoost += delta * 0.002;
+      // Clamp to prevent extreme effects
+      scrollBoost = Math.max(-0.25, Math.min(0.25, scrollBoost));
+    };
+
+    const onClick = (e) => {
+      const now = performance.now();
+      for (let i = 0; i < BURST_COUNT; i++) {
+        const angle = (i / BURST_COUNT) * Math.PI * 2 + rnd(-0.3, 0.3);
+        const speed = rnd(1.5, 4.0);
+        const c = pickColor();
+        bursts.push({
+          x: e.clientX,
+          y: e.clientY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          radius: rnd(1.0, 2.5),
+          rgb: c.rgb,
+          startTime: now,
+        });
+      }
+    };
+
     resize();
-    window.addEventListener('resize', resize);
-
-    const onMouseMove = e => { mouseX = e.clientX; mouseY = e.clientY; };
-    const onScroll    = ()  => { scrollY = window.scrollY; };
-    const onClick     = e  => {
-      ripples.push({ x: e.clientX, y: e.clientY, age: 0, maxAge: 60 });
-    };
-
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('scroll',    onScroll, { passive: true });
+    window.addEventListener('resize',    resize);
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
+    window.addEventListener('scroll',    onScroll,    { passive: true });
     window.addEventListener('click',     onClick);
 
     const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
       const W = canvas.width;
       const H = canvas.height;
 
-      // Band centre shifts slightly with scroll (max ±8% of H)
-      const scrollShift = (scrollY / (document.body.scrollHeight || H)) * H * 0.08;
-      const bandCenterY = H * BAND_CENTER + scrollShift;
-      const bandHalfPx  = H * BAND_HALF;
+      ctx.clearRect(0, 0, W, H);
 
-      // Mouse influence radius² (3σ = 480px → skip distant points early)
-      const MOUSE_R2 = 480 * 480;
-      const MOUSE_SIG2 = 2 * 160 * 160;
+      // Gradually return scroll boost to zero (~500ms at 60fps)
+      scrollBoost *= 0.92;
 
-      // Age ripples
-      for (let r = ripples.length - 1; r >= 0; r--) {
-        ripples[r].age++;
-        if (ripples[r].age > ripples[r].maxAge) ripples.splice(r, 1);
-      }
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        const { r, g, b } = p.rgb;
 
-      for (let li = 0; li < layers.length; li++) {
-        const layer = layers[li];
-        const depthFactor = (li + 1) / layers.length;
+        // Breathing pulse
+        p.pulsePhase += p.pulseSpeed;
+        const op = p.opacity * (0.55 + 0.45 * Math.sin(p.pulsePhase));
 
-        ctx.lineWidth = layer.lw;
-
-        // Gradient: full opacity until ~94% width, short fade to transparent at right edge
-        const grad = ctx.createLinearGradient(W * 0.94, 0, W, 0);
-        grad.addColorStop(0, `rgba(${layer.rgb},${layer.op})`);
-        grad.addColorStop(1, `rgba(${layer.rgb},0)`);
-        ctx.strokeStyle = grad;
-
-        for (let i = 0; i < layer.n; i++) {
-          const frac  = layer.n === 1 ? 0.5 : i / (layer.n - 1);
-          // Flat band centre for this line (diagonal added per-x below)
-          const yFlat = bandCenterY - bandHalfPx + frac * bandHalfPx * 2;
-          const phase = i * layer.ps;
-
+        // Glow halo (larger particles only)
+        if (p.radius > 1.0) {
           ctx.beginPath();
-          for (let x = 0; x <= W; x += 4) {
-            // Quadratic rise: flows straight-ish at first, curves up sharply toward top-right
-            const tx = x / W;
-            const rise = tx * tx * EXIT_OFFSET * H;
-
-            // Primary wave + secondary harmonic for organic feel
-            let y = yFlat - rise
-              + Math.sin(x * layer.freq + t * layer.speed + phase) * layer.amp
-              + Math.sin(x * layer.freq * 2.1 + t * layer.speed * 1.6 + phase * 0.8) * layer.amp * 0.22;
-
-            // Mouse distortion — skip points clearly outside influence radius
-            if (mouseX >= 0) {
-              const dx = x - mouseX;
-              if (dx * dx < MOUSE_R2) {
-                const dy = y - mouseY;
-                const dist2 = dx * dx + dy * dy;
-                if (dist2 < MOUSE_R2) {
-                  const influence = Math.exp(-dist2 / MOUSE_SIG2);
-                  y += influence * 18 * depthFactor * Math.sin(t * 0.04 + x * 0.01);
-                }
-              }
-            }
-
-            // Ripple distortion
-            for (const rpl of ripples) {
-              const dx = x - rpl.x;
-              const dy = y - rpl.y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-              const progress  = rpl.age / rpl.maxAge;
-              const wavefront = progress * 220;
-              const spread    = 35;
-              const envelope  = Math.exp(-((dist - wavefront) ** 2) / (2 * spread * spread));
-              y += envelope * (1 - progress) * 14 * depthFactor;
-            }
-
-            x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-          }
-          ctx.stroke();
+          ctx.arc(p.x, p.y, p.glowRadius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${r},${g},${b},${op * 0.08})`;
+          ctx.fill();
         }
+
+        // Core particle
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${r},${g},${b},${op})`;
+        ctx.fill();
+
+        // Mouse repulsion
+        const dx   = p.x - mouse.x;
+        const dy   = p.y - mouse.y;
+        const dist2 = dx * dx + dy * dy;
+        if (dist2 < MOUSE_RADIUS * MOUSE_RADIUS && dist2 > 0) {
+          const dist  = Math.sqrt(dist2);
+          const force = ((MOUSE_RADIUS - dist) / MOUSE_RADIUS) * MAX_FORCE;
+          p.x += (dx / dist) * force;
+          p.y += (dy / dist) * force;
+        }
+
+        // Drift + scroll parallax
+        p.x += p.speedX;
+        p.y += p.speedY + scrollBoost;
+
+        // Wrap edges
+        if (p.x < -5)    p.x = W + 5;
+        if (p.x > W + 5) p.x = -5;
+        if (p.y < -5)    p.y = H + 5;
+        if (p.y > H + 5) p.y = -5;
       }
 
-      t += 1;
+      // Burst particles
+      const now = performance.now();
+      for (let i = bursts.length - 1; i >= 0; i--) {
+        const b        = bursts[i];
+        const elapsed  = now - b.startTime;
+        if (elapsed >= BURST_DURATION) { bursts.splice(i, 1); continue; }
+
+        const progress = elapsed / BURST_DURATION;
+        const op       = (1 - progress) * 0.85;
+        const { r, g, b: blue } = b.rgb;
+
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.radius * (1 + progress * 0.5), 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${r},${g},${blue},${op})`;
+        ctx.fill();
+
+        // Slow down as they expand
+        b.x += b.vx * (1 - progress * 0.7);
+        b.y += b.vy * (1 - progress * 0.7);
+      }
+
       animId = requestAnimationFrame(draw);
     };
 
     draw();
+
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize',    resize);
@@ -144,7 +183,16 @@ export default function WaveBackground() {
   return (
     <canvas
       ref={canvasRef}
-      style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}
+      style={{
+        position:      'fixed',
+        top:           0,
+        left:          0,
+        width:         '100%',
+        height:        '100%',
+        zIndex:        0,
+        pointerEvents: 'none',
+        willChange:    'transform',
+      }}
     />
   );
 }
