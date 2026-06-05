@@ -17,36 +17,59 @@ function HealthScore({ applications }) {
     return 'Outstanding — your job search is well-organised and highly active. Keep the momentum going!';
   };
 
-  const barColor = score < 40 ? '#60a5fa' : score < 70 ? '#fbbf24' : 'var(--accent)';
+  const getLabel = () => {
+    if (score === 0) return 'Just Starting';
+    if (score < 30) return 'Getting Started';
+    if (score < 60) return 'Building Momentum';
+    if (score < 85) return 'Good Candidate';
+    return 'Outstanding';
+  };
+
+  const radius = 34;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="health-score-card" style={{ marginBottom: 24 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12, gap: 16 }}>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Application Health Score</div>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{getMessage()}</div>
-        </div>
-        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <span style={{ fontSize: 30, fontWeight: 800, color: barColor }}>{score}</span>
-          <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>/100</span>
+    <div className="dash-health-card">
+      <div style={{ position: 'relative', flexShrink: 0, width: 90, height: 90 }}>
+        <svg width="90" height="90" viewBox="0 0 90 90">
+          <circle cx="45" cy="45" r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+          <circle
+            cx="45" cy="45" r={radius} fill="none"
+            stroke="#1D9E75" strokeWidth="6"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            transform="rotate(-90 45 45)"
+            style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+          />
+        </svg>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 20, fontWeight: 700, color: '#1D9E75', textShadow: '0 0 20px rgba(29,158,117,0.5)', lineHeight: 1 }}>{score}</span>
         </div>
       </div>
-      <div style={{ background: 'var(--bg-tertiary)', borderRadius: 100, height: 8, overflow: 'hidden' }}>
-        <div style={{ width: `${score}%`, height: '100%', background: barColor, borderRadius: 100, transition: 'width 0.8s ease' }} />
-      </div>
-      <div className="health-score-links" style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>
-        <span style={{ color: applications.length >= 5 ? 'var(--accent)' : 'var(--text-muted)' }}>
-          {applications.length >= 5 ? '✓' : '○'} 5+ applications tracked
-        </span>
-        <span style={{ color: cvoUsed ? 'var(--accent)' : 'var(--text-muted)' }}>
-          {cvoUsed ? '✓' : '○'} CV Optimizer used
-        </span>
-        <span style={{ color: clUsed ? 'var(--accent)' : 'var(--text-muted)' }}>
-          {clUsed ? '✓' : '○'} Cover Letter generated
-        </span>
-        <span style={{ color: advanced > 0 ? 'var(--accent)' : 'var(--text-muted)' }}>
-          {advanced > 0 ? '✓' : '○'} Interview stage reached
-        </span>
+
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: '#e2ede8', marginBottom: 6 }}>Application Health Score</div>
+        <div style={{ fontSize: 13, color: '#1D9E75', marginBottom: 12 }}>{getLabel()}</div>
+        <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 4, marginBottom: 10, overflow: 'hidden' }}>
+          <div style={{ width: `${score}%`, height: '100%', background: '#1D9E75', borderRadius: 4, transition: 'width 0.8s ease' }} />
+        </div>
+        <div style={{ fontSize: 12, color: 'rgba(226,237,232,0.4)', marginBottom: 14, lineHeight: 1.6 }}>{getMessage()}</div>
+        <div className="health-score-links" style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 12 }}>
+          <span style={{ color: applications.length >= 5 ? '#1D9E75' : 'rgba(226,237,232,0.35)' }}>
+            {applications.length >= 5 ? '✓' : '○'} 5+ applications tracked
+          </span>
+          <span style={{ color: cvoUsed ? '#1D9E75' : 'rgba(226,237,232,0.35)' }}>
+            {cvoUsed ? '✓' : '○'} CV Optimizer used
+          </span>
+          <span style={{ color: clUsed ? '#1D9E75' : 'rgba(226,237,232,0.35)' }}>
+            {clUsed ? '✓' : '○'} Cover Letter generated
+          </span>
+          <span style={{ color: advanced > 0 ? '#1D9E75' : 'rgba(226,237,232,0.35)' }}>
+            {advanced > 0 ? '✓' : '○'} Interview stage reached
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -54,18 +77,18 @@ function HealthScore({ applications }) {
 
 const STATUSES = ['Draft', 'Applied', 'Interview', 'Offer'];
 
-const STATUS_BADGE = {
-  Draft: 'badge badge-draft',
-  Applied: 'badge badge-applied',
-  Interview: 'badge badge-interview',
-  Offer: 'badge badge-offer',
+const STATUS_DOT = {
+  Draft: 'rgba(226,237,232,0.3)',
+  Applied: '#1D9E75',
+  Interview: '#f59e0b',
+  Offer: '#10b981',
 };
 
-const STAT_COLORS = {
-  Draft: 'var(--status-draft-color)',
-  Applied: 'var(--status-applied-color)',
-  Interview: 'var(--status-interview-color)',
-  Offer: 'var(--status-offer-color)',
+const BADGE_CLS = {
+  Draft:     'dash-badge dash-badge-draft',
+  Applied:   'dash-badge dash-badge-applied',
+  Interview: 'dash-badge dash-badge-interview',
+  Offer:     'dash-badge dash-badge-offer',
 };
 
 const BLANK_FORM = {
@@ -156,94 +179,121 @@ export default function Dashboard() {
     return acc;
   }, {});
 
-  const SortIcon = ({ field }) => (
-    <span style={{ color: sortField === field ? 'var(--accent)' : 'transparent', marginLeft: 4, fontSize: 10 }}>
-      {sortDir === 'asc' && sortField === field ? '▲' : '▼'}
-    </span>
-  );
-
   return (
-    <div className="page">
-      <div className="page-header flex justify-between items-center">
-        <div>
-          <h1>Job Applications</h1>
-          <p>Track and manage all your job applications in one place</p>
+    <div style={{ flex: 1, overflowX: 'hidden' }}>
+
+      {/* Section A: Hero */}
+      <div className="dash-hero">
+        <div className="tool-hero-badge">◎ DASHBOARD</div>
+        <h1 className="tool-hero-h1">
+          Track every <span className="tool-kw">application</span> in one place
+        </h1>
+        <p className="tool-hero-sub" style={{ maxWidth: 500, marginBottom: 0 }}>
+          Add every job you apply to and move it through the stages — Draft, Applied, Interview, Offer. Never lose track of an opportunity.
+        </p>
+      </div>
+
+      {/* Section B: Divider */}
+      <div className="tool-divider dash-divider" />
+
+      {/* Section C: Stats */}
+      <div className="dash-section" style={{ paddingBottom: 40 }}>
+        <div className="dash-stats-row">
+          {STATUSES.map(s => (
+            <div key={s} className="dash-stat-card">
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: STATUS_DOT[s], margin: '0 auto 14px' }} />
+              <div style={{
+                fontSize: 36,
+                fontWeight: 700,
+                lineHeight: 1,
+                marginBottom: 6,
+                color: s === 'Applied' ? '#1D9E75' : '#e2ede8',
+                textShadow: s === 'Applied' ? '0 0 20px rgba(29,158,117,0.4)' : 'none',
+              }}>{counts[s]}</div>
+              <div style={{ fontSize: 10, color: 'rgba(226,237,232,0.35)', letterSpacing: '1px', textTransform: 'uppercase' }}>{s}</div>
+            </div>
+          ))}
         </div>
-        <button className="btn btn-primary" onClick={openAdd}>
-          <span style={{ fontSize: 16 }}>+</span> Add Application
+      </div>
+
+      {/* Section D: Health Score */}
+      <div className="dash-section" style={{ paddingBottom: 40 }}>
+        <HealthScore applications={applications} />
+      </div>
+
+      {/* Section E: Add Application */}
+      <div className="dash-section" style={{ paddingBottom: 32, textAlign: 'right' }}>
+        <button
+          className="tool-generate-btn"
+          style={{ width: 'auto', padding: '12px 24px', fontSize: 14, display: 'inline-flex' }}
+          onClick={openAdd}
+        >
+          ✦ Add Application
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="stats-row">
-        {STATUSES.map(s => (
-          <div key={s} className="stat-card">
-            <div className="stat-value" style={{ color: STAT_COLORS[s] }}>{counts[s]}</div>
-            <div className="stat-label">{s}</div>
+      {/* Section F: Applications list */}
+      <div className="dash-section" style={{ paddingBottom: 80 }}>
+        {applications.length === 0 ? (
+          <div className="dash-empty">
+            <div style={{ fontSize: 40, opacity: 0.3, marginBottom: 16 }}>📋</div>
+            <p style={{ fontSize: 16, color: 'rgba(226,237,232,0.5)', marginBottom: 8 }}>No applications yet</p>
+            <p style={{ fontSize: 13, color: 'rgba(226,237,232,0.35)', marginBottom: 24, lineHeight: 1.6 }}>
+              Start tracking your first application — every job you apply to goes here.
+            </p>
+            <div style={{ maxWidth: 320, margin: '0 auto' }}>
+              <button className="tool-generate-btn" onClick={openAdd}>
+                ✦ Add Your First Application
+              </button>
+            </div>
           </div>
-        ))}
-      </div>
-
-      {/* Health Score */}
-      <HealthScore applications={applications} />
-
-      {/* Table */}
-      {applications.length === 0 ? (
-        <div className="card empty-state">
-          <div className="empty-state-icon">📋</div>
-          <p style={{ fontWeight: 600, marginBottom: 6, color: 'var(--text-primary)' }}>No applications yet</p>
-          <p style={{ marginBottom: 20 }}>Start tracking your job applications by adding your first entry.</p>
-          <button className="btn btn-primary" onClick={openAdd}>Add Your First Application</button>
-        </div>
-      ) : (
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('company')}>
-                  Company <SortIcon field="company" />
-                </th>
-                <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('role')}>
-                  Role <SortIcon field="role" />
-                </th>
-                <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('status')}>
-                  Status <SortIcon field="status" />
-                </th>
-                <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('dateApplied')}>
-                  Date Applied <SortIcon field="dateApplied" />
-                </th>
-                <th>Notes</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map(app => (
-                <tr key={app.id}>
-                  <td className="td-company">{app.company}</td>
-                  <td className="td-role">{app.role}</td>
-                  <td><span className={STATUS_BADGE[app.status]}>{app.status}</span></td>
-                  <td className="td-date">{formatDate(app.dateApplied)}</td>
-                  <td className="td-notes"><span title={app.notes}>{app.notes || '—'}</span></td>
-                  <td>
-                    <div className="td-actions">
-                      <button className="btn btn-ghost btn-sm" onClick={() => openEdit(app)} title="Edit">
-                        ✎ Edit
-                      </button>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        onClick={() => setDeleteId(app.id)}
-                        title="Delete"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+        ) : (
+          <>
+            {/* Sort controls */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 11, color: 'rgba(226,237,232,0.3)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sort</span>
+              {[['company', 'Company'], ['role', 'Role'], ['status', 'Status'], ['dateApplied', 'Date']].map(([field, label]) => (
+                <button key={field} onClick={() => toggleSort(field)} style={{
+                  background: sortField === field ? 'rgba(29,158,117,0.1)' : 'transparent',
+                  border: `1px solid ${sortField === field ? 'rgba(29,158,117,0.25)' : 'rgba(255,255,255,0.07)'}`,
+                  borderRadius: 100,
+                  color: sortField === field ? '#1D9E75' : 'rgba(226,237,232,0.4)',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: '4px 10px',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                }}>
+                  {label}
+                  {sortField === field && <span style={{ fontSize: 9 }}>{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                </button>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </div>
+
+            {/* Application cards */}
+            {sorted.map(app => (
+              <div key={app.id} className="dash-app-card">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: '#e2ede8', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {app.company}{app.role ? ` — ${app.role}` : ''}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'rgba(226,237,232,0.4)' }}>
+                    {formatDate(app.dateApplied)}{app.notes ? ` · ${app.notes.length > 48 ? app.notes.slice(0, 48) + '…' : app.notes}` : ''}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                  <span className={BADGE_CLS[app.status]}>{app.status}</span>
+                  <button className="btn btn-ghost btn-sm" onClick={() => openEdit(app)} title="Edit">✎ Edit</button>
+                  <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(app.id)} title="Delete">✕</button>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
 
       {/* Add/Edit Modal */}
       {showModal && (

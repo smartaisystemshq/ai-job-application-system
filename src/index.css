@@ -1450,3 +1450,95 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text-primary
   /* Word count badge: always visible */
   .word-count-badge { display: inline-flex !important; }
 }
+
+/* ─── Dashboard Redesign (Phase 5) ─── */
+.dash-hero {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 60px 40px 32px;
+  text-align: center;
+}
+.dash-divider {
+  margin: 28px 40px 48px;
+}
+.dash-section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding-left: 40px;
+  padding-right: 40px;
+}
+.dash-stats-row {
+  display: flex;
+  gap: 16px;
+}
+.dash-stat-card {
+  flex: 1;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 24px 20px;
+  text-align: center;
+  transition: all 0.2s;
+}
+.dash-stat-card:hover {
+  border-color: rgba(29,158,117,0.2);
+  background: rgba(29,158,117,0.03);
+}
+.dash-health-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 28px 32px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.dash-app-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: all 0.2s;
+}
+.dash-app-card:hover {
+  border-color: rgba(29,158,117,0.15);
+  background: rgba(29,158,117,0.02);
+  transform: translateY(-1px);
+}
+.dash-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.dash-badge-draft     { background: rgba(255,255,255,0.06);   color: rgba(226,237,232,0.5); border: 1px solid rgba(255,255,255,0.08); }
+.dash-badge-applied   { background: rgba(29,158,117,0.12);    color: #1D9E75;               border: 1px solid rgba(29,158,117,0.25); }
+.dash-badge-interview { background: rgba(245,158,11,0.12);    color: #f59e0b;               border: 1px solid rgba(245,158,11,0.25); }
+.dash-badge-offer     { background: rgba(16,185,129,0.12);    color: #10b981;               border: 1px solid rgba(16,185,129,0.25); }
+.dash-empty {
+  background: rgba(255,255,255,0.015);
+  border: 1px dashed rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 60px 40px;
+  text-align: center;
+}
+@media (max-width: 640px) {
+  .dash-hero { padding: 40px 20px 24px; }
+  .dash-divider { margin: 20px 16px 36px; }
+  .dash-section { padding-left: 16px; padding-right: 16px; }
+  .dash-stats-row { display: grid; grid-template-columns: repeat(2, 1fr); }
+  .dash-stat-card { flex: unset; }
+  .dash-health-card { flex-direction: column; align-items: flex-start; padding: 20px; gap: 20px; }
+  .dash-app-card { flex-direction: column; align-items: flex-start; }
+  .dash-app-card > div:last-child { align-self: flex-start; flex-wrap: wrap; }
+  .dash-empty { padding: 40px 20px; }
+}
