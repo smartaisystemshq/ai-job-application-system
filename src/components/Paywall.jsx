@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
 import { unlockApp } from '../utils/accessControl';
-
-const FEATURES = [
-  'Unlimited CV Optimizations — tailored to every job',
-  'AI Cover Letter in under 2 minutes',
-  'Interview Question Generator — role-specific',
-  'CV Builder from scratch with AI guidance',
-  'ATS Keyword Match score for every application',
-  'Adjust any output with AI chat in seconds',
-  'Pay once — use forever',
-];
+import { useLang } from '../context/LanguageContext';
+import { t } from '../translations';
 
 export default function Paywall({ onUnlock, onClose }) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { lang } = useLang();
+
+  const FEATURES = [
+    t[lang].paywall_bullet1,
+    t[lang].paywall_bullet2,
+    t[lang].paywall_bullet3,
+    t[lang].paywall_bullet4,
+    t[lang].paywall_bullet5,
+    t[lang].paywall_bullet6,
+    t[lang].paywall_bullet7,
+  ];
 
   const handleUnlock = async () => {
     if (!code.trim() || loading) return;
@@ -25,7 +28,7 @@ export default function Paywall({ onUnlock, onClose }) {
       if (valid) {
         onUnlock?.();
       } else {
-        setError('Invalid code. Please try again.');
+        setError(t[lang].paywall_invalid);
       }
     } catch {
       setError('Could not verify code. Please try again.');
@@ -91,8 +94,8 @@ export default function Paywall({ onUnlock, onClose }) {
         </div>
 
         {/* Headline */}
-        <h2 style={{ fontSize: 26, fontWeight: 800, marginBottom: 6, lineHeight: 1.2 }}>Unlock Full Access</h2>
-        <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>One-time payment. Unlimited use.</p>
+        <h2 style={{ fontSize: 26, fontWeight: 800, marginBottom: 6, lineHeight: 1.2 }}>{t[lang].paywall_headline}</h2>
+        <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>{t[lang].paywall_sub}</p>
 
         {/* Price */}
         <div style={{ fontSize: 44, fontWeight: 900, color: '#1D9E75', marginBottom: 20, lineHeight: 1 }}>€37</div>
@@ -127,18 +130,18 @@ export default function Paywall({ onUnlock, onClose }) {
           onMouseEnter={e => { e.currentTarget.style.opacity = '0.88'; }}
           onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
         >
-          Get Access — €37
+          {t[lang].paywall_cta}
         </a>
 
         {/* Divider */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginBottom: 20 }} />
 
         {/* Code entry */}
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 10 }}>Already have a code? Enter it here</p>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 10 }}>{t[lang].paywall_code_label}</p>
         <div style={{ display: 'flex', gap: 8 }}>
           <input
             className="input"
-            placeholder="Enter your access code..."
+            placeholder={t[lang].paywall_code_placeholder}
             value={code}
             onChange={e => setCode(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !loading && handleUnlock()}
@@ -153,7 +156,7 @@ export default function Paywall({ onUnlock, onClose }) {
           >
             {loading
               ? <span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'white' }} />
-              : 'Unlock'}
+              : t[lang].paywall_code_btn}
           </button>
         </div>
         {error && (

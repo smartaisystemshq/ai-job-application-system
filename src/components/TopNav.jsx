@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import { PAGES } from '../constants';
 import Paywall from './Paywall';
+import { useLang } from '../context/LanguageContext';
+import { t } from '../translations';
 
 const NAV_TABS = [
-  { id: PAGES.HOME,           label: 'Home' },
-  { id: PAGES.CV_OPTIMIZER,   label: 'Optimize CV' },
-  { id: PAGES.COVER_LETTER,   label: 'Cover Letter' },
-  { id: PAGES.INTERVIEW_PREP, label: 'Interview Prep' },
-  { id: PAGES.CV_BUILDER,     label: 'Build CV' },
-  { id: PAGES.DASHBOARD,      label: 'Dashboard' },
-  { id: PAGES.FAQ,            label: 'FAQ' },
+  { id: PAGES.HOME,           labelKey: 'nav_home' },
+  { id: PAGES.CV_OPTIMIZER,   labelKey: 'nav_cv' },
+  { id: PAGES.COVER_LETTER,   labelKey: 'nav_cover' },
+  { id: PAGES.INTERVIEW_PREP, labelKey: 'nav_interview' },
+  { id: PAGES.CV_BUILDER,     labelKey: 'nav_builder' },
+  { id: PAGES.DASHBOARD,      labelKey: 'nav_dashboard' },
+  { id: PAGES.FAQ,            labelKey: 'nav_faq' },
 ];
 
 export default function TopNav({ activePage, onNavigate, unlocked, onUnlock }) {
   const [showPaywall, setShowPaywall] = useState(false);
-  const [lang, setLang] = useState('EN');
+  const { lang, setLang } = useLang();
 
   return (
     <>
@@ -35,13 +37,13 @@ export default function TopNav({ activePage, onNavigate, unlocked, onUnlock }) {
 
         {/* Center — Tab navigation */}
         <div className="topnav-tabs">
-          {NAV_TABS.map(({ id, label }) => (
+          {NAV_TABS.map(({ id, labelKey }) => (
             <button
               key={id}
               onClick={() => onNavigate(id)}
               className={`topnav-tab${activePage === id ? ' active' : ''}`}
             >
-              {label}
+              {t[lang][labelKey]}
             </button>
           ))}
         </div>
@@ -66,7 +68,7 @@ export default function TopNav({ activePage, onNavigate, unlocked, onUnlock }) {
               onClick={() => setShowPaywall(true)}
             >
               <span className="topnav-status-dot" />
-              Unlock Access
+              {t[lang].nav_unlock}
             </button>
           ) : (
             <div className="topnav-unlocked-badge">

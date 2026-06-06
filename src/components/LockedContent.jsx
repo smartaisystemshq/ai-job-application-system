@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import Paywall from './Paywall';
+import { useLang } from '../context/LanguageContext';
+import { t } from '../translations';
 
 export default function LockedContent({ children, unlocked, onUnlock }) {
   const [paywallDismissed, setPaywallDismissed] = useState(false);
+  const { lang } = useLang();
 
   if (unlocked) return <>{children}</>;
 
@@ -25,7 +28,7 @@ export default function LockedContent({ children, unlocked, onUnlock }) {
           fontSize: 13,
           color: 'rgba(226,237,232,0.5)',
         }}>
-          🔒 Unlock to see your full result{' '}
+          🔒 {t[lang].paywall_locked_banner}{' '}
           <button
             onClick={() => setPaywallDismissed(false)}
             style={{
@@ -35,7 +38,7 @@ export default function LockedContent({ children, unlocked, onUnlock }) {
               padding: 0,
             }}
           >
-            Enter code
+            {t[lang].paywall_locked_link}
           </button>
         </div>
       )}
