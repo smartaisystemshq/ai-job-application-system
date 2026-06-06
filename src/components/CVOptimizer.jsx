@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLang } from '../context/LanguageContext';
+import { t } from '../translations';
 import FileUploadField from './FileUploadField';
 import DownloadButtons from '../utils/DownloadButtons';
 import DocumentPreview from '../utils/DocumentPreview';
@@ -74,6 +76,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
 }
 
 export default function CVOptimizer({ unlocked, onUnlock }) {
+  const { lang } = useLang();
   const [cv, setCv] = useState(() => localStorage.getItem(LS.cv) || '');
   const [cvFile, setCvFile] = useState(null);
   const [cvPdfBase64, setCvPdfBase64] = useState('');
@@ -161,26 +164,26 @@ export default function CVOptimizer({ unlocked, onUnlock }) {
       {/* ── Section A: Hero ── */}
       <div className="tool-hero scroll-reveal">
         <div className="tool-hero-badge">
-          <span>✦</span><span>CV OPTIMIZER</span>
+          <span>✦</span><span>{t[lang].cv_badge}</span>
         </div>
         <h1 className="tool-hero-h1">
-          Tailor your <span className="tool-kw">CV</span> to any job in seconds
+          Tailor your <span className="tool-kw">{t[lang].cv_headline_highlight}</span> to any job in seconds
         </h1>
         <p className="tool-hero-sub">
-          Upload your CV and the job description — AI rewrites your CV with the exact keywords recruiters and ATS systems look for. You get an interview-ready version in under a minute.
+          {t[lang].cv_sub}
         </p>
         <p className="tool-ats-note">
-          ATS = the software companies use to filter CVs before a human ever sees them. Our AI makes sure yours gets through.
+          {t[lang].cv_ats_info}
         </p>
       </div>
 
       {/* ── Section B: How it works ── */}
       <div className="tool-steps-wrap scroll-reveal">
-        <div className="tool-step"><div className="tool-step-num">1</div><span className="tool-step-text">Upload CV</span></div>
+        <div className="tool-step"><div className="tool-step-num">1</div><span className="tool-step-text">{t[lang].cv_step1}</span></div>
         <span className="tool-step-arrow">→</span>
-        <div className="tool-step"><div className="tool-step-num">2</div><span className="tool-step-text">Paste job description</span></div>
+        <div className="tool-step"><div className="tool-step-num">2</div><span className="tool-step-text">{t[lang].cv_step2}</span></div>
         <span className="tool-step-arrow">→</span>
-        <div className="tool-step"><div className="tool-step-num">3</div><span className="tool-step-text">Get tailored CV</span></div>
+        <div className="tool-step"><div className="tool-step-num">3</div><span className="tool-step-text">{t[lang].cv_step3}</span></div>
       </div>
 
       {/* ── Section C: Divider ── */}
@@ -191,25 +194,25 @@ export default function CVOptimizer({ unlocked, onUnlock }) {
         <div className="two-col scroll-reveal" style={{ marginBottom: 20 }}>
           <div className="input-card">
             <FileUploadField
-              label="Your CV"
+              label={t[lang].cv_upload_cv}
               value={cv}
               onChange={setCv}
               onFileSelect={handleCvFileSelect}
               onFileRemove={handleCvFileRemove}
               file={cvFile}
-              placeholder="Paste your full CV here..."
+              placeholder={t[lang].cv_upload_cv_hint}
               rows={14}
             />
           </div>
           <div className="input-card" ref={jdRef}>
             <FileUploadField
-              label="Job Description"
+              label={t[lang].cv_upload_jd}
               value={jobDescription}
               onChange={setJobDescription}
               onFileSelect={handleJdFileSelect}
               onFileRemove={handleJdFileRemove}
               file={jdFile}
-              placeholder="Paste the full job description here..."
+              placeholder={t[lang].cv_upload_jd_hint}
               rows={14}
             />
           </div>
@@ -230,7 +233,7 @@ export default function CVOptimizer({ unlocked, onUnlock }) {
             onClick={handleOptimize}
             disabled={loading || !canSubmit}
           >
-            {loading ? <><span className="spinner"></span> Optimizing…</> : '✦ Optimize CV'}
+            {loading ? <><span className="spinner"></span> Optimizing…</> : <>✦ {t[lang].cv_generate_btn}</>}
           </button>
           {(cv || cvFile || jobDescription || jdFile || result) && (
             <div style={{ textAlign: 'center', marginTop: 10 }}>
@@ -253,7 +256,7 @@ export default function CVOptimizer({ unlocked, onUnlock }) {
       <div className="tool-section" style={{ padding: '0 40px 60px' }}>
         <div className="tool-tip-box">
           <span>💡</span>
-          <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> Templates appear after optimization — pick what suits your industry. Want to adjust? Use the AI chat below the result.</span>
+          <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> {t[lang].cv_tip}</span>
         </div>
       </div>
 

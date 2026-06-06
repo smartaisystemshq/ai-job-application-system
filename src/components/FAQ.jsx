@@ -1,47 +1,6 @@
 import React, { useState } from 'react';
-
-const FAQS = [
-  {
-    q: 'What is the AI Job Application System?',
-    a: 'A web app that uses AI to help you land more job interviews. It optimizes your CV for each job, writes personalized cover letters, prepares you for interviews, and helps you build a CV from scratch — all in minutes.',
-  },
-  {
-    q: 'How does the CV Optimizer work?',
-    a: 'You upload your CV and paste the job description. Our AI rewrites your CV summary and bullet points using the exact keywords recruiters and ATS systems look for. You get a tailored version ready to send in under a minute.',
-  },
-  {
-    q: 'What is ATS and why does it matter?',
-    a: "ATS stands for Applicant Tracking System — software companies use to automatically filter CVs before a human ever reads them. Most CVs get rejected by ATS before reaching a recruiter. Our AI makes sure yours gets through by matching your CV to the job description.",
-  },
-  {
-    q: 'Will my cover letter sound like it was written by AI?',
-    a: "No — that's the point. Our AI is specifically instructed to write in a natural, human tone without clichés. The result sounds like you actually wrote it. You can also adjust it with the built-in AI chat.",
-  },
-  {
-    q: 'Is my data safe?',
-    a: 'Your CV and job descriptions are sent to the AI for processing and are not stored permanently. We don\'t sell or share your data. The app saves your inputs locally in your browser for convenience.',
-  },
-  {
-    q: 'How do I get access after purchasing?',
-    a: "After purchasing on Gumroad, you receive a unique access code. Enter it in the 'Unlock Access' field in the top navigation. Your access is saved in your browser — enter the code again on a new device.",
-  },
-  {
-    q: 'Can I use it on my phone?',
-    a: 'Yes — the app works on mobile. For the best experience we recommend using it on a desktop or laptop, especially for uploading and editing your CV.',
-  },
-  {
-    q: 'What file formats does it support?',
-    a: 'You can upload your CV as a PDF or Word (.docx) file. Job descriptions can be uploaded as PDF or Word, or pasted directly as text.',
-  },
-  {
-    q: 'How many times can I use it after purchasing?',
-    a: "Unlimited. It's a one-time payment — use every tool as many times as you want across all your job applications.",
-  },
-  {
-    q: "I have a question that isn't answered here. How do I contact you?",
-    a: 'Send us an email at smartaisystemshq@gmail.com — we reply personally and usually within 24 hours.',
-  },
-];
+import { useLang } from '../context/LanguageContext';
+import { t } from '../translations';
 
 function TikTokIcon() {
   return (
@@ -61,6 +20,12 @@ function InstagramIcon() {
 
 export default function FAQ() {
   const [openIdx, setOpenIdx] = useState(null);
+  const { lang } = useLang();
+
+  const FAQS = Array.from({ length: 10 }, (_, i) => ({
+    q: t[lang][`faq_q${i + 1}`],
+    a: t[lang][`faq_a${i + 1}`],
+  }));
 
   const toggle = (i) => setOpenIdx(prev => prev === i ? null : i);
 
@@ -69,12 +34,12 @@ export default function FAQ() {
 
       {/* Section A: Hero */}
       <div className="tool-hero">
-        <div className="tool-hero-badge">? FAQ</div>
+        <div className="tool-hero-badge">? {t[lang].faq_badge}</div>
         <h1 className="tool-hero-h1">
-          Got <span className="tool-kw">questions?</span> We've got answers.
+          Got <span className="tool-kw">{t[lang].faq_headline_highlight}</span> We've got answers.
         </h1>
         <p className="tool-hero-sub" style={{ maxWidth: 480, marginBottom: 0 }}>
-          Everything you need to know about the AI Job Application System.
+          {t[lang].faq_sub}
         </p>
       </div>
 
@@ -133,13 +98,13 @@ export default function FAQ() {
       {/* Section E: Contact */}
       <div className="tool-section" style={{ padding: '0 40px 48px', textAlign: 'center' }}>
         <div style={{ fontSize: 9, letterSpacing: '2.5px', color: 'rgba(29,158,117,0.55)', marginBottom: 20, textTransform: 'uppercase', fontWeight: 600 }}>
-          STILL HAVE QUESTIONS?
+          {t[lang].faq_contact_label}
         </div>
         <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 10, color: '#e2ede8' }}>
-          We reply <span className="tool-kw">personally.</span>
+          We reply <span className="tool-kw">{t[lang].faq_contact_highlight}</span>
         </h2>
         <p style={{ fontSize: 14, color: 'rgba(226,237,232,0.45)', marginBottom: 24, lineHeight: 1.7, maxWidth: 440, margin: '0 auto 24px' }}>
-          Have a question, issue, or feedback? Send us an email — a real person reads and replies to every message.
+          {t[lang].faq_contact_sub}
         </p>
         <div style={{
           display: 'inline-block',
@@ -157,7 +122,7 @@ export default function FAQ() {
           </div>
         </div>
         <div style={{ fontSize: 12, color: 'rgba(226,237,232,0.35)', marginTop: 12 }}>
-          We typically reply within 24 hours.
+          {t[lang].faq_contact_note}
         </div>
       </div>
 
@@ -167,13 +132,13 @@ export default function FAQ() {
       {/* Section G: Social Media */}
       <div className="tool-section" style={{ padding: '0 40px 100px', textAlign: 'center' }}>
         <div style={{ fontSize: 9, letterSpacing: '2.5px', color: 'rgba(29,158,117,0.55)', marginBottom: 20, textTransform: 'uppercase', fontWeight: 600 }}>
-          FOLLOW FOR MORE TIPS
+          {t[lang].faq_social_label}
         </div>
         <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 10, color: '#e2ede8' }}>
-          Stay in the <span className="tool-kw">loop.</span>
+          {t[lang].faq_social_headline}
         </h2>
         <p style={{ fontSize: 14, color: 'rgba(226,237,232,0.45)', marginBottom: 32, lineHeight: 1.7 }}>
-          Follow us for free job application tips, AI tricks, and product updates.
+          {t[lang].faq_social_sub}
         </p>
         <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
 

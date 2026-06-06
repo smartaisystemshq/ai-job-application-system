@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLang } from '../context/LanguageContext';
+import { t } from '../translations';
 import FileUploadField from './FileUploadField';
 import DownloadButtons from '../utils/DownloadButtons';
 import DocumentPreview from '../utils/DocumentPreview';
@@ -82,6 +84,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
 }
 
 export default function CoverLetterGenerator({ unlocked, onUnlock }) {
+  const { lang } = useLang();
   const [cv, setCv] = useState(() => localStorage.getItem(LS.cv) || '');
   const [cvFile, setCvFile] = useState(null);
   const [cvPdfBase64, setCvPdfBase64] = useState('');
@@ -169,23 +172,23 @@ export default function CoverLetterGenerator({ unlocked, onUnlock }) {
       {/* ── Section A: Hero ── */}
       <div className="tool-hero scroll-reveal">
         <div className="tool-hero-badge">
-          <span>✉</span><span>COVER LETTER</span>
+          <span>✉</span><span>{t[lang].cover_badge}</span>
         </div>
         <h1 className="tool-hero-h1">
-          Write a <span className="tool-kw">cover letter</span> that sounds like you
+          Write a <span className="tool-kw">{t[lang].cover_headline_highlight}</span> that sounds like you
         </h1>
         <p className="tool-hero-sub">
-          Stop writing the same generic letter for every job. AI generates a human-sounding, specific cover letter in under 2 minutes — no clichés, no boring intros.
+          {t[lang].cover_sub}
         </p>
       </div>
 
       {/* ── Section B: How it works ── */}
       <div className="tool-steps-wrap scroll-reveal">
-        <div className="tool-step"><div className="tool-step-num">1</div><span className="tool-step-text">Upload CV</span></div>
+        <div className="tool-step"><div className="tool-step-num">1</div><span className="tool-step-text">{t[lang].cover_step1}</span></div>
         <span className="tool-step-arrow">→</span>
-        <div className="tool-step"><div className="tool-step-num">2</div><span className="tool-step-text">Paste job description</span></div>
+        <div className="tool-step"><div className="tool-step-num">2</div><span className="tool-step-text">{t[lang].cover_step2}</span></div>
         <span className="tool-step-arrow">→</span>
-        <div className="tool-step"><div className="tool-step-num">3</div><span className="tool-step-text">Get personal letter</span></div>
+        <div className="tool-step"><div className="tool-step-num">3</div><span className="tool-step-text">{t[lang].cover_step3}</span></div>
       </div>
 
       {/* ── Section C: Divider ── */}
@@ -196,25 +199,25 @@ export default function CoverLetterGenerator({ unlocked, onUnlock }) {
         <div className="two-col scroll-reveal" style={{ marginBottom: 20 }}>
           <div className="input-card">
             <FileUploadField
-              label="Your CV"
+              label={t[lang].cover_upload_cv}
               value={cv}
               onChange={setCv}
               onFileSelect={handleCvFileSelect}
               onFileRemove={handleCvFileRemove}
               file={cvFile}
-              placeholder="Paste your CV to give context about your background..."
+              placeholder={t[lang].cover_upload_cv_hint}
               rows={14}
             />
           </div>
           <div className="input-card" ref={jdRef}>
             <FileUploadField
-              label="Job Description"
+              label={t[lang].cover_upload_jd}
               value={jobDescription}
               onChange={setJobDescription}
               onFileSelect={handleJdFileSelect}
               onFileRemove={handleJdFileRemove}
               file={jdFile}
-              placeholder="Paste the job description — the letter will reference specific requirements..."
+              placeholder={t[lang].cover_upload_jd_hint}
               rows={14}
             />
           </div>
@@ -235,7 +238,7 @@ export default function CoverLetterGenerator({ unlocked, onUnlock }) {
             onClick={handleGenerate}
             disabled={loading || !canSubmit}
           >
-            {loading ? <><span className="spinner"></span> Generating…</> : '✦ Generate Cover Letter'}
+            {loading ? <><span className="spinner"></span> Generating…</> : <>✦ {t[lang].cover_generate_btn}</>}
           </button>
           {(cv || cvFile || jobDescription || jdFile || result) && (
             <div style={{ textAlign: 'center', marginTop: 10 }}>
@@ -258,7 +261,7 @@ export default function CoverLetterGenerator({ unlocked, onUnlock }) {
       <div className="tool-section" style={{ padding: '0 40px 60px' }}>
         <div className="tool-tip-box">
           <span>💡</span>
-          <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> The cover letter is automatically written in the language of your CV. You can refine it with the AI chat below.</span>
+          <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> {t[lang].cover_tip}</span>
         </div>
       </div>
 

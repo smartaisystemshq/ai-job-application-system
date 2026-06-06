@@ -1,26 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { PAGES } from '../constants';
 import Paywall from './Paywall';
-
-const STEPS = [
-  { n: '1', title: 'Upload your CV',    desc: 'PDF or Word, any format works fine' },
-  { n: '2', title: 'Paste job posting', desc: 'Copy directly from any job board' },
-  { n: '3', title: 'Get results',       desc: 'Optimized CV & cover letter ready to send' },
-];
-
-const FEATURES = [
-  { icon: '✦', title: 'CV Optimizer',            desc: 'AI rewrites your CV with the right keywords for each job — ATS-optimized and recruiter-ready' },
-  { icon: '✉', title: 'Cover Letter Generator',  desc: 'Human-sounding, specific to the exact role — generated in under 2 minutes, no clichés' },
-  { icon: '◎', title: 'Interview Prep',          desc: 'The 8 most likely questions for your role with answer frameworks so you walk in prepared' },
-  { icon: '◈', title: 'CV Builder',              desc: 'No CV yet? Build a professional one from scratch with AI guidance in 6 simple steps' },
-];
-
-const STATS = [
-  { n: '3x',    label: 'More interviews on average' },
-  { n: '<5min', label: 'Per full application' },
-  { n: '5',     label: 'Professional CV templates' },
-  { n: '€27',   label: 'One-time payment, unlimited use' },
-];
+import { useLang } from '../context/LanguageContext';
+import { t } from '../translations';
 
 const Divider = () => (
   <div style={{
@@ -45,6 +27,27 @@ const SectionLabel = ({ text }) => (
 export default function Home({ onNavigate, onUnlock }) {
   const featuresRef = useRef(null);
   const [showPaywall, setShowPaywall] = useState(false);
+  const { lang } = useLang();
+
+  const STEPS = [
+    { n: '1', title: t[lang].home_step1_title, desc: t[lang].home_step1_desc },
+    { n: '2', title: t[lang].home_step2_title, desc: t[lang].home_step2_desc },
+    { n: '3', title: t[lang].home_step3_title, desc: t[lang].home_step3_desc },
+  ];
+
+  const FEATURES = [
+    { icon: '✦', title: t[lang].home_feat1_title, desc: t[lang].home_feat1_desc },
+    { icon: '✉', title: t[lang].home_feat2_title, desc: t[lang].home_feat2_desc },
+    { icon: '◎', title: t[lang].home_feat3_title, desc: t[lang].home_feat3_desc },
+    { icon: '◈', title: t[lang].home_feat4_title, desc: t[lang].home_feat4_desc },
+  ];
+
+  const STATS = [
+    { n: '3x',    label: t[lang].home_stat1_label },
+    { n: '<5min', label: t[lang].home_stat2_label },
+    { n: '5',     label: t[lang].home_stat3_label },
+    { n: '€27',   label: t[lang].home_stat4_label },
+  ];
 
   const scrollToFeatures = () => {
     featuresRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -69,7 +72,7 @@ export default function Home({ onNavigate, onUnlock }) {
             fontSize: 10, letterSpacing: '0.7px',
             color: 'rgba(29,158,117,0.8)',
             textTransform: 'uppercase', fontWeight: 600,
-          }}>AI-Powered Job Applications</span>
+          }}>{t[lang].home_badge}</span>
         </div>
 
         {/* Headline */}
@@ -79,7 +82,7 @@ export default function Home({ onNavigate, onUnlock }) {
         }}>
           Get{' '}
           <span style={{ color: '#1D9E75', textShadow: '0 0 28px rgba(29,158,117,0.5)' }}>
-            3x more interviews
+            {t[lang].home_headline_highlight}
           </span>
           {' '}with AI in minutes
         </h1>
@@ -89,7 +92,7 @@ export default function Home({ onNavigate, onUnlock }) {
           maxWidth: 420, margin: '0 auto 52px',
           fontSize: 16, color: 'rgba(226,237,232,0.45)', lineHeight: 1.72,
         }}>
-          Stop applying randomly. Let AI tailor every CV, cover letter, and interview prep to the exact job — done in under 5 minutes.
+          {t[lang].home_sub}
         </p>
 
         {/* ── Section 2: Step Cards ── */}
@@ -116,13 +119,13 @@ export default function Home({ onNavigate, onUnlock }) {
             className="home-cta-primary"
             onClick={() => onNavigate(PAGES.CV_OPTIMIZER)}
           >
-            Start with CV Optimizer →
+            {t[lang].home_cta_primary}
           </button>
           <button
             className="home-cta-secondary"
             onClick={scrollToFeatures}
           >
-            See how it works
+            {t[lang].home_cta_secondary}
           </button>
         </div>
       </div>
@@ -132,10 +135,10 @@ export default function Home({ onNavigate, onUnlock }) {
 
       {/* ── Section 5: Features Grid ── */}
       <div ref={featuresRef} style={{ maxWidth: 860, margin: '0 auto', padding: '0 40px 60px' }}>
-        <SectionLabel text="WHAT YOU GET" />
+        <SectionLabel text={t[lang].home_features_label} />
         <div className="home-features-grid">
           {FEATURES.map(({ icon, title, desc }) => (
-            <div key={title} className="home-feature-card">
+            <div key={icon} className="home-feature-card">
               <div style={{ fontSize: 22, marginBottom: 10 }}>{icon}</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: '#e2ede8', marginBottom: 6 }}>{title}</div>
               <div style={{ fontSize: 12, color: 'rgba(226,237,232,0.35)', lineHeight: 1.6 }}>{desc}</div>
@@ -149,7 +152,7 @@ export default function Home({ onNavigate, onUnlock }) {
 
       {/* ── Section 7: Stats ── */}
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 40px 72px', textAlign: 'center' }}>
-        <SectionLabel text="BY THE NUMBERS" />
+        <SectionLabel text={t[lang].home_stats_label} />
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32, flexWrap: 'wrap' }}>
           {STATS.map(({ n, label }, i) => (
             <div
@@ -179,20 +182,20 @@ export default function Home({ onNavigate, onUnlock }) {
         }}>
           Stop guessing.{' '}
           <span style={{ color: '#1D9E75', textShadow: '0 0 20px rgba(29,158,117,0.45)' }}>
-            Start getting interviews.
+            {t[lang].home_final_highlight}
           </span>
         </h2>
         <p style={{
           fontSize: 14, color: 'rgba(226,237,232,0.5)',
           maxWidth: 380, margin: '0 auto 28px', lineHeight: 1.6,
         }}>
-          Join hundreds of job seekers already landing more callbacks with AI.
+          {t[lang].home_final_sub}
         </p>
         <button
           className="home-final-cta"
           onClick={() => setShowPaywall(true)}
         >
-          Get Full Access — €27 →
+          {t[lang].home_final_cta}
         </button>
       </div>
 

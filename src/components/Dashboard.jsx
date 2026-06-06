@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useLang } from '../context/LanguageContext';
+import { t } from '../translations';
 
 function HealthScore({ applications }) {
+  const { lang } = useLang();
   const advanced = applications.filter(a => ['Interview', 'Offer'].includes(a.status)).length;
   const appScore = Math.min(applications.length * 7, 35);
   const advScore = Math.min(advanced * 20, 40);
@@ -50,7 +53,7 @@ function HealthScore({ applications }) {
       </div>
 
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 16, fontWeight: 700, color: '#e2ede8', marginBottom: 6 }}>Application Health Score</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: '#e2ede8', marginBottom: 6 }}>{t[lang].dash_health_title}</div>
         <div style={{ fontSize: 13, color: '#1D9E75', marginBottom: 12 }}>{getLabel()}</div>
         <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 4, marginBottom: 10, overflow: 'hidden' }}>
           <div style={{ width: `${score}%`, height: '100%', background: '#1D9E75', borderRadius: 4, transition: 'width 0.8s ease' }} />
@@ -106,6 +109,7 @@ function formatDate(iso) {
 }
 
 export default function Dashboard() {
+  const { lang } = useLang();
   const [applications, setApplications] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('jobApplications') || '[]');
@@ -184,12 +188,12 @@ export default function Dashboard() {
 
       {/* Section A: Hero */}
       <div className="dash-hero">
-        <div className="tool-hero-badge">◎ DASHBOARD</div>
+        <div className="tool-hero-badge">◎ {t[lang].dash_badge}</div>
         <h1 className="tool-hero-h1">
-          Track every <span className="tool-kw">application</span> in one place
+          Track every <span className="tool-kw">{t[lang].dash_headline_highlight}</span> in one place
         </h1>
         <p className="tool-hero-sub" style={{ maxWidth: 500, marginBottom: 0 }}>
-          Add every job you apply to and move it through the stages — Draft, Applied, Interview, Offer. Never lose track of an opportunity.
+          {t[lang].dash_sub}
         </p>
       </div>
 
@@ -228,7 +232,7 @@ export default function Dashboard() {
           style={{ width: 'auto', padding: '12px 24px', fontSize: 14, display: 'inline-flex' }}
           onClick={openAdd}
         >
-          ✦ Add Application
+          ✦ {t[lang].dash_add_btn}
         </button>
       </div>
 
@@ -237,13 +241,13 @@ export default function Dashboard() {
         {applications.length === 0 ? (
           <div className="dash-empty">
             <div style={{ fontSize: 40, opacity: 0.3, marginBottom: 16 }}>📋</div>
-            <p style={{ fontSize: 16, color: 'rgba(226,237,232,0.5)', marginBottom: 8 }}>No applications yet</p>
+            <p style={{ fontSize: 16, color: 'rgba(226,237,232,0.5)', marginBottom: 8 }}>{t[lang].dash_empty_title}</p>
             <p style={{ fontSize: 13, color: 'rgba(226,237,232,0.35)', marginBottom: 24, lineHeight: 1.6 }}>
-              Start tracking your first application — every job you apply to goes here.
+              {t[lang].dash_empty_sub}
             </p>
             <div style={{ maxWidth: 320, margin: '0 auto' }}>
               <button className="tool-generate-btn" onClick={openAdd}>
-                ✦ Add Your First Application
+                ✦ {t[lang].dash_empty_btn}
               </button>
             </div>
           </div>

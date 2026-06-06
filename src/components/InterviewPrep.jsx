@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLang } from '../context/LanguageContext';
+import { t } from '../translations';
 import FileUploadField from './FileUploadField';
 import { stripMarkdown } from '../utils/downloadUtils';
 import LockedContent from './LockedContent';
@@ -108,6 +110,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
 }
 
 export default function InterviewPrep({ unlocked, onUnlock }) {
+  const { lang } = useLang();
   const [jobDescription, setJobDescription] = useState(() => localStorage.getItem(LS.jd) || '');
   const [jdFile, setJdFile] = useState(null);
   const [jdPdfBase64, setJdPdfBase64] = useState('');
@@ -189,23 +192,23 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
       {/* ── Section A: Hero ── */}
       <div className="tool-hero scroll-reveal">
         <div className="tool-hero-badge">
-          <span>◎</span><span>INTERVIEW PREP</span>
+          <span>◎</span><span>{t[lang].interview_badge}</span>
         </div>
         <h1 className="tool-hero-h1">
-          Walk in <span className="tool-kw">prepared</span> for any interview
+          Walk in <span className="tool-kw">{t[lang].interview_headline_highlight}</span> for any interview
         </h1>
         <p className="tool-hero-sub">
-          Paste the job description and AI generates the 8 most likely interview questions — each with a short answer framework so you know exactly how to respond.
+          {t[lang].interview_sub}
         </p>
       </div>
 
       {/* ── Section B: How it works ── */}
       <div className="tool-steps-wrap scroll-reveal">
-        <div className="tool-step"><div className="tool-step-num">1</div><span className="tool-step-text">Paste job description</span></div>
+        <div className="tool-step"><div className="tool-step-num">1</div><span className="tool-step-text">{t[lang].interview_step1}</span></div>
         <span className="tool-step-arrow">→</span>
-        <div className="tool-step"><div className="tool-step-num">2</div><span className="tool-step-text">Get 8 questions</span></div>
+        <div className="tool-step"><div className="tool-step-num">2</div><span className="tool-step-text">{t[lang].interview_step2}</span></div>
         <span className="tool-step-arrow">→</span>
-        <div className="tool-step"><div className="tool-step-num">3</div><span className="tool-step-text">Practice with frameworks</span></div>
+        <div className="tool-step"><div className="tool-step-num">3</div><span className="tool-step-text">{t[lang].interview_step3}</span></div>
       </div>
 
       {/* ── Section C: Divider ── */}
@@ -216,13 +219,13 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
         <div style={{ maxWidth: 480, margin: '0 auto' }}>
           <div className="input-card scroll-reveal">
             <FileUploadField
-              label="Job Description"
+              label={t[lang].interview_upload_jd}
               value={jobDescription}
               onChange={setJobDescription}
               onFileSelect={handleJdFileSelect}
               onFileRemove={handleJdFileRemove}
               file={jdFile}
-              placeholder="Paste the full job description here — include responsibilities, requirements, and any 'nice to have' skills..."
+              placeholder={t[lang].interview_upload_jd_hint}
               rows={10}
             />
           </div>
@@ -243,7 +246,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
             onClick={handleGenerate}
             disabled={loading || newQuestionsLoading || !canSubmit}
           >
-            {loading ? <><span className="spinner"></span> Generating…</> : '✦ Generate Questions'}
+            {loading ? <><span className="spinner"></span> Generating…</> : <>✦ {t[lang].interview_generate_btn}</>}
           </button>
           {(jobDescription || jdFile || rawResult) && (
             <div style={{ textAlign: 'center', marginTop: 10 }}>
@@ -266,7 +269,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
       <div className="tool-section" style={{ padding: '0 40px 60px' }}>
         <div className="tool-tip-box">
           <span>💡</span>
-          <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> Need different questions? Hit 'New Interview Questions' below for a fresh set. Or use the chat to adjust the existing ones.</span>
+          <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> {t[lang].interview_tip}</span>
         </div>
       </div>
 

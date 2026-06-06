@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLang } from '../context/LanguageContext';
+import { t } from '../translations';
 import DownloadButtons from '../utils/DownloadButtons';
 import DocumentPreview from '../utils/DocumentPreview';
 import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
@@ -32,9 +34,15 @@ function newExp() { return { id: Date.now(), jobTitle: '', company: '', startDat
 function newEdu() { return { id: Date.now() + 1, degree: '', institution: '', year: '', field: '' }; }
 
 // ── Step Progress Bar ────────────────────────────────────────────
-const STEP_NAMES = ['Personal Info', 'Experience', 'Education', 'Skills', 'Summary'];
-
 function StepProgressBar({ step }) {
+  const { lang } = useLang();
+  const STEP_NAMES = [
+    t[lang].builder_step1,
+    t[lang].builder_step2,
+    t[lang].builder_step3,
+    t[lang].builder_step4,
+    t[lang].builder_step5,
+  ];
   const progress = (step / 5) * 100;
   return (
     <div className="tool-section" style={{ padding: '0 40px 40px' }}>
@@ -287,6 +295,7 @@ function buildCVText({ personal, experience, education, skills, summary }) {
 
 // ── Main Component ───────────────────────────────────────────────
 export default function CVBuilder({ unlocked, onUnlock }) {
+  const { lang } = useLang();
   const [state, setState] = useState(load);
   const [skillInput, setSkillInput] = useState('');
   const [suggestedSkills, setSuggestedSkills] = useState([]);
@@ -732,16 +741,16 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       {/* ── Section A: Hero ── */}
       <div className="tool-hero scroll-reveal">
         <div className="tool-hero-badge">
-          <span>◈</span><span>CV BUILDER</span>
+          <span>◈</span><span>{t[lang].builder_badge}</span>
         </div>
         <h1 className="tool-hero-h1">
-          Build a professional <span className="tool-kw">CV</span> from scratch
+          Build a professional <span className="tool-kw">{t[lang].builder_headline_highlight}</span> from scratch
         </h1>
         <p className="tool-hero-sub">
-          No CV yet? No problem. AI guides you through 5 simple steps — enter your info, and we build a polished, ready-to-send CV at the end.
+          {t[lang].builder_sub}
         </p>
         <p className="tool-ats-note">
-          Takes about 5 minutes. You can download your CV as PDF or Word when finished.
+          {t[lang].builder_timing}
         </p>
       </div>
 
@@ -775,7 +784,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
               onClick={() => setStep(state.step - 1)}
               disabled={state.step === 1}
             >
-              ← Previous
+              {t[lang].builder_previous}
             </button>
             <span style={{ fontSize: 12, color: 'rgba(226,237,232,0.38)' }}>
               Step {state.step} of 5
@@ -784,7 +793,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
               className="cvb-btn-next"
               onClick={() => setStep(state.step < 5 ? state.step + 1 : 6)}
             >
-              {state.step === 5 ? 'Preview CV →' : 'Next →'}
+              {state.step === 5 ? 'Preview CV →' : t[lang].builder_next}
             </button>
           </div>
 
@@ -797,10 +806,10 @@ export default function CVBuilder({ unlocked, onUnlock }) {
           <div style={{ textAlign: 'center', marginBottom: 32 }} className="scroll-reveal">
             <div style={{ fontSize: 32, marginBottom: 10 }}>🎉</div>
             <h2 style={{ fontSize: 22, fontWeight: 700, color: '#e2ede8', marginBottom: 6 }}>
-              Your CV is ready!
+              {t[lang].builder_ready}
             </h2>
             <p style={{ fontSize: 13, color: 'rgba(226,237,232,0.45)' }}>
-              Download it as PDF or Word, or adjust it with the AI chat below.
+              {t[lang].builder_ready_sub}
             </p>
           </div>
           {renderPreview()}
