@@ -1,4 +1,6 @@
 import React, { useRef, useState } from 'react';
+import { useLang } from '../context/LanguageContext';
+import { t } from '../translations';
 
 function arrayBufferToBase64(buffer) {
   let binary = '';
@@ -13,6 +15,7 @@ export default function FileUploadField({
   label, value, onChange, onFileSelect, onFileRemove,
   file, placeholder, rows = 12,
 }) {
+  const { lang } = useLang();
   const fileInputRef = useRef(null);
   const [extracting, setExtracting] = useState(false);
   const [fileError, setFileError] = useState('');
@@ -86,7 +89,7 @@ export default function FileUploadField({
               </svg>
               {file.name}
               {file.type === 'pdf' && <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginLeft: 4 }}>PDF</span>}
-              {file.type === 'docx' && <span style={{ fontSize: 11, color: 'var(--status-applied-color)', fontWeight: 600, marginLeft: 4 }}>DOCX → extracted</span>}
+              {file.type === 'docx' && <span style={{ fontSize: 11, color: 'var(--status-applied-color)', fontWeight: 600, marginLeft: 4 }}>{t[lang].cv_docx_extracted}</span>}
             </span>
             <button onClick={handleRemove} className="file-remove-btn" title="Remove file">✕</button>
           </div>
@@ -138,7 +141,7 @@ export default function FileUploadField({
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)', flexShrink: 0 }}>
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          <span>PDF ready — Claude will analyse it directly for best results</span>
+          <span>{t[lang].cv_pdf_ready}</span>
         </div>
       )}
     </div>

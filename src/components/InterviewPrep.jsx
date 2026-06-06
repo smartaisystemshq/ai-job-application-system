@@ -60,6 +60,7 @@ function CopyButton({ text }) {
 }
 
 function MiniChatbot({ currentDocument, onUpdate }) {
+  const { lang } = useLang();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -88,7 +89,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
     <div className="mini-chatbot">
       <div className="mini-chatbot-label">
         <span className="mini-chatbot-icon">✦</span>
-        <span>Adjust with AI</span>
+        <span>{t[lang].adjust_with_ai}</span>
         <span className="mini-chatbot-hint">Type a request — Claude updates the questions above</span>
       </div>
       <div className="mini-chatbot-row">
@@ -101,7 +102,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
           disabled={loading}
         />
         <button className="btn btn-primary btn-sm" onClick={handleAdjust} disabled={loading || !input.trim()} style={{ flexShrink: 0 }}>
-          {loading ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</> : 'Apply →'}
+          {loading ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</> : t[lang].adjust_apply}
         </button>
       </div>
       {error && <p style={{ fontSize: 12, color: '#f87171', marginTop: 6 }}>{error}</p>}
@@ -281,7 +282,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, padding: '12px 16px', background: 'rgba(29,158,117,0.06)', border: '1px solid rgba(29,158,117,0.2)', borderRadius: 12 }}>
                 <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ color: 'var(--accent)' }}>◈</span>
-                  {questions.length} Interview Questions
+                  {questions.length} {t[lang].interview_result_label}
                 </h2>
                 <CopyButton text={rawResult} />
               </div>
@@ -295,7 +296,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
               ))}
 
               <p style={{ marginTop: 16, fontSize: 12, color: 'var(--text-muted)' }}>
-                Practise answering each question out loud and prepare 1-2 specific examples (STAR method works well).
+                {t[lang].interview_practice_note}
               </p>
 
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24, marginBottom: 8 }}>
@@ -307,7 +308,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
                 >
                   {newQuestionsLoading
                     ? <><span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }}></span> Generating new questions…</>
-                    : '↺ New Interview Questions'}
+                    : t[lang].interview_new_btn}
                 </button>
               </div>
 

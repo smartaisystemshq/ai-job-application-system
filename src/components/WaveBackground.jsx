@@ -3,8 +3,8 @@ import React, { useEffect, useRef } from 'react';
 const PARTICLE_COUNT = 180;
 const MOUSE_RADIUS   = 120;
 const MAX_FORCE      = 0.4;
-const BURST_COUNT    = 8;
-const BURST_DURATION = 600; // ms
+const BURST_COUNT    = 3;
+const BURST_DURATION = 300; // ms
 
 const COLORS = [
   { rgb: { r: 29,  g: 158, b: 117 }, threshold: 0.70 }, // #1D9E75  70%
@@ -72,14 +72,14 @@ export default function WaveBackground() {
       const now = performance.now();
       for (let i = 0; i < BURST_COUNT; i++) {
         const angle = (i / BURST_COUNT) * Math.PI * 2 + rnd(-0.3, 0.3);
-        const speed = rnd(1.5, 4.0);
+        const speed = rnd(0.6, 1.6);
         const c = pickColor();
         bursts.push({
           x: e.clientX,
           y: e.clientY,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
-          radius: rnd(1.0, 2.5),
+          radius: rnd(0.4, 1.0),
           rgb: c.rgb,
           startTime: now,
         });

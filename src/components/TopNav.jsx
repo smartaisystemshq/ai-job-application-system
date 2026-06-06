@@ -29,7 +29,9 @@ export default function TopNav({ activePage, onNavigate, unlocked, onUnlock }) {
           tabIndex={0}
           onKeyDown={e => e.key === 'Enter' && onNavigate(PAGES.HOME)}
         >
-          <div className="topnav-logo">S</div>
+          <div className="topnav-logo">
+            <img src="/logo.png" alt="Smart AI Systems" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8 }} />
+          </div>
           <span className="topnav-brand-name">
             Smart <span className="topnav-ai">AI</span> Systems
           </span>

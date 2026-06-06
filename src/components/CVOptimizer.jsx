@@ -9,7 +9,7 @@ import { stripMarkdown } from '../utils/downloadUtils';
 import { TEMPLATES, TemplateSelector } from './TemplateSelector';
 import LockedContent from './LockedContent';
 
-const LS = { cv: 'jas.cvo.cv', jd: 'jas.cvo.jd', result: 'jas.cvo.result' };
+const LS = { cv: 'jas.cvo.cv', jd: 'cv_optimizer_jd', result: 'jas.cvo.result' };
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
@@ -26,6 +26,7 @@ function CopyButton({ text }) {
 }
 
 function MiniChatbot({ currentDocument, onUpdate }) {
+  const { lang } = useLang();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -54,7 +55,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
     <div className="mini-chatbot">
       <div className="mini-chatbot-label">
         <span className="mini-chatbot-icon">✦</span>
-        <span>Adjust with AI</span>
+        <span>{t[lang].adjust_with_ai}</span>
         <span className="mini-chatbot-hint">Type a request — Claude updates the CV above</span>
       </div>
       <div className="mini-chatbot-row">
@@ -67,7 +68,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
           disabled={loading}
         />
         <button className="btn btn-primary btn-sm" onClick={handleAdjust} disabled={loading || !input.trim()} style={{ flexShrink: 0 }}>
-          {loading ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</> : 'Apply →'}
+          {loading ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</> : t[lang].adjust_apply}
         </button>
       </div>
       {error && <p style={{ fontSize: 12, color: '#f87171', marginTop: 6 }}>{error}</p>}
@@ -238,7 +239,7 @@ export default function CVOptimizer({ unlocked, onUnlock }) {
           {(cv || cvFile || jobDescription || jdFile || result) && (
             <div style={{ textAlign: 'center', marginTop: 10 }}>
               <button className="btn btn-ghost" onClick={handleClear} disabled={loading} style={{ fontSize: 13 }}>
-                Clear All
+                {t[lang].cv_clear_all}
               </button>
             </div>
           )}
@@ -270,9 +271,9 @@ export default function CVOptimizer({ unlocked, onUnlock }) {
                 marginBottom: 12, flexWrap: 'wrap', gap: 8,
               }}>
                 <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: 'var(--accent)' }}>✦</span>Optimized CV
+                  <span style={{ color: 'var(--accent)' }}>✦</span>{t[lang].cv_result_label}
                   <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 2 }}>
-                    · {TEMPLATES.find(t => t.id === selectedTemplate)?.name} template
+                    · {TEMPLATES.find(tmpl => tmpl.id === selectedTemplate)?.name} template
                   </span>
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -284,7 +285,7 @@ export default function CVOptimizer({ unlocked, onUnlock }) {
               <DocumentPreview text={result} template={selectedTemplate} />
 
               <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
-                Review and personalise before submitting your application.
+                {t[lang].cv_review_note}
               </p>
 
               {score !== null && <ScoreCard score={score} />}
@@ -296,7 +297,7 @@ export default function CVOptimizer({ unlocked, onUnlock }) {
 
             <div className="tool-tip-box" style={{ marginTop: 20, marginBottom: 16 }}>
               <span>💡</span>
-              <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> Choose a template below to change the look of your CV — pick what suits your industry best.</span>
+              <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> {t[lang].cv_result_tip}</span>
             </div>
 
             <TemplateSelector selectedTemplate={selectedTemplate} onSelect={setSelectedTemplate} />

@@ -96,9 +96,6 @@ body {
   justify-content: space-between;
   gap: 16px;
   padding: 0 28px;
-  background: rgba(4, 8, 6, 0.93);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(29, 158, 117, 0.1);
   z-index: 200;
 }
@@ -113,17 +110,14 @@ body {
 }
 
 .topnav-logo {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #1D9E75, #0a5c40);
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  font-weight: 800;
-  color: white;
   flex-shrink: 0;
+  overflow: hidden;
   box-shadow: 0 0 12px rgba(29, 158, 117, 0.35);
 }
 
@@ -803,19 +797,20 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text-primary
 .home-final-cta {
   padding: 16px 38px;
   font-size: 15px;
-  background: #1D9E75;
-  border: none;
+  background: rgba(29,158,117,0.12);
+  border: 1px solid rgba(29,158,117,0.45);
   border-radius: 12px;
-  color: white;
+  color: #e2ede8;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  box-shadow: 0 0 32px rgba(29,158,117,0.4);
+  box-shadow: 0 0 24px rgba(29,158,117,0.2), inset 0 1px 0 rgba(255,255,255,0.06);
   transition: all 0.2s ease;
 }
 .home-final-cta:hover {
-  box-shadow: 0 0 48px rgba(29,158,117,0.6);
-  transform: translateY(-2px);
+  background: rgba(29,158,117,0.2);
+  box-shadow: 0 0 36px rgba(29,158,117,0.35);
+  transform: translateY(-1px);
 }
 
 .home-features-grid {
