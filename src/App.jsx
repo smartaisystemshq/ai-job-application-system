@@ -55,7 +55,7 @@ export default function App() {
 
       <div className="main-wrapper">
         <main style={{ flex: 1, position: 'relative', zIndex: 1 }}>
-          <div key={pageKey} className="page-transition">
+          <div key={pageKey} className="page-transition section-fade">
             {activePage === PAGES.HOME          && <Home onNavigate={navigate} onUnlock={handleUnlock} />}
             {activePage === PAGES.DASHBOARD     && <Dashboard />}
             {activePage === PAGES.CV_OPTIMIZER  && <CVOptimizer unlocked={unlocked} onUnlock={handleUnlock} />}

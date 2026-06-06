@@ -98,7 +98,7 @@ export default function Paywall({ onUnlock, onClose }) {
         <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>{t[lang].paywall_sub}</p>
 
         {/* Price */}
-        <div style={{ fontSize: 44, fontWeight: 900, color: '#1D9E75', marginBottom: 20, lineHeight: 1 }}>€37</div>
+        <div style={{ fontSize: 44, fontWeight: 900, color: '#1D9E75', marginBottom: 20, lineHeight: 1 }}>€27</div>
 
         {/* Features */}
         <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>

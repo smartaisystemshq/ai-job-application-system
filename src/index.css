@@ -69,6 +69,10 @@ body {
   animation: pageFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.section-fade {
+  animation: fadeIn 0.2s ease;
+}
+
 /* ─── Scroll reveal ─── */
 .scroll-reveal {
   opacity: 0;
@@ -708,7 +712,7 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text-primary
 }
 
 /* ─── Animations ─── */
-@keyframes fadeIn    { from { opacity: 0; }                              to { opacity: 1; } }
+@keyframes fadeIn    { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideUp   { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes spin      { to { transform: rotate(360deg); } }
 @keyframes pageFadeIn {
