@@ -31,7 +31,7 @@ function load() {
 }
 
 function newExp() { return { id: Date.now(), jobTitle: '', company: '', startDate: '', endDate: '', isCurrent: false, description: '', bullets: '' }; }
-function newEdu() { return { id: Date.now() + 1, degree: '', institution: '', year: '', field: '' }; }
+function newEdu() { return { id: Date.now() + 1, institution: '', degree: '', field: '', startYear: '', endYear: '' }; }
 
 // ── Step Progress Bar ────────────────────────────────────────────
 function StepProgressBar({ step }) {
@@ -94,50 +94,31 @@ function StepProgressBar({ step }) {
 
 // ── Step header ──────────────────────────────────────────────────
 function StepHeader({ step }) {
-  const titles = [
-    <>Tell us about <span className="tool-kw">yourself</span></>,
-    <>Your work <span className="tool-kw">experience</span></>,
-    <>Your <span className="tool-kw">education</span></>,
-    <>Your <span className="tool-kw">skills</span></>,
-    <>Professional <span className="tool-kw">summary</span></>,
-  ];
-  const descs = [
-    'Basic contact info — this goes at the top of your CV.',
-    'Add your jobs, internships, and relevant experience. AI helps write strong bullet points from your descriptions.',
-    "Degrees, courses, training — add what's relevant to the roles you're applying for.",
-    'Type your skills and AI suggests more based on your target role. Click green suggestions to add them.',
-    "AI generates a strong summary based on everything you've entered. Review it and adjust if needed.",
-  ];
+  const { lang } = useLang();
+  const titleKeys = ['builder_s1_title', 'builder_s2_title', 'builder_s3_title', 'builder_s4_title', 'builder_s5_title'];
+  const descKeys  = ['builder_s1_desc',  'builder_s2_desc',  'builder_s3_desc',  'builder_s4_desc',  'builder_s5_desc'];
   return (
     <div style={{ marginBottom: 28 }}>
       <h2 style={{ fontSize: 20, fontWeight: 700, color: '#e2ede8', marginBottom: 6, lineHeight: 1.3 }}>
-        {titles[step - 1]}
+        {t[lang][titleKeys[step - 1]]}
       </h2>
       <p style={{ fontSize: 13, color: 'rgba(226,237,232,0.45)', lineHeight: 1.6 }}>
-        {descs[step - 1]}
+        {t[lang][descKeys[step - 1]]}
       </p>
     </div>
   );
 }
 
 // ── Tip box ──────────────────────────────────────────────────────
-const STEP_TIPS = [
-  'Tip: Only your name and email are required. Add more contact info for a more professional CV.',
-  'Tip: Focus on achievements over responsibilities. AI helps you write strong action-oriented bullet points.',
-  'Tip: Add your most relevant education first. Courses and certifications count too.',
-  'Tip: Click the green AI suggestions to add them. Aim for 6-10 skills that match your target role.',
-  'Tip: This summary is your elevator pitch. Keep it 3-4 sentences — AI generates a strong one based on your input.',
-];
-
 function TipBox({ step }) {
-  const tip = STEP_TIPS[step - 1];
-  const colon = tip.indexOf(':');
+  const { lang } = useLang();
+  const tipKeys = ['builder_tip1', 'builder_tip2', 'builder_tip3', 'builder_tip4', 'builder_tip5'];
+  const tipLabel = lang === 'DE' ? 'Tipp:' : 'Tip:';
   return (
     <div className="tool-tip-box" style={{ marginBottom: 24 }}>
       <span>💡</span>
       <span>
-        <strong style={{ color: '#1D9E75' }}>{tip.slice(0, colon + 1)}</strong>
-        {tip.slice(colon + 1)}
+        <strong style={{ color: '#1D9E75' }}>{tipLabel}</strong>{' '}{t[lang][tipKeys[step - 1]]}
       </span>
     </div>
   );
@@ -145,6 +126,7 @@ function TipBox({ step }) {
 
 // ── Shared helpers ────────────────────────────────────────────────
 function CopyButton({ text }) {
+  const { lang } = useLang();
   const [copied, setCopied] = useState(false);
   return (
     <button
@@ -155,7 +137,7 @@ function CopyButton({ text }) {
         setTimeout(() => setCopied(false), 2000);
       }}
     >
-      {copied ? '✓ Copied to Clipboard' : '⎘ Copy CV'}
+      {copied ? t[lang].builder_copied_cv : t[lang].builder_copy_cv}
     </button>
   );
 }
@@ -171,6 +153,7 @@ function ErrBox({ msg }) {
 
 // ── Mini Chatbot ─────────────────────────────────────────────────
 function MiniChatbot({ currentDocument, onUpdate }) {
+  const { lang } = useLang();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -204,7 +187,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
     <div className="mini-chatbot">
       <div className="mini-chatbot-label">
         <span className="mini-chatbot-icon">✦</span>
-        <span>Adjust with AI</span>
+        <span>{t[lang].adjust_with_ai}</span>
         <span className="mini-chatbot-hint">Type a request — Claude updates the CV above</span>
       </div>
       <div className="mini-chatbot-row">
@@ -224,7 +207,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
         >
           {loading
             ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</>
-            : 'Apply →'}
+            : t[lang].adjust_apply}
         </button>
       </div>
       {error && <p style={{ fontSize: 12, color: '#f87171', marginTop: 6 }}>{error}</p>}
@@ -254,15 +237,16 @@ function buildCVText({ personal, experience, education, skills, summary }) {
     lines.push('');
   }
 
-  if (experience.length > 0) {
+  const validExp = experience.filter(e => e.jobTitle?.trim() || e.company?.trim() || e.bullets?.trim());
+  if (validExp.length > 0) {
     lines.push('─'.repeat(58));
     lines.push('');
     lines.push('WORK EXPERIENCE');
     lines.push('');
-    experience.forEach(exp => {
+    validExp.forEach(exp => {
       const dates = [exp.startDate, exp.isCurrent ? 'Present' : exp.endDate].filter(Boolean).join(' – ');
-      const header = [exp.jobTitle || 'Job Title', exp.company || 'Company', dates].filter(Boolean).join(' | ');
-      lines.push(header);
+      const header = [exp.jobTitle, exp.company, dates].filter(s => s?.trim()).join(' | ');
+      if (header) lines.push(header);
       if (exp.bullets) {
         exp.bullets.split('\n').filter(l => l.trim()).forEach(l => lines.push(l.trim()));
       }
@@ -270,14 +254,17 @@ function buildCVText({ personal, experience, education, skills, summary }) {
     });
   }
 
-  if (education.length > 0) {
+  const validEdu = education.filter(e => e.institution?.trim());
+  if (validEdu.length > 0) {
     lines.push('─'.repeat(58));
     lines.push('');
     lines.push('EDUCATION');
     lines.push('');
-    education.forEach(edu => {
+    validEdu.forEach(edu => {
+      const dates = [edu.startYear, edu.endYear || edu.year].filter(s => s?.trim()).join(' – ');
       const deg = [edu.degree, edu.field ? `in ${edu.field}` : ''].filter(Boolean).join(' ');
-      lines.push([deg || 'Degree', edu.institution || 'Institution', edu.year].filter(Boolean).join(' | '));
+      const parts = [edu.institution, deg, dates].filter(s => s?.trim());
+      if (parts.length) lines.push(parts.join(' | '));
     });
     lines.push('');
   }
@@ -489,15 +476,15 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       {state.experience.length === 0 && (
         <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)', marginTop: 16 }}>
           <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.4 }}>💼</div>
-          <p>No experience entries yet. Click "Add Role" to start.</p>
+          <p>{t[lang].builder_no_exp}</p>
         </div>
       )}
 
       {state.experience.map((exp, idx) => (
         <div key={exp.id} className="card" style={{ marginTop: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>Role {idx + 1}</span>
-            <button className="btn btn-danger btn-sm" onClick={() => delExp(exp.id)}>Remove</button>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>{t[lang].builder_role} {idx + 1}</span>
+            <button className="btn btn-danger btn-sm" onClick={() => delExp(exp.id)}>{t[lang].builder_remove}</button>
           </div>
           <div className="two-col">
             <div className="form-group">
@@ -517,12 +504,12 @@ export default function CVBuilder({ unlocked, onUnlock }) {
               <input className="input" placeholder={exp.isCurrent ? 'Present' : 'Dec 2023'} value={exp.isCurrent ? 'Present' : exp.endDate} onChange={e => updExp(exp.id, 'endDate', e.target.value)} disabled={exp.isCurrent} />
               <label style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13, color: 'var(--text-secondary)' }}>
                 <input type="checkbox" checked={exp.isCurrent} onChange={e => updExp(exp.id, 'isCurrent', e.target.checked)} />
-                Current role
+                {t[lang].builder_current_role}
               </label>
             </div>
           </div>
           <div className="form-group">
-            <label className="label">Brief Description</label>
+            <label className="label">{t[lang].builder_brief_desc}</label>
             <textarea className="textarea" rows={3} placeholder="Briefly describe what you did — Claude will turn this into strong CV bullet points..." value={exp.description} onChange={e => updExp(exp.id, 'description', e.target.value)} />
           </div>
           <button
@@ -532,12 +519,12 @@ export default function CVBuilder({ unlocked, onUnlock }) {
             style={{ marginBottom: exp.bullets ? 12 : 0 }}
           >
             {bulletLoading === exp.id
-              ? <><span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }}></span> Generating...</>
-              : '✦ AI: Generate Bullet Points'}
+              ? <><span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }}></span> {t[lang].builder_ai_generating}</>
+              : t[lang].builder_ai_bullets}
           </button>
           {exp.bullets && (
             <div className="form-group" style={{ marginTop: 10, marginBottom: 0 }}>
-              <label className="label">Bullet Points (editable)</label>
+              <label className="label">{t[lang].builder_bullets_label}</label>
               <textarea className="textarea" rows={5} value={exp.bullets} onChange={e => updExp(exp.id, 'bullets', e.target.value)} />
             </div>
           )}
@@ -545,7 +532,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       ))}
 
       <button className="btn btn-secondary" style={{ marginTop: 16 }} onClick={addExp}>
-        + Add Role
+        {t[lang].builder_add_role}
       </button>
       <ErrBox msg={apiError} />
     </div>
@@ -556,39 +543,49 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       {state.education.length === 0 && (
         <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)', marginTop: 16 }}>
           <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.4 }}>🎓</div>
-          <p>No education entries yet. Click "Add Education" to start.</p>
+          <p>{t[lang].builder_no_edu}</p>
         </div>
       )}
 
       {state.education.map((edu, idx) => (
         <div key={edu.id} className="card" style={{ marginTop: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>Entry {idx + 1}</span>
-            <button className="btn btn-danger btn-sm" onClick={() => delEdu(edu.id)}>Remove</button>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>{t[lang].builder_entry} {idx + 1}</span>
+            <button className="btn btn-danger btn-sm" onClick={() => delEdu(edu.id)}>{t[lang].builder_remove}</button>
+          </div>
+          <div className="form-group">
+            <label className="label">{t[lang].edu_school} *</label>
+            <input className="input" placeholder="e.g. BG/BRG Lilienfeld, BHAK St. Pölten, University of Vienna" value={edu.institution} onChange={e => updEdu(edu.id, 'institution', e.target.value)} />
           </div>
           <div className="two-col">
             <div className="form-group">
-              <label className="label">Degree / Qualification</label>
-              <input className="input" placeholder="BSc Computer Science" value={edu.degree} onChange={e => updEdu(edu.id, 'degree', e.target.value)} />
+              <label className="label">
+                {t[lang].edu_degree}
+                <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>{t[lang].edu_optional}</span>
+              </label>
+              <input className="input" placeholder="e.g. Matura, Bachelor, Certificate" value={edu.degree} onChange={e => updEdu(edu.id, 'degree', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="label">Field of Study</label>
-              <input className="input" placeholder="(optional)" value={edu.field} onChange={e => updEdu(edu.id, 'field', e.target.value)} />
+              <label className="label">
+                {t[lang].edu_field}
+                <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>{t[lang].edu_optional}</span>
+              </label>
+              <input className="input" placeholder="e.g. Business, Computer Science" value={edu.field} onChange={e => updEdu(edu.id, 'field', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="label">Institution</label>
-              <input className="input" placeholder="University of Manchester" value={edu.institution} onChange={e => updEdu(edu.id, 'institution', e.target.value)} />
+              <label className="label">{t[lang].edu_from}</label>
+              <input className="input" placeholder="e.g. 2019" value={edu.startYear} onChange={e => updEdu(edu.id, 'startYear', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="label">Year</label>
-              <input className="input" placeholder="2020" value={edu.year} onChange={e => updEdu(edu.id, 'year', e.target.value)} />
+              <label className="label">{t[lang].edu_to}</label>
+              <input className="input" placeholder="e.g. 2023 or 'Present'" value={edu.endYear} onChange={e => updEdu(edu.id, 'endYear', e.target.value)} />
             </div>
           </div>
         </div>
       ))}
 
       <button className="btn btn-secondary" style={{ marginTop: 16 }} onClick={addEdu}>
-        + Add Education
+        {t[lang].builder_add_edu}
       </button>
     </div>
   );
@@ -627,14 +624,14 @@ export default function CVBuilder({ unlocked, onUnlock }) {
         style={{ marginBottom: 16 }}
       >
         {skillsLoading
-          ? <><span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }}></span> Suggesting...</>
-          : '✦ AI: Suggest Skills for ' + (state.personal.targetRole || 'My Role')}
+          ? <><span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }}></span> {t[lang].builder_ai_generating}</>
+          : `${t[lang].builder_ai_skills_prefix} ${state.personal.targetRole || 'My Role'}`}
       </button>
 
       {suggestedSkills.length > 0 && (
         <div>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>
-            Click to add — unselected suggestions disappear when you move on:
+            {t[lang].builder_suggestions_hint}
           </p>
           <div className="skill-tags">
             {suggestedSkills.filter(s => !state.skills.includes(s)).map(sk => (
@@ -651,7 +648,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
             ))}
           </div>
           {suggestedSkills.filter(s => !state.skills.includes(s)).length === 0 && (
-            <p style={{ fontSize: 13, color: 'var(--accent)' }}>All suggestions added ✓</p>
+            <p style={{ fontSize: 13, color: 'var(--accent)' }}>{t[lang].builder_all_added}</p>
           )}
         </div>
       )}
@@ -669,13 +666,13 @@ export default function CVBuilder({ unlocked, onUnlock }) {
           disabled={summaryLoading}
         >
           {summaryLoading
-            ? <><span className="spinner"></span> Generating...</>
-            : '✦ AI: Generate Summary'}
+            ? <><span className="spinner"></span> {t[lang].builder_ai_generating}</>
+            : t[lang].builder_ai_summary}
         </button>
       </div>
 
       <div className="form-group">
-        <label className="label">Summary (editable)</label>
+        <label className="label">{t[lang].builder_summary_label}</label>
         <textarea
           className="textarea"
           rows={6}
@@ -699,8 +696,8 @@ export default function CVBuilder({ unlocked, onUnlock }) {
           marginBottom: 12, flexWrap: 'wrap', gap: 8,
         }}>
           <div>
-            <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 2 }}>Your CV</h2>
-            <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Download as PDF or Word, or copy the text.</p>
+            <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 2 }}>{t[lang].builder_your_cv}</h2>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t[lang].builder_dl_hint}</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <DownloadButtons
@@ -715,9 +712,9 @@ export default function CVBuilder({ unlocked, onUnlock }) {
         <DocumentPreview text={displayCvText} template={selectedTemplate} />
 
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-          <button className="btn btn-secondary" onClick={() => setStep(5)}>← Back to Summary</button>
+          <button className="btn btn-secondary" onClick={() => setStep(5)}>{t[lang].builder_back_summary}</button>
           <button className="btn btn-ghost" onClick={startOver} style={{ marginLeft: 'auto', color: 'var(--danger)' }}>
-            Start Over
+            {t[lang].builder_start_over}
           </button>
         </div>
 
@@ -787,13 +784,13 @@ export default function CVBuilder({ unlocked, onUnlock }) {
               {t[lang].builder_previous}
             </button>
             <span style={{ fontSize: 12, color: 'rgba(226,237,232,0.38)' }}>
-              Step {state.step} of 5
+              {t[lang].builder_step_label} {state.step} {t[lang].builder_step_of} 5
             </span>
             <button
               className="cvb-btn-next"
               onClick={() => setStep(state.step < 5 ? state.step + 1 : 6)}
             >
-              {state.step === 5 ? 'Preview CV →' : t[lang].builder_next}
+              {state.step === 5 ? t[lang].builder_preview_cv : t[lang].builder_next}
             </button>
           </div>
 

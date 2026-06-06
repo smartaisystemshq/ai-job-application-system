@@ -75,7 +75,7 @@ export default function TopNav({ activePage, onNavigate, unlocked, onUnlock }) {
           ) : (
             <div className="topnav-unlocked-badge">
               <span className="topnav-status-dot" />
-              Unlocked
+              {t[lang].nav_unlocked}
             </div>
           )}
         </div>

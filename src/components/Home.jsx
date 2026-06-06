@@ -80,11 +80,11 @@ export default function Home({ onNavigate, onUnlock }) {
           fontSize: 52, fontWeight: 700, lineHeight: 1.12,
           letterSpacing: '-1.5px', marginBottom: 20, color: '#e2ede8',
         }}>
-          Get{' '}
+          {t[lang].home_headline_pre}{' '}
           <span style={{ color: '#1D9E75', textShadow: '0 0 28px rgba(29,158,117,0.5)' }}>
             {t[lang].home_headline_highlight}
           </span>
-          {' '}with AI in minutes
+          {' '}{t[lang].home_headline_post}
         </h1>
 
         {/* Subheadline */}
@@ -180,7 +180,7 @@ export default function Home({ onNavigate, onUnlock }) {
           fontSize: 28, fontWeight: 700, letterSpacing: '-0.5px',
           marginBottom: 12, color: '#e2ede8',
         }}>
-          Stop guessing.{' '}
+          {t[lang].home_final_pre}{' '}
           <span style={{ color: '#1D9E75', textShadow: '0 0 20px rgba(29,158,117,0.45)' }}>
             {t[lang].home_final_highlight}
           </span>

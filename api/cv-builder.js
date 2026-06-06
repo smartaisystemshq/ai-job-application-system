@@ -63,8 +63,8 @@ RULES:
         .map(e => `${e.jobTitle || 'Role'} at ${e.company || 'Company'} (${e.startDate || ''}${e.endDate ? ' – ' + e.endDate : ''})`)
         .join('; ')
       const eduText = (education || [])
-        .filter(e => e.degree || e.institution)
-        .map(e => `${e.degree || 'Degree'} from ${e.institution || 'Institution'}`)
+        .filter(e => e.institution?.trim())
+        .map(e => [e.degree, e.field, e.institution].filter(s => s?.trim()).join(' — '))
         .join(', ')
       prompt = `You are an elite CV writer. Write a professional summary section (3 sentences, under 75 words).
 

@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLang } from '../context/LanguageContext';
+import { t } from '../translations';
 
 // ── ATS Keyword Match ──────────────────────────────────────────────────────────
 
@@ -21,6 +23,7 @@ export function extractKeywords(jd) {
 }
 
 export function KeywordMatch({ cvText, jdText }) {
+  const { lang } = useLang();
   const [expanded, setExpanded] = useState(false);
 
   const { matched, missing, matchPct } = useMemo(() => {
@@ -37,7 +40,7 @@ export function KeywordMatch({ cvText, jdText }) {
   if (!jdText || matched.length + missing.length === 0) return null;
 
   const color = matchPct >= 70 ? '#1D9E75' : matchPct >= 50 ? '#f59e0b' : '#ef4444';
-  const label = matchPct >= 70 ? 'Strong keyword alignment' : matchPct >= 50 ? 'Moderate alignment' : 'Low keyword overlap';
+  const label = matchPct >= 70 ? t[lang].ats_strong : matchPct >= 50 ? t[lang].ats_moderate : t[lang].ats_low;
 
   return (
     <div style={{
@@ -51,12 +54,12 @@ export function KeywordMatch({ cvText, jdText }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ fontSize: 22, fontWeight: 800, color }}>{matchPct}%</div>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>ATS Keyword Match</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1 }}>{label} — {matched.length}/{matched.length + missing.length} keywords found</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{t[lang].ats_label}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1 }}>{label} — {matched.length}/{matched.length + missing.length} {t[lang].ats_found}</div>
           </div>
         </div>
         <button onClick={() => setExpanded(e => !e)} className="btn btn-ghost" style={{ fontSize: 12, padding: '4px 10px' }}>
-          {expanded ? 'Hide keywords' : 'Show keywords'}
+          {expanded ? t[lang].ats_hide : t[lang].ats_show}
         </button>
       </div>
 
@@ -69,7 +72,7 @@ export function KeywordMatch({ cvText, jdText }) {
         <div style={{ marginTop: 14 }}>
           {matched.length > 0 && (
             <div style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#1D9E75', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>✓ Found in your CV</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#1D9E75', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t[lang].ats_found_label}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {matched.map(k => (
                   <span key={k} style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(29,158,117,0.12)', color: '#1D9E75', borderRadius: 100, border: '1px solid rgba(29,158,117,0.25)' }}>{k}</span>
@@ -79,7 +82,7 @@ export function KeywordMatch({ cvText, jdText }) {
           )}
           {missing.length > 0 && (
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#f87171', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>✗ Missing — consider adding</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#f87171', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t[lang].ats_missing_label}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {missing.map(k => (
                   <span key={k} style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(239,68,68,0.08)', color: '#f87171', borderRadius: 100, border: '1px solid rgba(239,68,68,0.2)' }}>{k}</span>
@@ -129,13 +132,13 @@ export function calculateAttractivenessScore(resultText, jobDescription = '') {
   return Math.min(9.5, Math.max(6.5, parseFloat(score.toFixed(1))));
 }
 
-function getScoreLabel(score) {
-  if (score >= 9.0) return 'Very Likely to Get a Callback';
-  if (score >= 8.5) return 'Excellent Fit';
-  if (score >= 8.0) return 'Very Strong Match';
-  if (score >= 7.5) return 'Strong Application';
-  if (score >= 7.0) return 'Good Candidate';
-  return 'Decent Foundation';
+function getScoreLabel(score, lang) {
+  if (score >= 9.0) return t[lang].score_very_likely;
+  if (score >= 8.5) return t[lang].score_excellent;
+  if (score >= 8.0) return t[lang].score_very_strong;
+  if (score >= 7.5) return t[lang].score_strong;
+  if (score >= 7.0) return t[lang].score_good;
+  return t[lang].score_decent;
 }
 
 function getScoreColor(score) {
@@ -145,6 +148,7 @@ function getScoreColor(score) {
 }
 
 export default function ScoreCard({ score }) {
+  const { lang } = useLang();
   const [animScore, setAnimScore] = useState(0);
   const [visible, setVisible] = useState(false);
 
@@ -172,7 +176,7 @@ export default function ScoreCard({ score }) {
   }, [score, visible]);
 
   const color = getScoreColor(score);
-  const label = getScoreLabel(score);
+  const label = getScoreLabel(score, lang);
   const radius = 44;
   const circumference = 2 * Math.PI * radius;
   const progress = (animScore / 10) * circumference;
@@ -230,7 +234,7 @@ export default function ScoreCard({ score }) {
       {/* Score details */}
       <div style={{ flex: 1, minWidth: 180 }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 4 }}>
-          Attractiveness Score
+          {t[lang].score_title}
         </div>
         <div style={{ fontSize: 18, fontWeight: 700, color, marginBottom: 6 }}>{label}</div>
 
@@ -246,7 +250,7 @@ export default function ScoreCard({ score }) {
         </div>
 
         <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-          Based on keyword alignment, quantified achievements &amp; content quality
+          {t[lang].score_basis}
         </div>
       </div>
     </div>

@@ -100,13 +100,13 @@ export default function FileUploadField({
             className="upload-btn"
           >
             {extracting ? (
-              <><span className="spinner" style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: 'currentColor' }}></span> Extracting...</>
+              <><span className="spinner" style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: 'currentColor' }}></span> {t[lang].file_extracting}</>
             ) : (
               <>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
                 </svg>
-                Upload PDF or DOCX
+                {t[lang].file_upload_btn}
               </>
             )}
           </button>
@@ -119,7 +119,7 @@ export default function FileUploadField({
         <>
           {!file && (
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8, textAlign: 'center' }}>
-              — or paste text below —
+              {t[lang].file_paste_hint}
             </div>
           )}
           <textarea
@@ -131,7 +131,7 @@ export default function FileUploadField({
             style={{ minHeight: rows * 22 }}
           />
           <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)', textAlign: 'right' }}>
-            {wordCount > 0 && `${wordCount} words`}
+            {wordCount > 0 && `${wordCount} ${t[lang].label_words}`}
           </div>
         </>
       )}

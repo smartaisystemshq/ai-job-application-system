@@ -289,7 +289,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
 
               {questions.map((q, i) => (
                 <div key={i} className="question-item scroll-reveal" style={{ animationDelay: `${i * 0.04}s` }}>
-                  <div className="question-number">Question {i + 1}</div>
+                  <div className="question-number">{t[lang].interview_question_num} {i + 1}</div>
                   <div className="question-text">{q.question}</div>
                   {q.framework && <div className="question-framework">{q.framework}</div>}
                 </div>

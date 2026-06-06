@@ -9,7 +9,7 @@ import { stripMarkdown } from '../utils/downloadUtils';
 import { TEMPLATES, TemplateSelector } from './TemplateSelector';
 import LockedContent from './LockedContent';
 
-const LS = { cv: 'jas.cvo.cv', jd: 'cv_optimizer_jd', result: 'jas.cvo.result' };
+const LS = { cv: 'cv_optimizer_cv_text', jd: 'cv_optimizer_jd_text', result: 'jas.cvo.result' };
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);

@@ -36,7 +36,7 @@ export default function FAQ() {
       <div className="tool-hero">
         <div className="tool-hero-badge">? {t[lang].faq_badge}</div>
         <h1 className="tool-hero-h1">
-          Got <span className="tool-kw">{t[lang].faq_headline_highlight}</span> We've got answers.
+          {t[lang].faq_headline_pre} <span className="tool-kw">{t[lang].faq_headline_highlight}</span> {t[lang].faq_headline_post}
         </h1>
         <p className="tool-hero-sub" style={{ maxWidth: 480, marginBottom: 0 }}>
           {t[lang].faq_sub}
@@ -167,6 +167,45 @@ export default function FAQ() {
           </a>
 
         </div>
+      </div>
+
+      {/* Section H: Divider */}
+      <div className="tool-divider" style={{ marginTop: 0, marginBottom: 48 }} />
+
+      {/* Section I: Gumroad CTA */}
+      <div className="tool-section" style={{ padding: '0 40px 100px', textAlign: 'center' }}>
+        <div style={{ fontSize: 9, letterSpacing: '2.5px', color: 'rgba(29,158,117,0.55)', marginBottom: 20, textTransform: 'uppercase', fontWeight: 600 }}>
+          {t[lang].faq_gumroad_label}
+        </div>
+        <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 10, color: '#e2ede8', letterSpacing: '-0.5px' }}>
+          Ready to{' '}
+          <span style={{ color: '#1D9E75', textShadow: '0 0 20px rgba(29,158,117,0.45)' }}>start?</span>
+        </h2>
+        <p style={{ fontSize: 14, color: 'rgba(226,237,232,0.45)', marginBottom: 28, lineHeight: 1.7, maxWidth: 360, margin: '0 auto 28px' }}>
+          {t[lang].faq_gumroad_sub}
+        </p>
+        <a
+          href="https://systemsbyniklas.gumroad.com/l/zilhaq"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-block',
+            padding: '16px 38px',
+            fontSize: 15,
+            fontWeight: 700,
+            background: 'linear-gradient(135deg, #1D9E75, #16865f)',
+            color: 'white',
+            borderRadius: 12,
+            textDecoration: 'none',
+            boxShadow: '0 0 32px rgba(29,158,117,0.45), 0 4px 16px rgba(29,158,117,0.25)',
+            transition: 'all 0.2s ease',
+            fontFamily: 'inherit',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 0 48px rgba(29,158,117,0.6), 0 8px 24px rgba(29,158,117,0.3)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 0 32px rgba(29,158,117,0.45), 0 4px 16px rgba(29,158,117,0.25)'; }}
+        >
+          {t[lang].faq_gumroad_btn}
+        </a>
       </div>
 
     </div>

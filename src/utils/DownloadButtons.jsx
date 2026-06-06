@@ -1,7 +1,10 @@
 import React, { useState } from 'react'
 import { downloadAsPDF, downloadAsWord } from './downloadUtils'
+import { useLang } from '../context/LanguageContext'
+import { t } from '../translations'
 
 export default function DownloadButtons({ text, filename = 'document', template = 'minimal', isLetter = false, style = {} }) {
+  const { lang } = useLang()
   const [pdfLoading, setPdfLoading] = useState(false)
   const [wordLoading, setWordLoading] = useState(false)
   const [error, setError] = useState('')
@@ -50,7 +53,7 @@ export default function DownloadButtons({ text, filename = 'document', template 
               <line x1="12" y1="18" x2="12" y2="12"/>
               <polyline points="9 15 12 18 15 15"/>
             </svg>
-            PDF
+            {t[lang].download_pdf}
           </>
         )}
       </button>
@@ -70,7 +73,7 @@ export default function DownloadButtons({ text, filename = 'document', template 
               <line x1="12" y1="18" x2="12" y2="12"/>
               <polyline points="9 15 12 18 15 15"/>
             </svg>
-            Word
+            {t[lang].download_word}
           </>
         )}
       </button>
