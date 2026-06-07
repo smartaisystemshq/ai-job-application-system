@@ -84,6 +84,8 @@ REQUIREMENTS:
 
 PLAIN TEXT ONLY — no markdown, no **, no #. Just the paragraph text.
 
+GRAMMAR: Review the summary for grammatical correctness — complete sentences, natural phrasing, professional tone.
+
 Return ONLY the summary text. No heading, no "Here is your summary:", just the paragraph.`
 
     } else {
@@ -93,6 +95,7 @@ Return ONLY the summary text. No heading, no "Here is your summary:", just the p
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 700,
+      temperature: 0,
       messages: [{ role: 'user', content: prompt }],
     })
     return res.status(200).json({ result: message.content[0].text })

@@ -69,6 +69,8 @@ IMPORTANT — PLAIN TEXT FORMATTING (MANDATORY):
 - No bullet points — flowing paragraph prose only
 - The output must look clean when pasted into any document editor
 
+GRAMMAR: Before returning, check every sentence for grammatical correctness in the target language — complete sentences, natural phrasing, no fragments.
+
 Return ONLY the complete business letter as specified above. No extra commentary.`
 
     let userContent
@@ -98,6 +100,7 @@ Return ONLY the complete business letter as specified above. No extra commentary
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 2048,
+      temperature: 0,
       messages: [{ role: 'user', content: userContent }],
     })
 

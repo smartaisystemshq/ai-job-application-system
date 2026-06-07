@@ -46,6 +46,7 @@ function parseQuestions(raw) {
 }
 
 function CopyButton({ text }) {
+  const { lang } = useLang();
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     await navigator.clipboard.writeText(text);
@@ -54,7 +55,7 @@ function CopyButton({ text }) {
   };
   return (
     <button className={`copy-btn ${copied ? 'copied' : ''}`} onClick={copy}>
-      {copied ? '✓ Copied' : '⎘ Copy All'}
+      {copied ? t[lang].copy_done : `⎘ ${t[lang].copy_all}`}
     </button>
   );
 }
@@ -90,19 +91,19 @@ function MiniChatbot({ currentDocument, onUpdate }) {
       <div className="mini-chatbot-label">
         <span className="mini-chatbot-icon">✦</span>
         <span>{t[lang].adjust_with_ai}</span>
-        <span className="mini-chatbot-hint">Type a request — Claude updates the questions above</span>
+        <span className="mini-chatbot-hint">{t[lang].adjust_placeholder_interview}</span>
       </div>
       <div className="mini-chatbot-row">
         <input
           className="input mini-chatbot-input"
-          placeholder={`"Make the frameworks shorter", "Add STAR examples", "Focus on leadership questions", "Translate to German"...`}
+          placeholder={t[lang].adjust_suggestions_interview.map(s => `"${s}"`).join(', ') + '...'}
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && !loading && handleAdjust()}
           disabled={loading}
         />
         <button className="btn btn-primary btn-sm" onClick={handleAdjust} disabled={loading || !input.trim()} style={{ flexShrink: 0 }}>
-          {loading ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</> : t[lang].adjust_apply}
+          {loading ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> {t[lang].adjust_applying}</> : t[lang].adjust_apply}
         </button>
       </div>
       {error && <p style={{ fontSize: 12, color: '#f87171', marginTop: 6 }}>{error}</p>}
@@ -248,12 +249,12 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
             onClick={handleGenerate}
             disabled={loading || newQuestionsLoading || !canSubmit}
           >
-            {loading ? <><span className="spinner"></span> Generating…</> : <>✦ {t[lang].interview_generate_btn}</>}
+            {loading ? <><span className="spinner"></span> {t[lang].generating}</> : <>✦ {t[lang].interview_generate_btn}</>}
           </button>
           {(jobDescription || jdFile || rawResult) && (
             <div style={{ textAlign: 'center', marginTop: 10 }}>
               <button className="btn btn-ghost" onClick={handleClear} disabled={loading || newQuestionsLoading} style={{ fontSize: 13 }}>
-                Clear
+                {t[lang].clear_all}
               </button>
             </div>
           )}
@@ -262,7 +263,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
         {loading && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 0', gap: 16 }}>
             <div className="spinner-lg" />
-            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Analyzing the role and building your interview prep…</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{t[lang].writing_questions}</p>
           </div>
         )}
       </div>
@@ -308,7 +309,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
                   style={{ minWidth: 240, padding: '11px 28px' }}
                 >
                   {newQuestionsLoading
-                    ? <><span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }}></span> Generating new questions…</>
+                    ? <><span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }}></span> {t[lang].generating}</>
                     : t[lang].interview_new_btn}
                 </button>
               </div>

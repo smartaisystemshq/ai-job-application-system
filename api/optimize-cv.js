@@ -64,6 +64,8 @@ IMPORTANT — PLAIN TEXT FORMATTING (MANDATORY):
 - Dates: Jan 2021 – Mar 2024 (use – en-dash, never -- double-dash)
 - The output must be ready to paste into a Word doc and look clean with no special characters
 
+GRAMMAR: Before returning, review every sentence for grammatical correctness in the target language — no fragments, no run-ons, natural phrasing throughout.
+
 Return ONLY the optimised CV — no commentary, no preamble. Just the final polished CV text.`
 
     let userContent
@@ -94,6 +96,7 @@ Return ONLY the optimised CV — no commentary, no preamble. Just the final poli
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 4096,
+      temperature: 0,
       messages: [{ role: 'user', content: userContent }],
     })
 

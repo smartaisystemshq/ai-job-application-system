@@ -188,12 +188,12 @@ function MiniChatbot({ currentDocument, onUpdate }) {
       <div className="mini-chatbot-label">
         <span className="mini-chatbot-icon">✦</span>
         <span>{t[lang].adjust_with_ai}</span>
-        <span className="mini-chatbot-hint">Type a request — Claude updates the CV above</span>
+        <span className="mini-chatbot-hint">{t[lang].adjust_placeholder}</span>
       </div>
       <div className="mini-chatbot-row">
         <input
           className="input mini-chatbot-input"
-          placeholder={`"Make it shorter", "Stronger opening", "More formal tone", "Add keywords for software engineering"...`}
+          placeholder={t[lang].adjust_suggestions_cv.map(s => `"${s}"`).join(', ') + '...'}
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && !loading && handleAdjust()}
@@ -206,12 +206,12 @@ function MiniChatbot({ currentDocument, onUpdate }) {
           style={{ flexShrink: 0 }}
         >
           {loading
-            ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</>
+            ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> {t[lang].adjust_applying}</>
             : t[lang].adjust_apply}
         </button>
       </div>
       {error && <p style={{ fontSize: 12, color: '#f87171', marginTop: 6 }}>{error}</p>}
-      {loading && <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Applying your adjustment…</p>}
+      {loading && <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>{t[lang].adjust_applying}</p>}
     </div>
   );
 }
@@ -418,7 +418,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
         </div>
         <div className="form-group">
           <label className="label">{t[lang].builder_label_target} *</label>
-          <input className="input" placeholder="e.g. Senior Product Manager" value={state.personal.targetRole} onChange={e => setP('targetRole', e.target.value)} />
+          <input className="input" placeholder={t[lang].builder_target_placeholder} value={state.personal.targetRole} onChange={e => setP('targetRole', e.target.value)} />
         </div>
         <div className="form-group">
           <label className="label">{t[lang].builder_label_email}</label>
@@ -430,25 +430,25 @@ export default function CVBuilder({ unlocked, onUnlock }) {
         </div>
         <div className="form-group">
           <label className="label">
-            Street &amp; House Number
+            {t[lang].builder_label_street}
             <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>(optional)</span>
           </label>
           <input className="input" placeholder="123 High Street" value={state.personal.street} onChange={e => setP('street', e.target.value)} />
         </div>
         <div className="form-group">
-          <label className="label">{t[lang].builder_label_location}</label>
+          <label className="label">{t[lang].builder_label_city}</label>
           <input className="input" placeholder="London" value={state.personal.city} onChange={e => setP('city', e.target.value)} />
         </div>
         <div className="form-group">
           <label className="label">
-            Postal Code
+            {t[lang].builder_label_postal}
             <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>(optional)</span>
           </label>
           <input className="input" placeholder="SW1A 1AA" value={state.personal.postalCode} onChange={e => setP('postalCode', e.target.value)} />
         </div>
         <div className="form-group">
           <label className="label">
-            Country
+            {t[lang].builder_label_country}
             <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>(optional)</span>
           </label>
           <input className="input" placeholder="United Kingdom" value={state.personal.country} onChange={e => setP('country', e.target.value)} />
@@ -458,7 +458,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
             LinkedIn URL
             <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>(optional)</span>
           </label>
-          <input className="input" placeholder="linkedin.com/in/janesmith" value={state.personal.linkedin} onChange={e => setP('linkedin', e.target.value)} />
+          <input className="input" placeholder={t[lang].builder_linkedin_placeholder} value={state.personal.linkedin} onChange={e => setP('linkedin', e.target.value)} />
         </div>
         <div className="form-group">
           <label className="label">
@@ -489,11 +489,11 @@ export default function CVBuilder({ unlocked, onUnlock }) {
           <div className="two-col">
             <div className="form-group">
               <label className="label">{t[lang].builder_label_jobtitle}</label>
-              <input className="input" placeholder="Software Engineer" value={exp.jobTitle} onChange={e => updExp(exp.id, 'jobTitle', e.target.value)} />
+              <input className="input" placeholder={t[lang].builder_exp_placeholder_title} value={exp.jobTitle} onChange={e => updExp(exp.id, 'jobTitle', e.target.value)} />
             </div>
             <div className="form-group">
               <label className="label">{t[lang].builder_label_company}</label>
-              <input className="input" placeholder="Acme Ltd" value={exp.company} onChange={e => updExp(exp.id, 'company', e.target.value)} />
+              <input className="input" placeholder={t[lang].builder_exp_placeholder_company} value={exp.company} onChange={e => updExp(exp.id, 'company', e.target.value)} />
             </div>
             <div className="form-group">
               <label className="label">{t[lang].builder_label_from} <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', fontSize: 11 }}>(e.g. Jan 2022)</span></label>
@@ -510,7 +510,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
           </div>
           <div className="form-group">
             <label className="label">{t[lang].builder_label_desc}</label>
-            <textarea className="textarea" rows={3} placeholder="Briefly describe what you did — Claude will turn this into strong CV bullet points..." value={exp.description} onChange={e => updExp(exp.id, 'description', e.target.value)} />
+            <textarea className="textarea" rows={3} placeholder={t[lang].builder_exp_placeholder_desc} value={exp.description} onChange={e => updExp(exp.id, 'description', e.target.value)} />
           </div>
           <button
             className="btn btn-secondary btn-sm"
@@ -555,16 +555,16 @@ export default function CVBuilder({ unlocked, onUnlock }) {
           </div>
           <div className="form-group">
             <label className="label">{t[lang].builder_label_school} *</label>
-            <input className="input" placeholder="e.g. BG/BRG Lilienfeld, BHAK St. Pölten, University of Vienna" value={edu.institution} onChange={e => updEdu(edu.id, 'institution', e.target.value)} />
+            <input className="input" placeholder={t[lang].builder_edu_placeholder_school} value={edu.institution} onChange={e => updEdu(edu.id, 'institution', e.target.value)} />
           </div>
           <div className="two-col">
             <div className="form-group">
               <label className="label">{t[lang].builder_label_degree}</label>
-              <input className="input" placeholder="e.g. Matura, Bachelor, Certificate" value={edu.degree} onChange={e => updEdu(edu.id, 'degree', e.target.value)} />
+              <input className="input" placeholder={t[lang].builder_edu_placeholder_degree} value={edu.degree} onChange={e => updEdu(edu.id, 'degree', e.target.value)} />
             </div>
             <div className="form-group">
               <label className="label">{t[lang].builder_label_field}</label>
-              <input className="input" placeholder="e.g. Business, Computer Science" value={edu.field} onChange={e => updEdu(edu.id, 'field', e.target.value)} />
+              <input className="input" placeholder={t[lang].builder_edu_placeholder_field} value={edu.field} onChange={e => updEdu(edu.id, 'field', e.target.value)} />
             </div>
             <div className="form-group">
               <label className="label">{t[lang].builder_label_from}</label>
@@ -589,7 +589,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
         <input
           className="input"
-          placeholder="Type a skill and press Enter..."
+          placeholder={t[lang].builder_skill_placeholder}
           value={skillInput}
           onChange={e => setSkillInput(e.target.value)}
           onKeyDown={handleSkillKeyDown}
@@ -670,7 +670,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
         <textarea
           className="textarea"
           rows={6}
-          placeholder="Write or generate your professional summary here..."
+          placeholder={t[lang].builder_summary_placeholder}
           value={state.summary}
           onChange={e => set('summary', e.target.value)}
         />

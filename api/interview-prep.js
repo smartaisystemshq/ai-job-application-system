@@ -61,7 +61,9 @@ SELECT the 8 most likely questions from these categories (pick the most relevant
 - Technical skill or tool questions based on requirements listed in the job description
 - Behavioural questions testing the key competencies the role demands
 - Situational or case questions relevant to this role's main challenges
-- One motivation or fit question relevant to this company type or sector`
+- One motivation or fit question relevant to this company type or sector
+
+GRAMMAR: Write all questions and frameworks in grammatically correct, natural ${langName}. Every sentence must be complete and polished — no fragments.`
 
     let userContent
 
@@ -77,6 +79,7 @@ SELECT the 8 most likely questions from these categories (pick the most relevant
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 3500,
+      temperature: 0,
       messages: [{ role: 'user', content: userContent }],
     })
 

@@ -1,4 +1,6 @@
 import React from 'react'
+import { useLang } from '../context/LanguageContext'
+import { t } from '../translations'
 
 const SCALE = 0.26
 const DOC_W = 580
@@ -136,10 +138,11 @@ export const TEMPLATES = [
 ]
 
 export function TemplateSelector({ selectedTemplate, onSelect, className = '' }) {
+  const { lang } = useLang();
   return (
     <div className={`scroll-reveal ${className}`} style={{ marginBottom: 24 }}>
       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>
-        Select Template
+        {t[lang].select_template}
       </div>
       <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4 }} className="template-row">
         {TEMPLATES.map(tmpl => {

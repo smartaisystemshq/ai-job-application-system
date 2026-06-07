@@ -9,9 +9,10 @@ import { stripMarkdown } from '../utils/downloadUtils';
 import { TEMPLATES, TemplateSelector } from './TemplateSelector';
 import LockedContent from './LockedContent';
 
-const LS = { cv: 'sas_cv_text', jd: 'sas_cv_jd', filename: 'sas_cv_filename', result: 'jas.cvo.result' };
+const LS = { filename: 'sas_cv_filename', result: 'jas.cvo.result' };
 
 function CopyButton({ text }) {
+  const { lang } = useLang();
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     await navigator.clipboard.writeText(text);
@@ -20,7 +21,7 @@ function CopyButton({ text }) {
   };
   return (
     <button className={`copy-btn ${copied ? 'copied' : ''}`} onClick={copy}>
-      {copied ? '✓ Copied' : '⎘ Copy'}
+      {copied ? t[lang].copy_done : t[lang].copy_btn}
     </button>
   );
 }
@@ -56,19 +57,19 @@ function MiniChatbot({ currentDocument, onUpdate }) {
       <div className="mini-chatbot-label">
         <span className="mini-chatbot-icon">✦</span>
         <span>{t[lang].adjust_with_ai}</span>
-        <span className="mini-chatbot-hint">Type a request — Claude updates the CV above</span>
+        <span className="mini-chatbot-hint">{t[lang].adjust_placeholder}</span>
       </div>
       <div className="mini-chatbot-row">
         <input
           className="input mini-chatbot-input"
-          placeholder={`"Make it shorter", "Add more Python keywords", "Formal tone", "Stronger opening"...`}
+          placeholder={t[lang].adjust_suggestions_cv.map(s => `"${s}"`).join(', ') + '...'}
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && !loading && handleAdjust()}
           disabled={loading}
         />
         <button className="btn btn-primary btn-sm" onClick={handleAdjust} disabled={loading || !input.trim()} style={{ flexShrink: 0 }}>
-          {loading ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> Applying…</> : t[lang].adjust_apply}
+          {loading ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'white' }}></span> {t[lang].adjust_applying}</> : t[lang].adjust_apply}
         </button>
       </div>
       {error && <p style={{ fontSize: 12, color: '#f87171', marginTop: 6 }}>{error}</p>}
@@ -76,41 +77,35 @@ function MiniChatbot({ currentDocument, onUpdate }) {
   );
 }
 
-export default function CVOptimizer({ unlocked, onUnlock }) {
+export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText: setCv, jdText: jobDescription, setJdText: setJobDescription }) {
   const { lang } = useLang();
-  const [cv, setCv] = useState('');
   const [cvFile, setCvFile] = useState(null);
   const [cvPdfBase64, setCvPdfBase64] = useState('');
 
-  const [jobDescription, setJobDescription] = useState('');
   const [jdFile, setJdFile] = useState(null);
   const [jdPdfBase64, setJdPdfBase64] = useState('');
 
-  const [result, setResult] = useState('');
+  const [result, setResult] = useState(() => localStorage.getItem(LS.result) || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('minimal');
-  const [score, setScore] = useState(null);
+  const [score, setScore] = useState(() => {
+    const r = localStorage.getItem(LS.result);
+    const jd = localStorage.getItem('sas_jd_text') || localStorage.getItem('sas_cv_jd') || '';
+    return r ? calculateAttractivenessScore(r, jd) : null;
+  });
 
   const jdRef = useRef(null);
   const generateRef = useRef(null);
   const resultRef = useRef(null);
 
   useEffect(() => {
-    const savedCv = localStorage.getItem(LS.cv);
-    const savedJd = localStorage.getItem(LS.jd);
     const savedFilename = localStorage.getItem(LS.filename);
-    const savedResult = localStorage.getItem(LS.result);
-    if (savedCv) setCv(savedCv);
-    if (savedJd) setJobDescription(savedJd);
-    if (savedResult) setResult(savedResult);
-    if (savedFilename && !savedFilename.toLowerCase().endsWith('.pdf') && savedCv) {
+    if (savedFilename && !savedFilename.toLowerCase().endsWith('.pdf') && cv) {
       setCvFile({ name: savedFilename, type: 'docx' });
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { if (cv) localStorage.setItem(LS.cv, cv); }, [cv]);
-  useEffect(() => { if (jobDescription) localStorage.setItem(LS.jd, jobDescription); }, [jobDescription]);
   useEffect(() => { if (result) localStorage.setItem(LS.result, result); }, [result]);
   useEffect(() => {
     if (cvFile?.name) localStorage.setItem(LS.filename, cvFile.name);
@@ -251,7 +246,7 @@ export default function CVOptimizer({ unlocked, onUnlock }) {
             onClick={handleOptimize}
             disabled={loading || !canSubmit}
           >
-            {loading ? <><span className="spinner"></span> Optimizing…</> : <>✦ {t[lang].cv_generate_btn}</>}
+            {loading ? <><span className="spinner"></span> {t[lang].generating}</> : <>✦ {t[lang].cv_generate_btn}</>}
           </button>
           {(cv || cvFile || jobDescription || jdFile || result) && (
             <div style={{ textAlign: 'center', marginTop: 10 }}>
@@ -265,7 +260,7 @@ export default function CVOptimizer({ unlocked, onUnlock }) {
         {loading && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 0', gap: 16 }}>
             <div className="spinner-lg" />
-            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Analyzing job requirements and tailoring your CV…</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{t[lang].writing_cv}</p>
           </div>
         )}
       </div>
@@ -290,7 +285,7 @@ export default function CVOptimizer({ unlocked, onUnlock }) {
                 <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ color: 'var(--accent)' }}>✦</span>{t[lang].cv_result_label}
                   <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 2 }}>
-                    · {TEMPLATES.find(tmpl => tmpl.id === selectedTemplate)?.name} template
+                    · {TEMPLATES.find(tmpl => tmpl.id === selectedTemplate)?.name} {t[lang].template_word}
                   </span>
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
