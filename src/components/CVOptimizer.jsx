@@ -9,7 +9,7 @@ import { stripMarkdown } from '../utils/downloadUtils';
 import { TEMPLATES, TemplateSelector } from './TemplateSelector';
 import LockedContent from './LockedContent';
 
-const LS = { cv: 'cv_optimizer_cv_text', jd: 'cv_optimizer_jd_text', result: 'jas.cvo.result' };
+const LS = { cv: 'sas_cv_text', jd: 'sas_cv_jd', filename: 'sas_cv_filename', result: 'jas.cvo.result' };
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
@@ -78,15 +78,15 @@ function MiniChatbot({ currentDocument, onUpdate }) {
 
 export default function CVOptimizer({ unlocked, onUnlock }) {
   const { lang } = useLang();
-  const [cv, setCv] = useState(() => localStorage.getItem(LS.cv) || '');
+  const [cv, setCv] = useState('');
   const [cvFile, setCvFile] = useState(null);
   const [cvPdfBase64, setCvPdfBase64] = useState('');
 
-  const [jobDescription, setJobDescription] = useState(() => localStorage.getItem(LS.jd) || '');
+  const [jobDescription, setJobDescription] = useState('');
   const [jdFile, setJdFile] = useState(null);
   const [jdPdfBase64, setJdPdfBase64] = useState('');
 
-  const [result, setResult] = useState(() => localStorage.getItem(LS.result) || '');
+  const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('minimal');
@@ -96,9 +96,26 @@ export default function CVOptimizer({ unlocked, onUnlock }) {
   const generateRef = useRef(null);
   const resultRef = useRef(null);
 
-  useEffect(() => { localStorage.setItem(LS.cv, cv); }, [cv]);
-  useEffect(() => { localStorage.setItem(LS.jd, jobDescription); }, [jobDescription]);
+  useEffect(() => {
+    const savedCv = localStorage.getItem(LS.cv);
+    const savedJd = localStorage.getItem(LS.jd);
+    const savedFilename = localStorage.getItem(LS.filename);
+    const savedResult = localStorage.getItem(LS.result);
+    if (savedCv) setCv(savedCv);
+    if (savedJd) setJobDescription(savedJd);
+    if (savedResult) setResult(savedResult);
+    if (savedFilename && !savedFilename.toLowerCase().endsWith('.pdf') && savedCv) {
+      setCvFile({ name: savedFilename, type: 'docx' });
+    }
+  }, []);
+
+  useEffect(() => { if (cv) localStorage.setItem(LS.cv, cv); }, [cv]);
+  useEffect(() => { if (jobDescription) localStorage.setItem(LS.jd, jobDescription); }, [jobDescription]);
   useEffect(() => { if (result) localStorage.setItem(LS.result, result); }, [result]);
+  useEffect(() => {
+    if (cvFile?.name) localStorage.setItem(LS.filename, cvFile.name);
+    else localStorage.removeItem(LS.filename);
+  }, [cvFile]);
 
   const handleCvFileSelect = (fileInfo, content) => {
     setCvFile(fileInfo);
@@ -168,7 +185,7 @@ export default function CVOptimizer({ unlocked, onUnlock }) {
           <span>✦</span><span>{t[lang].cv_badge}</span>
         </div>
         <h1 className="tool-hero-h1">
-          Tailor your <span className="tool-kw">{t[lang].cv_headline_highlight}</span> to any job in seconds
+          {t[lang].cv_headline_pre} <span className="tool-kw">{t[lang].cv_headline_highlight}</span> {t[lang].cv_headline_post}
         </h1>
         <p className="tool-hero-sub">
           {t[lang].cv_sub}

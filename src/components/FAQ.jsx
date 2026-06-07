@@ -166,6 +166,18 @@ export default function FAQ() {
             <div style={{ fontSize: 12, color: 'rgba(29,158,117,0.8)' }}>@smartaisystemshq</div>
           </a>
 
+          {/* Gumroad */}
+          <a
+            href="https://systemsbyniklas.gumroad.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="faq-social-card"
+          >
+            <div style={{ fontSize: 28, display: 'block', textAlign: 'center', marginBottom: 10 }}>🛍</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#e2ede8', marginBottom: 4 }}>Gumroad</div>
+            <div style={{ fontSize: 12, color: 'rgba(29,158,117,0.8)' }}>{t[lang].faq_gumroad_handle}</div>
+          </a>
+
         </div>
       </div>
 

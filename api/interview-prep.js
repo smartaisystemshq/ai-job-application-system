@@ -14,14 +14,16 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: 'API key not configured' })
     }
 
-    const { jobDescription, jdPdf } = req.body || {}
+    const { jobDescription, jdPdf, language } = req.body || {}
     if (!jobDescription && !jdPdf) return res.status(400).json({ error: 'jobDescription is required.' })
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+    const langName = language === 'DE' ? 'German' : 'English'
+
     const prompt = `You are an expert interview coach preparing a candidate for the role described in the job description.
 
-LANGUAGE RULE: Detect the language of the job description. Write every question and every answer framework in that exact same language. If the job description is in German, respond entirely in German. If it is in English, respond entirely in English. Do not mix languages.
+LANGUAGE RULE: Generate all 8 questions AND all answer frameworks in ${langName}. Write entirely in ${langName}. Do not mix languages.
 
 OUTPUT FORMAT — follow this exactly:
 

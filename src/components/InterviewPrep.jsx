@@ -154,6 +154,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
         body: JSON.stringify({
           jobDescription: jobDescription.trim() || undefined,
           jdPdf: jdPdfBase64 || undefined,
+          language: lang,
         }),
       });
       const data = await res.json();
@@ -196,7 +197,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
           <span>◎</span><span>{t[lang].interview_badge}</span>
         </div>
         <h1 className="tool-hero-h1">
-          Walk in <span className="tool-kw">{t[lang].interview_headline_highlight}</span> for any interview
+          {t[lang].interview_headline_pre} <span className="tool-kw">{t[lang].interview_headline_highlight}</span> {t[lang].interview_headline_post}
         </h1>
         <p className="tool-hero-sub">
           {t[lang].interview_sub}

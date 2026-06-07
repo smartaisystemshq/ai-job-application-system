@@ -413,19 +413,19 @@ export default function CVBuilder({ unlocked, onUnlock }) {
     <div>
       <div className="two-col">
         <div className="form-group">
-          <label className="label">Full Name *</label>
+          <label className="label">{t[lang].builder_label_fullname} *</label>
           <input className="input" placeholder="Jane Smith" value={state.personal.name} onChange={e => setP('name', e.target.value)} />
         </div>
         <div className="form-group">
-          <label className="label">Target Role *</label>
+          <label className="label">{t[lang].builder_label_target} *</label>
           <input className="input" placeholder="e.g. Senior Product Manager" value={state.personal.targetRole} onChange={e => setP('targetRole', e.target.value)} />
         </div>
         <div className="form-group">
-          <label className="label">Email</label>
+          <label className="label">{t[lang].builder_label_email}</label>
           <input className="input" type="email" placeholder="jane@example.com" value={state.personal.email} onChange={e => setP('email', e.target.value)} />
         </div>
         <div className="form-group">
-          <label className="label">Phone</label>
+          <label className="label">{t[lang].builder_label_phone}</label>
           <input className="input" placeholder="+44 7000 000000" value={state.personal.phone} onChange={e => setP('phone', e.target.value)} />
         </div>
         <div className="form-group">
@@ -436,7 +436,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
           <input className="input" placeholder="123 High Street" value={state.personal.street} onChange={e => setP('street', e.target.value)} />
         </div>
         <div className="form-group">
-          <label className="label">City</label>
+          <label className="label">{t[lang].builder_label_location}</label>
           <input className="input" placeholder="London" value={state.personal.city} onChange={e => setP('city', e.target.value)} />
         </div>
         <div className="form-group">
@@ -488,19 +488,19 @@ export default function CVBuilder({ unlocked, onUnlock }) {
           </div>
           <div className="two-col">
             <div className="form-group">
-              <label className="label">Job Title</label>
+              <label className="label">{t[lang].builder_label_jobtitle}</label>
               <input className="input" placeholder="Software Engineer" value={exp.jobTitle} onChange={e => updExp(exp.id, 'jobTitle', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="label">Company</label>
+              <label className="label">{t[lang].builder_label_company}</label>
               <input className="input" placeholder="Acme Ltd" value={exp.company} onChange={e => updExp(exp.id, 'company', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="label">From <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', fontSize: 11 }}>(e.g. Jan 2022)</span></label>
+              <label className="label">{t[lang].builder_label_from} <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', fontSize: 11 }}>(e.g. Jan 2022)</span></label>
               <input className="input" placeholder="Jan 2022" value={exp.startDate} onChange={e => updExp(exp.id, 'startDate', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="label">To <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', fontSize: 11 }}>(e.g. Dec 2023 or "Present")</span></label>
+              <label className="label">{t[lang].builder_label_to} <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', fontSize: 11 }}>(e.g. Dec 2023 or "Present")</span></label>
               <input className="input" placeholder={exp.isCurrent ? 'Present' : 'Dec 2023'} value={exp.isCurrent ? 'Present' : exp.endDate} onChange={e => updExp(exp.id, 'endDate', e.target.value)} disabled={exp.isCurrent} />
               <label style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13, color: 'var(--text-secondary)' }}>
                 <input type="checkbox" checked={exp.isCurrent} onChange={e => updExp(exp.id, 'isCurrent', e.target.checked)} />
@@ -509,7 +509,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
             </div>
           </div>
           <div className="form-group">
-            <label className="label">{t[lang].builder_brief_desc}</label>
+            <label className="label">{t[lang].builder_label_desc}</label>
             <textarea className="textarea" rows={3} placeholder="Briefly describe what you did — Claude will turn this into strong CV bullet points..." value={exp.description} onChange={e => updExp(exp.id, 'description', e.target.value)} />
           </div>
           <button
@@ -532,7 +532,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       ))}
 
       <button className="btn btn-secondary" style={{ marginTop: 16 }} onClick={addExp}>
-        {t[lang].builder_add_role}
+        {t[lang].builder_add_exp}
       </button>
       <ErrBox msg={apiError} />
     </div>
@@ -554,30 +554,24 @@ export default function CVBuilder({ unlocked, onUnlock }) {
             <button className="btn btn-danger btn-sm" onClick={() => delEdu(edu.id)}>{t[lang].builder_remove}</button>
           </div>
           <div className="form-group">
-            <label className="label">{t[lang].edu_school} *</label>
+            <label className="label">{t[lang].builder_label_school} *</label>
             <input className="input" placeholder="e.g. BG/BRG Lilienfeld, BHAK St. Pölten, University of Vienna" value={edu.institution} onChange={e => updEdu(edu.id, 'institution', e.target.value)} />
           </div>
           <div className="two-col">
             <div className="form-group">
-              <label className="label">
-                {t[lang].edu_degree}
-                <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>{t[lang].edu_optional}</span>
-              </label>
+              <label className="label">{t[lang].builder_label_degree}</label>
               <input className="input" placeholder="e.g. Matura, Bachelor, Certificate" value={edu.degree} onChange={e => updEdu(edu.id, 'degree', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="label">
-                {t[lang].edu_field}
-                <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>{t[lang].edu_optional}</span>
-              </label>
+              <label className="label">{t[lang].builder_label_field}</label>
               <input className="input" placeholder="e.g. Business, Computer Science" value={edu.field} onChange={e => updEdu(edu.id, 'field', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="label">{t[lang].edu_from}</label>
+              <label className="label">{t[lang].builder_label_from}</label>
               <input className="input" placeholder="e.g. 2019" value={edu.startYear} onChange={e => updEdu(edu.id, 'startYear', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="label">{t[lang].edu_to}</label>
+              <label className="label">{t[lang].builder_label_to}</label>
               <input className="input" placeholder="e.g. 2023 or 'Present'" value={edu.endYear} onChange={e => updEdu(edu.id, 'endYear', e.target.value)} />
             </div>
           </div>
@@ -602,7 +596,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
           style={{ flex: 1 }}
         />
         <button className="btn btn-secondary" onClick={() => { addSkill(skillInput); setSkillInput(''); }} disabled={!skillInput.trim()}>
-          Add
+          {t[lang].builder_add_skill}
         </button>
       </div>
 
@@ -625,7 +619,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       >
         {skillsLoading
           ? <><span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'currentColor' }}></span> {t[lang].builder_ai_generating}</>
-          : `${t[lang].builder_ai_skills_prefix} ${state.personal.targetRole || 'My Role'}`}
+          : t[lang].builder_ai_suggest}
       </button>
 
       {suggestedSkills.length > 0 && (
@@ -667,7 +661,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
         >
           {summaryLoading
             ? <><span className="spinner"></span> {t[lang].builder_ai_generating}</>
-            : t[lang].builder_ai_summary}
+            : t[lang].builder_gen_summary}
         </button>
       </div>
 
@@ -741,7 +735,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
           <span>◈</span><span>{t[lang].builder_badge}</span>
         </div>
         <h1 className="tool-hero-h1">
-          Build a professional <span className="tool-kw">{t[lang].builder_headline_highlight}</span> from scratch
+          {t[lang].builder_headline_pre} <span className="tool-kw">{t[lang].builder_headline_highlight}</span> {t[lang].builder_headline_post}
         </h1>
         <p className="tool-hero-sub">
           {t[lang].builder_sub}
