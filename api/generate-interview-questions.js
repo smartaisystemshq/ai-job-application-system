@@ -1,4 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk')
+const { INTERVIEW_EXPERT_KNOWLEDGE } = require('./expertKnowledge.js')
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -7,7 +8,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { jobDescription } = req.body
+  const { jobDescription, language } = req.body
 
   if (!jobDescription) {
     return res.status(400).json({ error: 'Job description is required' })
@@ -17,39 +18,28 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Job description too long. Please shorten it.' })
   }
 
+  const systemPrompt = `You are a senior recruiter and interview coach with expertise across all industries. You know exactly what hiring managers look for and what questions reveal the best candidates.
+
+${INTERVIEW_EXPERT_KNOWLEDGE}
+
+YOUR TASK:
+- Generate exactly 8 interview questions tailored to the specific role and company in the job description
+- Include all question types from the knowledge base
+- Each question must be specific to this role — no generic questions
+- Provide a detailed answer framework for each question using STAR method
+- Match the seniority level and industry of the job description
+- Write entirely in ${language === 'DE' ? 'German' : 'English'}
+- Questions should be challenging but fair`
+
   try {
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 3000,
-      system: `You are an expert interview coach who helps candidates prepare for job interviews. You analyse job descriptions to identify the key competencies, challenges, and skills being assessed, then generate targeted interview questions with detailed STAR framework guidance.
-
-STAR framework: Situation, Task, Action, Result
-
-For each question you provide:
-1. The likely interview question
-2. Why interviewers ask it (what they're really assessing)
-3. A STAR answer framework with specific guidance on what to cover in each section
-
-Format your response as exactly 8 questions using this structure for each:
-
-**Question [N]: [The question]**
-*Why they ask this:* [Brief explanation]
-
-**STAR Framework:**
-- **Situation:** [What context to set up]
-- **Task:** [What challenge or responsibility to describe]
-- **Action:** [What specific actions to highlight — be concrete]
-- **Result:** [What outcome metrics and learnings to mention]
-
----
-
-Generate a mix of: behavioural questions, technical/role-specific questions, and situational questions based on the job description.`,
+      system: systemPrompt,
       messages: [
         {
           role: 'user',
-          content: `Generate 8 interview questions with STAR answer frameworks for this role:
-
-${jobDescription}`
+          content: `Generate 8 interview questions with STAR answer frameworks for this role:\n\n${jobDescription}`
         }
       ]
     })

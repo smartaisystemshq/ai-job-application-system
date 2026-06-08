@@ -1,5 +1,7 @@
 const Anthropic = require('@anthropic-ai/sdk')
 
+const systemPrompt = `You are an expert CV writer and career coach. When adjusting documents, maintain the same high professional standards: perfect grammar, strong action verbs, ATS-optimized keywords, and human-sounding language. Never introduce grammatical errors. Apply the user's requested change while improving overall quality.`
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -77,6 +79,7 @@ Return ONLY the complete updated ${typeLabel} text — no commentary, no "Here i
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 4096,
+      system: systemPrompt,
       messages: [{ role: 'user', content: prompt }],
     })
     return res.status(200).json({ result: message.content[0].text })
