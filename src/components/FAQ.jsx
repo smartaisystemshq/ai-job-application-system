@@ -190,8 +190,7 @@ export default function FAQ() {
           {t[lang].faq_gumroad_label}
         </div>
         <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 10, color: '#e2ede8', letterSpacing: '-0.5px' }}>
-          Ready to{' '}
-          <span style={{ color: '#1D9E75', textShadow: '0 0 20px rgba(29,158,117,0.45)' }}>start?</span>
+          {t[lang].faq_gumroad_headline}
         </h2>
         <p style={{ fontSize: 14, color: 'rgba(226,237,232,0.45)', marginBottom: 28, lineHeight: 1.7, maxWidth: 360, margin: '0 auto 28px' }}>
           {t[lang].faq_gumroad_sub}

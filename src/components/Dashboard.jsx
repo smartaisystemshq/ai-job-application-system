@@ -13,7 +13,7 @@ function HealthScore({ applications }) {
   const score = Math.min(appScore + advScore + toolScore, 100);
 
   const getMessage = () => {
-    if (score === 0) return 'Add your first application and start using the AI tools to begin your score.';
+    if (score === 0) return t[lang].dash_health_empty_msg;
     if (score < 30) return 'Good start — keep adding applications and use the CV Optimizer for a quick boost.';
     if (score < 60) return 'Solid progress. Aim for interviews by tailoring each application with the AI tools.';
     if (score < 85) return 'Strong pipeline! Keep your applications moving — interview prep will help seal the deal.';
@@ -21,7 +21,7 @@ function HealthScore({ applications }) {
   };
 
   const getLabel = () => {
-    if (score === 0) return 'Just Starting';
+    if (score === 0) return t[lang].dash_health_just_starting;
     if (score < 30) return 'Getting Started';
     if (score < 60) return 'Building Momentum';
     if (score < 85) return 'Good Candidate';
@@ -61,16 +61,16 @@ function HealthScore({ applications }) {
         <div style={{ fontSize: 12, color: 'rgba(226,237,232,0.4)', marginBottom: 14, lineHeight: 1.6 }}>{getMessage()}</div>
         <div className="health-score-links" style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 12 }}>
           <span style={{ color: applications.length >= 5 ? '#1D9E75' : 'rgba(226,237,232,0.35)' }}>
-            {applications.length >= 5 ? '✓' : '○'} 5+ applications tracked
+            {applications.length >= 5 ? '✓' : '○'} {t[lang].dash_health_check1}
           </span>
           <span style={{ color: cvoUsed ? '#1D9E75' : 'rgba(226,237,232,0.35)' }}>
-            {cvoUsed ? '✓' : '○'} CV Optimizer used
+            {cvoUsed ? '✓' : '○'} {t[lang].dash_health_check2}
           </span>
           <span style={{ color: clUsed ? '#1D9E75' : 'rgba(226,237,232,0.35)' }}>
-            {clUsed ? '✓' : '○'} Cover Letter generated
+            {clUsed ? '✓' : '○'} {t[lang].dash_health_check3}
           </span>
           <span style={{ color: advanced > 0 ? '#1D9E75' : 'rgba(226,237,232,0.35)' }}>
-            {advanced > 0 ? '✓' : '○'} Interview stage reached
+            {advanced > 0 ? '✓' : '○'} {t[lang].dash_health_check4}
           </span>
         </div>
       </div>
@@ -79,6 +79,13 @@ function HealthScore({ applications }) {
 }
 
 const STATUSES = ['Draft', 'Applied', 'Interview', 'Offer'];
+
+const STATUS_LABEL_KEY = {
+  Draft: 'dash_status_draft',
+  Applied: 'dash_status_applied',
+  Interview: 'dash_status_interview',
+  Offer: 'dash_status_offer',
+};
 
 const STATUS_DOT = {
   Draft: 'rgba(226,237,232,0.3)',
@@ -190,7 +197,7 @@ export default function Dashboard() {
       <div className="dash-hero">
         <div className="tool-hero-badge">◎ {t[lang].dash_badge}</div>
         <h1 className="tool-hero-h1">
-          Track every <span className="tool-kw">{t[lang].dash_headline_highlight}</span> in one place
+          {t[lang].dash_headline_pre} <span className="tool-kw">{t[lang].dash_headline_highlight}</span> {t[lang].dash_headline_post}
         </h1>
         <p className="tool-hero-sub" style={{ maxWidth: 500, marginBottom: 0 }}>
           {t[lang].dash_sub}
@@ -214,7 +221,7 @@ export default function Dashboard() {
                 color: s === 'Applied' ? '#1D9E75' : '#e2ede8',
                 textShadow: s === 'Applied' ? '0 0 20px rgba(29,158,117,0.4)' : 'none',
               }}>{counts[s]}</div>
-              <div style={{ fontSize: 10, color: 'rgba(226,237,232,0.35)', letterSpacing: '1px', textTransform: 'uppercase' }}>{s}</div>
+              <div style={{ fontSize: 10, color: 'rgba(226,237,232,0.35)', letterSpacing: '1px', textTransform: 'uppercase' }}>{t[lang][STATUS_LABEL_KEY[s]]}</div>
             </div>
           ))}
         </div>
@@ -289,7 +296,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                  <span className={BADGE_CLS[app.status]}>{app.status}</span>
+                  <span className={BADGE_CLS[app.status]}>{t[lang][STATUS_LABEL_KEY[app.status]]}</span>
                   <button className="btn btn-ghost btn-sm" onClick={() => openEdit(app)} title="Edit">✎ Edit</button>
                   <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(app.id)} title="Delete">✕</button>
                 </div>
