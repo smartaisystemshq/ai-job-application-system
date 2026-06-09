@@ -98,9 +98,8 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
   const [error, setError] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('minimal');
   const [showPhotoPlaceholder, setShowPhotoPlaceholder] = useState(false);
-  const [extractedPhoto, setExtractedPhoto] = useState(null);
+  const [cvPhoto, setCvPhoto] = useState(() => localStorage.getItem('sas_cv_photo') || null);
 
-  const rawCvFileRef = useRef(null);
   const [score, setScore] = useState(() => {
     const r = localStorage.getItem(LS.result);
     const jd = localStorage.getItem('sas_jd_text') || localStorage.getItem('sas_cv_jd') || '';
@@ -151,83 +150,30 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
     if (jdPdfBase64) { localStorage.setItem(LS.jdPdf, jdPdfBase64); localStorage.setItem(LS.jdIsPdf, 'true'); }
     else { localStorage.removeItem(LS.jdPdf); localStorage.removeItem(LS.jdIsPdf); }
   }, [jdPdfBase64]);
+  useEffect(() => {
+    if (cvPhoto) localStorage.setItem('sas_cv_photo', cvPhoto);
+    else localStorage.removeItem('sas_cv_photo');
+  }, [cvPhoto]);
 
-  async function extractPhotoFromDocx(file) {
-    try {
-      const JSZip = (await import('jszip')).default;
-      const arrayBuffer = await file.arrayBuffer();
-      const zip = await JSZip.loadAsync(arrayBuffer);
-      const mediaFiles = Object.keys(zip.files).filter(name =>
-        name.startsWith('word/media/') &&
-        (name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png'))
-      );
-      if (mediaFiles.length === 0) return null;
-      const imageFile = zip.files[mediaFiles[0]];
-      const imageBlob = await imageFile.async('blob');
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.readAsDataURL(imageBlob);
-      });
-    } catch (e) {
-      console.log('No photo found in DOCX:', e);
-      return null;
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert(lang === 'DE' ? 'Foto ist zu groß. Maximal 5MB.' : 'Photo is too large. Maximum 5MB.');
+      return;
     }
-  }
-
-  async function extractPhotoFromPdf(base64) {
-    try {
-      const pdfjsLib = await import('pdfjs-dist');
-      if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
-      }
-      const binaryStr = atob(base64);
-      const data = new Uint8Array(binaryStr.length);
-      for (let i = 0; i < binaryStr.length; i++) data[i] = binaryStr.charCodeAt(i);
-      const pdf = await pdfjsLib.getDocument({ data }).promise;
-      const page = await pdf.getPage(1);
-      const viewport = page.getViewport({ scale: 2.0 });
-      const canvas = document.createElement('canvas');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      const ctx = canvas.getContext('2d');
-      await page.render({ canvasContext: ctx, viewport }).promise;
-      const photoX = Math.floor(viewport.width * 0.62);
-      const photoY = Math.floor(viewport.height * 0.02);
-      const photoW = Math.floor(viewport.width * 0.35);
-      const photoH = Math.floor(viewport.height * 0.22);
-      const cropCanvas = document.createElement('canvas');
-      cropCanvas.width = photoW;
-      cropCanvas.height = photoH;
-      const cropCtx = cropCanvas.getContext('2d');
-      cropCtx.drawImage(canvas, photoX, photoY, photoW, photoH, 0, 0, photoW, photoH);
-      const imageData = cropCtx.getImageData(0, 0, photoW, photoH);
-      const hasContent = Array.from(imageData.data).some((val, i) => i % 4 !== 3 && val < 240);
-      if (!hasContent) return null;
-      return cropCanvas.toDataURL('image/jpeg', 0.85);
-    } catch (e) {
-      console.log('Could not extract photo from PDF:', e);
-      return null;
-    }
-  }
+    const reader = new FileReader();
+    reader.onload = (ev) => setCvPhoto(ev.target.result);
+    reader.readAsDataURL(file);
+  };
 
   const handleCvFileSelect = (fileInfo, content) => {
     setCvFile(fileInfo);
-    if (fileInfo.type === 'pdf') {
-      setCvPdfBase64(content);
-      setCv('');
-      extractPhotoFromPdf(content).then(photo => setExtractedPhoto(photo));
-    } else {
-      setCv(content);
-      setCvPdfBase64('');
-      if (rawCvFileRef.current) {
-        extractPhotoFromDocx(rawCvFileRef.current).then(photo => setExtractedPhoto(photo));
-      }
-    }
-    // Auto-scroll to JD field after CV is loaded
+    if (fileInfo.type === 'pdf') { setCvPdfBase64(content); setCv(''); }
+    else { setCv(content); setCvPdfBase64(''); }
     setTimeout(() => jdRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
   };
-  const handleCvFileRemove = () => { setCvFile(null); setCvPdfBase64(''); setCv(''); setExtractedPhoto(null); rawCvFileRef.current = null; };
+  const handleCvFileRemove = () => { setCvFile(null); setCvPdfBase64(''); setCv(''); };
 
   const handleJdFileSelect = (fileInfo, content) => {
     setJdFile(fileInfo);
@@ -271,7 +217,7 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
     setCv(''); setCvFile(null); setCvPdfBase64('');
     setJobDescription(''); setJdFile(null); setJdPdfBase64('');
     setResult(''); setError(''); setScore(null);
-    setExtractedPhoto(null); rawCvFileRef.current = null;
+    setCvPhoto(null);
     Object.values(LS).forEach(k => localStorage.removeItem(k));
   };
 
@@ -324,8 +270,44 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
               file={cvFile}
               placeholder={t[lang].cv_upload_cv_hint}
               rows={14}
-              onRawFile={f => { rawCvFileRef.current = f; }}
             />
+            <div style={{ marginTop: '10px' }}>
+              {!cvPhoto ? (
+                <label style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  padding: '6px 14px', background: 'rgba(255,255,255,0.03)',
+                  border: '1px dashed rgba(29,158,117,0.25)', borderRadius: '8px',
+                  fontSize: '12px', color: 'rgba(226,237,232,0.5)', cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(29,158,117,0.5)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(29,158,117,0.25)'}
+                >
+                  📷 {t[lang].cv_photo_add}
+                  <input type="file" accept="image/jpeg,image/png" style={{ display: 'none' }}
+                    onChange={handlePhotoUpload} />
+                </label>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <img src={cvPhoto} alt="CV Photo"
+                    style={{ width: '46px', height: '59px', borderRadius: '6px', objectFit: 'cover',
+                    border: '1px solid rgba(29,158,117,0.3)' }} />
+                  <div>
+                    <div style={{ fontSize: '12px', color: '#1D9E75', fontWeight: 600 }}>
+                      ✓ {t[lang].cv_photo_ready}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'rgba(226,237,232,0.4)', marginTop: '2px' }}>
+                      {t[lang].cv_photo_hint}
+                    </div>
+                    <button onClick={() => setCvPhoto(null)}
+                      style={{ fontSize: '11px', color: 'rgba(226,237,232,0.35)', background: 'none',
+                      border: 'none', cursor: 'pointer', marginTop: '2px', padding: 0 }}>
+                      {t[lang].cv_photo_remove}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <div className="input-card" ref={jdRef}>
             <FileUploadField
@@ -340,21 +322,6 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
             />
           </div>
         </div>
-
-        {extractedPhoto && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, padding: '10px 14px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
-            <img src={extractedPhoto} alt="CV photo" style={{ width: 52, height: 67, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{t[lang].cv_photo_detected}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t[lang].cv_photo_will_insert}</div>
-            </div>
-            <button
-              className="btn btn-ghost btn-sm"
-              onClick={() => setExtractedPhoto(null)}
-              style={{ fontSize: 12, flexShrink: 0 }}
-            >{t[lang].cv_photo_remove}</button>
-          </div>
-        )}
 
         <div className="tool-tip-box" style={{ marginBottom: error ? 16 : 0 }}>
           <span>🔒</span>
@@ -419,12 +386,12 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
                   </span>
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <DownloadButtons text={result} filename="optimized-cv" template={selectedTemplate} photo={extractedPhoto} />
+                  <DownloadButtons text={result} filename="optimized-cv" template={selectedTemplate} photo={cvPhoto} />
                   <CopyButton text={result} />
                 </div>
               </div>
 
-              <DocumentPreview text={result} template={selectedTemplate} photo={extractedPhoto} showPlaceholder={showPhotoPlaceholder && !extractedPhoto} />
+              <DocumentPreview text={result} template={selectedTemplate} photo={cvPhoto} showPlaceholder={showPhotoPlaceholder && !cvPhoto} />
 
               <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
                 {t[lang].cv_review_note}

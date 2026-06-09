@@ -331,6 +331,11 @@ export const t = {
     builder_photo_privacy: 'Your photo is only used to display in your CV preview and downloaded document. It is never uploaded to any server or stored anywhere outside your browser.',
     builder_data_privacy: 'Privacy note: None of your data (CV content, job descriptions, photos) is stored on our servers. Everything stays in your browser.',
     cv_privacy_note: 'Privacy note: Your CV and job descriptions are processed by AI and are never stored on our servers. Everything is deleted after processing.',
+    cv_photo_add: 'Add photo (optional)',
+    cv_photo_ready: 'Photo ready',
+    cv_photo_hint: 'Will appear top-right in your CV',
+    cv_photo_remove: 'Remove',
+    cv_photo_size_hint: 'JPG or PNG, max 5MB',
   },
   DE: {
     nav_home: 'Startseite',
@@ -663,5 +668,10 @@ export const t = {
     builder_photo_privacy: 'Dein Foto wird nur für die Vorschau und den Download verwendet. Es wird niemals auf einen Server hochgeladen oder außerhalb deines Browsers gespeichert.',
     builder_data_privacy: 'Datenschutzhinweis: Keine deiner Daten (CV-Inhalte, Stellenbeschreibungen, Fotos) werden auf unseren Servern gespeichert. Alles bleibt in deinem Browser.',
     cv_privacy_note: 'Datenschutzhinweis: Dein CV und die Stellenbeschreibungen werden von KI verarbeitet und niemals dauerhaft gespeichert. Alles wird nach der Verarbeitung gelöscht.',
+    cv_photo_add: 'Foto hinzufügen (optional)',
+    cv_photo_ready: 'Foto bereit',
+    cv_photo_hint: 'Erscheint oben rechts im CV',
+    cv_photo_remove: 'Entfernen',
+    cv_photo_size_hint: 'JPG oder PNG, max. 5MB',
   }
 };
