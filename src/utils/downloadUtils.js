@@ -186,7 +186,13 @@ function buildMinimalPDF(text, sp, photo = null) {
       headerItems.push({ text: line.text, fontSize: nameSize, bold: true, color: '#111111', margin: [0, 0, 0, 2] }); continue
     }
     if (!headerDone && line.type === 'contact') {
-      headerItems.push({ text: line.text, fontSize: contactSize, color: '#555555', margin: [0, 0, 0, 1] }); continue
+      const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
+      if (citems.length > 1) {
+        headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
+      } else {
+        headerItems.push({ text: line.text, fontSize: contactSize, color: '#555555', margin: [0, 0, 0, 1] })
+      }
+      continue
     }
     headerDone = true
     switch (line.type) {
@@ -233,7 +239,13 @@ function buildModernPDF(text, sp, photo = null) {
       headerItems.push({ text: line.text, fontSize: nameSize, bold: true, color: '#111111', margin: [0, 0, 0, 2] }); continue
     }
     if (!headerDone && line.type === 'contact') {
-      headerItems.push({ text: line.text, fontSize: contactSize, color: '#666666', margin: [0, 0, 0, 1] }); continue
+      const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
+      if (citems.length > 1) {
+        headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#666666', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
+      } else {
+        headerItems.push({ text: line.text, fontSize: contactSize, color: '#666666', margin: [0, 0, 0, 1] })
+      }
+      continue
     }
     headerDone = true
     switch (line.type) {
@@ -282,7 +294,13 @@ function buildClassicPDF(text, sp, photo = null) {
       continue
     }
     if (!headerDone && line.type === 'contact') {
-      headerItems.push({ text: line.text, fontSize: contactSize, color: '#555555', alignment: photo ? 'left' : 'center', margin: [0, 0, 0, 1] }); continue
+      const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
+      if (citems.length > 1) {
+        headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
+      } else {
+        headerItems.push({ text: line.text, fontSize: contactSize, color: '#555555', alignment: photo ? 'left' : 'center', margin: [0, 0, 0, 1] })
+      }
+      continue
     }
     headerDone = true
     switch (line.type) {
@@ -338,7 +356,13 @@ function buildExecutivePDF(text, sp, photo = null) {
       continue
     }
     if (!headerDone && line.type === 'contact') {
-      headerItems.push({ text: line.text, fontSize: contactSize, color: '#555555', margin: [0, 0, 0, 1] }); continue
+      const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
+      if (citems.length > 1) {
+        headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
+      } else {
+        headerItems.push({ text: line.text, fontSize: contactSize, color: '#555555', margin: [0, 0, 0, 1] })
+      }
+      continue
     }
     headerDone = true
     switch (line.type) {

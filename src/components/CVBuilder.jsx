@@ -131,7 +131,6 @@ function TipBox({ step }) {
   if (!tipKey) return null;
   return (
     <div className="tool-tip-box" style={{ marginBottom: 24 }}>
-      <span>💡</span>
       <span>
         <strong style={{ color: '#1D9E75' }}>{tipLabel}</strong>{' '}{t[lang][tipKey]}
       </span>
@@ -443,50 +442,64 @@ export default function CVBuilder({ unlocked, onUnlock }) {
         style={{ display: 'none' }}
         onChange={handlePhotoUpload}
       />
-      <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <div style={{
-          width: 100, height: 130, flexShrink: 0,
-          background: photoBase64 ? 'transparent' : 'rgba(255,255,255,0.04)',
-          border: photoBase64 ? 'none' : '2px dashed rgba(255,255,255,0.12)',
-          borderRadius: 4,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          overflow: 'hidden',
-        }}>
-          {photoBase64 ? (
-            <img src={photoBase64} alt="CV photo" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
-          ) : (
-            <div style={{ textAlign: 'center', color: 'rgba(226,237,232,0.25)' }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ display: 'block', margin: '0 auto 6px' }}>
-                <circle cx="12" cy="8" r="4" />
-                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-              </svg>
-              <span style={{ fontSize: 11 }}>{t[lang].builder_photo_upload_btn}</span>
-            </div>
-          )}
+      <div style={{
+        background: 'rgba(255,255,255,0.02)',
+        border: '1px solid rgba(29,158,117,0.12)',
+        borderRadius: '12px',
+        padding: '16px 20px',
+        marginBottom: 20,
+      }}>
+        <div style={{ fontSize: '13px', fontWeight: 600, color: '#e2ede8', marginBottom: '4px' }}>
+          {t[lang].cv_photo_section_title}
         </div>
-        <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-            <button className="btn btn-secondary" onClick={() => photoInputRef.current?.click()}>
-              {t[lang].builder_photo_upload_btn}
-            </button>
-            {photoBase64 && (
-              <button className="btn btn-danger btn-sm" onClick={() => { setPhotoBase64(''); setPhotoError(''); }}>
-                {t[lang].builder_photo_remove}
-              </button>
+        <div style={{ fontSize: '12px', color: 'rgba(226,237,232,0.45)', marginBottom: '16px', lineHeight: '1.6' }}>
+          {t[lang].cv_photo_section_desc}
+        </div>
+        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={{
+            width: 100, height: 130, flexShrink: 0,
+            background: photoBase64 ? 'transparent' : 'rgba(255,255,255,0.04)',
+            border: photoBase64 ? 'none' : '2px dashed rgba(255,255,255,0.12)',
+            borderRadius: 4,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            overflow: 'hidden',
+          }}>
+            {photoBase64 ? (
+              <img src={photoBase64} alt="CV photo" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+            ) : (
+              <div style={{ textAlign: 'center', color: 'rgba(226,237,232,0.25)' }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ display: 'block', margin: '0 auto 6px' }}>
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                </svg>
+                <span style={{ fontSize: 11 }}>{t[lang].builder_photo_upload_btn}</span>
+              </div>
             )}
           </div>
-          <p style={{ fontSize: 12, color: 'rgba(226,237,232,0.4)', lineHeight: 1.6, marginBottom: 12 }}>
-            {t[lang].builder_photo_hint}
-          </p>
-          {photoError && (
-            <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 6, color: '#f87171', fontSize: 12 }}>
-              {photoError}
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+              <button className="btn btn-secondary" onClick={() => photoInputRef.current?.click()}>
+                {t[lang].builder_photo_upload_btn}
+              </button>
+              {photoBase64 && (
+                <button className="btn btn-danger btn-sm" onClick={() => { setPhotoBase64(''); setPhotoError(''); }}>
+                  {t[lang].builder_photo_remove}
+                </button>
+              )}
             </div>
-          )}
+            {photoError && (
+              <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 6, color: '#f87171', fontSize: 12 }}>
+                {photoError}
+              </div>
+            )}
+          </div>
+        </div>
+        <div style={{ fontSize: '11px', color: 'rgba(226,237,232,0.3)', marginTop: '10px' }}>
+          {t[lang].cv_photo_size_hint}
         </div>
       </div>
-      <div className="tool-tip-box" style={{ marginTop: 20 }}>
-        <span>🔒</span>
+      <div className="tool-tip-box" style={{ borderLeft: '2px solid rgba(29,158,117,0.4)', paddingLeft: 12 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: '#1D9E75', whiteSpace: 'nowrap' }}>{t[lang].cv_privacy_label}</span>
         <span style={{ fontSize: 12 }}>{t[lang].builder_photo_privacy}</span>
       </div>
     </div>
@@ -563,7 +576,6 @@ export default function CVBuilder({ unlocked, onUnlock }) {
     <div>
       {state.experience.length === 0 && (
         <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)', marginTop: 16 }}>
-          <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.4 }}>💼</div>
           <p>{t[lang].builder_no_exp}</p>
         </div>
       )}
@@ -630,7 +642,6 @@ export default function CVBuilder({ unlocked, onUnlock }) {
     <div>
       {state.education.length === 0 && (
         <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)', marginTop: 16 }}>
-          <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.4 }}>🎓</div>
           <p>{t[lang].builder_no_edu}</p>
         </div>
       )}
@@ -885,7 +896,6 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       {state.step === 7 && (
         <div className="tool-section" style={{ padding: '0 40px 80px' }}>
           <div style={{ textAlign: 'center', marginBottom: 32 }} className="scroll-reveal">
-            <div style={{ fontSize: 32, marginBottom: 10 }}>🎉</div>
             <h2 style={{ fontSize: 22, fontWeight: 700, color: '#e2ede8', marginBottom: 6 }}>
               {t[lang].builder_ready}
             </h2>

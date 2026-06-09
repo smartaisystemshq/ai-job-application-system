@@ -115,7 +115,6 @@ function SidebarUnlock({ onUnlock }) {
         className="unlock-cta-btn"
         title="Enter access code"
       >
-        <span style={{ fontSize: 15, lineHeight: 1 }}>🔒</span>
         <span>Unlock Full Access</span>
       </button>
       {open && (

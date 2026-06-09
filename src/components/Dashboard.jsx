@@ -14,18 +14,18 @@ function HealthScore({ applications }) {
 
   const getMessage = () => {
     if (score === 0) return t[lang].dash_health_empty_msg;
-    if (score < 30) return 'Good start — keep adding applications and use the CV Optimizer for a quick boost.';
-    if (score < 60) return 'Solid progress. Aim for interviews by tailoring each application with the AI tools.';
-    if (score < 85) return 'Strong pipeline! Keep your applications moving — interview prep will help seal the deal.';
-    return 'Outstanding — your job search is well-organised and highly active. Keep the momentum going!';
+    if (score < 30) return t[lang].dash_health_msg_start;
+    if (score < 60) return t[lang].dash_health_msg_building;
+    if (score < 85) return t[lang].dash_health_msg_strong;
+    return t[lang].dash_health_msg_outstanding;
   };
 
   const getLabel = () => {
     if (score === 0) return t[lang].dash_health_just_starting;
-    if (score < 30) return 'Getting Started';
-    if (score < 60) return 'Building Momentum';
-    if (score < 85) return 'Good Candidate';
-    return 'Outstanding';
+    if (score < 30) return t[lang].dash_health_getting_started;
+    if (score < 60) return t[lang].dash_health_building;
+    if (score < 85) return t[lang].dash_health_strong;
+    return t[lang].dash_health_outstanding;
   };
 
   const radius = 34;
@@ -247,7 +247,6 @@ export default function Dashboard() {
       <div className="dash-section" style={{ paddingBottom: 80 }}>
         {applications.length === 0 ? (
           <div className="dash-empty">
-            <div style={{ fontSize: 40, opacity: 0.3, marginBottom: 16 }}>📋</div>
             <p style={{ fontSize: 16, color: 'rgba(226,237,232,0.5)', marginBottom: 8 }}>{t[lang].dash_empty_title}</p>
             <p style={{ fontSize: 13, color: 'rgba(226,237,232,0.35)', marginBottom: 24, lineHeight: 1.6 }}>
               {t[lang].dash_empty_sub}
@@ -262,8 +261,8 @@ export default function Dashboard() {
           <>
             {/* Sort controls */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 11, color: 'rgba(226,237,232,0.3)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sort</span>
-              {[['company', 'Company'], ['role', 'Role'], ['status', 'Status'], ['dateApplied', 'Date']].map(([field, label]) => (
+              <span style={{ fontSize: 11, color: 'rgba(226,237,232,0.3)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t[lang].dash_sort}</span>
+              {[['company', t[lang].dash_sort_company], ['role', t[lang].dash_sort_role], ['status', t[lang].dash_sort_status], ['dateApplied', t[lang].dash_sort_date]].map(([field, label]) => (
                 <button key={field} onClick={() => toggleSort(field)} style={{
                   background: sortField === field ? 'rgba(29,158,117,0.1)' : 'transparent',
                   border: `1px solid ${sortField === field ? 'rgba(29,158,117,0.25)' : 'rgba(255,255,255,0.07)'}`,
@@ -297,7 +296,7 @@ export default function Dashboard() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                   <span className={BADGE_CLS[app.status]}>{t[lang][STATUS_LABEL_KEY[app.status]]}</span>
-                  <button className="btn btn-ghost btn-sm" onClick={() => openEdit(app)} title="Edit">✎ Edit</button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => openEdit(app)} title="Edit">✎ {t[lang].dash_edit}</button>
                   <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(app.id)} title="Delete">✕</button>
                 </div>
               </div>
@@ -311,17 +310,17 @@ export default function Dashboard() {
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && closeModal()}>
           <div className="modal">
             <div className="modal-header">
-              <h2>{editingId ? 'Edit Application' : 'Add Application'}</h2>
+              <h2>{editingId ? t[lang].dash_edit + ' ' + t[lang].dash_add_application : t[lang].dash_add_application}</h2>
               <button className="btn btn-ghost btn-sm" onClick={closeModal} style={{ fontSize: 18, padding: '4px 8px' }}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 <div className="two-col">
                   <div className="form-group">
-                    <label className="label">Company *</label>
+                    <label className="label">{t[lang].dash_company_label}</label>
                     <input
                       className="input"
-                      placeholder="e.g. Google"
+                      placeholder={t[lang].dash_company_placeholder}
                       value={form.company}
                       onChange={e => setForm(f => ({ ...f, company: e.target.value }))}
                       required
@@ -329,10 +328,10 @@ export default function Dashboard() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="label">Role *</label>
+                    <label className="label">{t[lang].dash_role_label}</label>
                     <input
                       className="input"
-                      placeholder="e.g. Senior Engineer"
+                      placeholder={t[lang].dash_role_placeholder}
                       value={form.role}
                       onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
                       required
@@ -341,17 +340,17 @@ export default function Dashboard() {
                 </div>
                 <div className="two-col">
                   <div className="form-group">
-                    <label className="label">Status</label>
+                    <label className="label">{t[lang].dash_status_label}</label>
                     <select
                       className="select"
                       value={form.status}
                       onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
                     >
-                      {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                      {STATUSES.map(s => <option key={s} value={s}>{t[lang][STATUS_LABEL_KEY[s]]}</option>)}
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="label">Date Applied</label>
+                    <label className="label">{t[lang].dash_date_label}</label>
                     <input
                       type="date"
                       className="input"
@@ -362,20 +361,20 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="form-group">
-                  <label className="label">Notes</label>
+                  <label className="label">{t[lang].dash_notes_label}</label>
                   <textarea
                     className="textarea"
                     rows={3}
-                    placeholder="Recruiter name, next steps, salary range..."
+                    placeholder={t[lang].dash_notes_placeholder}
                     value={form.notes}
                     onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                   />
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={closeModal}>Cancel</button>
+                <button type="button" className="btn btn-secondary" onClick={closeModal}>{t[lang].dash_cancel}</button>
                 <button type="submit" className="btn btn-primary">
-                  {editingId ? 'Save Changes' : 'Add Application'}
+                  {editingId ? t[lang].dash_save_changes : t[lang].dash_add_application}
                 </button>
               </div>
             </form>
@@ -388,21 +387,21 @@ export default function Dashboard() {
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setDeleteId(null)}>
           <div className="modal" style={{ maxWidth: 400 }}>
             <div className="modal-header">
-              <h2>Delete Application</h2>
+              <h2>{t[lang].dash_delete_application}</h2>
               <button className="btn btn-ghost btn-sm" onClick={() => setDeleteId(null)} style={{ fontSize: 18, padding: '4px 8px' }}>✕</button>
             </div>
             <div className="modal-body">
               <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                Are you sure you want to delete the application for{' '}
+                {t[lang].dash_delete_confirm_pre}{' '}
                 <strong style={{ color: 'var(--text-primary)' }}>
                   {applications.find(a => a.id === deleteId)?.company}
-                </strong>? This cannot be undone.
+                </strong>{t[lang].dash_delete_confirm_post}
               </p>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setDeleteId(null)}>Cancel</button>
+              <button className="btn btn-secondary" onClick={() => setDeleteId(null)}>{t[lang].dash_cancel}</button>
               <button className="btn btn-primary" style={{ background: 'var(--danger)' }} onClick={handleDelete}>
-                Delete
+                {t[lang].dash_delete_btn}
               </button>
             </div>
           </div>

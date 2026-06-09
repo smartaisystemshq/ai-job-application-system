@@ -28,7 +28,7 @@ export default function LockedContent({ children, unlocked, onUnlock }) {
           fontSize: 13,
           color: 'rgba(226,237,232,0.5)',
         }}>
-          🔒 {t[lang].paywall_locked_banner}{' '}
+          {t[lang].paywall_locked_banner}{' '}
           <button
             onClick={() => setPaywallDismissed(false)}
             style={{

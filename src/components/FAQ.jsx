@@ -173,7 +173,13 @@ export default function FAQ() {
             rel="noopener noreferrer"
             className="faq-social-card"
           >
-            <div style={{ fontSize: 28, display: 'block', textAlign: 'center', marginBottom: 10 }}>🛍</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}>
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+            </div>
             <div style={{ fontSize: 14, fontWeight: 600, color: '#e2ede8', marginBottom: 4 }}>Gumroad</div>
             <div style={{ fontSize: 12, color: 'rgba(29,158,117,0.8)' }}>{t[lang].faq_gumroad_handle}</div>
           </a>

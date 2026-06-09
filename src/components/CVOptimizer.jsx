@@ -271,7 +271,19 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
               placeholder={t[lang].cv_upload_cv_hint}
               rows={14}
             />
-            <div style={{ marginTop: '10px' }}>
+            <div style={{
+              marginTop: '16px',
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(29,158,117,0.12)',
+              borderRadius: '12px',
+              padding: '16px 20px',
+            }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#e2ede8', marginBottom: '4px' }}>
+                {t[lang].cv_photo_section_title}
+              </div>
+              <div style={{ fontSize: '12px', color: 'rgba(226,237,232,0.45)', marginBottom: '12px', lineHeight: '1.6' }}>
+                {t[lang].cv_photo_section_desc}
+              </div>
               {!cvPhoto ? (
                 <label style={{
                   display: 'inline-flex', alignItems: 'center', gap: '6px',
@@ -283,7 +295,7 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
                 onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(29,158,117,0.5)'}
                 onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(29,158,117,0.25)'}
                 >
-                  📷 {t[lang].cv_photo_add}
+                  {t[lang].cv_photo_add}
                   <input type="file" accept="image/jpeg,image/png" style={{ display: 'none' }}
                     onChange={handlePhotoUpload} />
                 </label>
@@ -307,6 +319,9 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
                   </div>
                 </div>
               )}
+              <div style={{ fontSize: '11px', color: 'rgba(226,237,232,0.3)', marginTop: '10px' }}>
+                {t[lang].cv_photo_size_hint}
+              </div>
             </div>
           </div>
           <div className="input-card" ref={jdRef}>
@@ -323,8 +338,8 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
           </div>
         </div>
 
-        <div className="tool-tip-box" style={{ marginBottom: error ? 16 : 0 }}>
-          <span>🔒</span>
+        <div className="tool-tip-box" style={{ marginBottom: error ? 16 : 0, borderLeft: '2px solid rgba(29,158,117,0.4)', paddingLeft: 12 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#1D9E75', whiteSpace: 'nowrap' }}>{t[lang].cv_privacy_label}</span>
           <span style={{ fontSize: 12 }}>{t[lang].cv_privacy_note}</span>
         </div>
 
@@ -365,7 +380,6 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
       {/* ── Section F: Tip ── */}
       <div className="tool-section" style={{ padding: '0 40px 60px' }}>
         <div className="tool-tip-box">
-          <span>💡</span>
           <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> {t[lang].cv_tip}</span>
         </div>
       </div>
@@ -405,7 +419,6 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
             </LockedContent>
 
             <div className="tool-tip-box" style={{ marginTop: 20, marginBottom: 16 }}>
-              <span>💡</span>
               <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> {t[lang].cv_result_tip}</span>
             </div>
 
@@ -416,8 +429,8 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
                 style={{ fontSize: 12 }}
               >
                 {showPhotoPlaceholder
-                  ? (lang === 'DE' ? '👤 Foto-Platzhalter ausblenden' : '👤 Hide photo placeholder')
-                  : (lang === 'DE' ? '👤 Foto-Platzhalter anzeigen' : '👤 Show photo placeholder')}
+                  ? (lang === 'DE' ? 'Foto-Platzhalter ausblenden' : 'Hide photo placeholder')
+                  : (lang === 'DE' ? 'Foto-Platzhalter anzeigen' : 'Show photo placeholder')}
               </button>
             </div>
             <TemplateSelector selectedTemplate={selectedTemplate} onSelect={setSelectedTemplate} />

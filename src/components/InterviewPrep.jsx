@@ -124,9 +124,19 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
   });
   const [loading, setLoading] = useState(false);
   const [newQuestionsLoading, setNewQuestionsLoading] = useState(false);
+  const [translateLoading, setTranslateLoading] = useState(false);
+  const [showLangBanner, setShowLangBanner] = useState(false);
   const [error, setError] = useState('');
 
   const resultRef = useRef(null);
+  const prevLangRef = useRef(lang);
+
+  useEffect(() => {
+    if (prevLangRef.current !== lang && questions.length > 0) {
+      setShowLangBanner(true);
+    }
+    prevLangRef.current = lang;
+  }, [lang]);
 
   useEffect(() => { localStorage.setItem(LS.jd, jobDescription); }, [jobDescription]);
   useEffect(() => { if (rawResult) localStorage.setItem(LS.rawResult, rawResult); }, [rawResult]);
@@ -188,6 +198,31 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
     setRawResult(newRaw);
     setQuestions(parseQuestions(newRaw));
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  };
+
+  const translateQuestions = async () => {
+    if (!rawResult) return;
+    setTranslateLoading(true);
+    setShowLangBanner(false);
+    try {
+      const targetLang = lang === 'DE' ? 'German' : 'English';
+      const res = await fetch('/api/adjust-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentText: rawResult,
+          instruction: `Translate all interview questions and their answer frameworks to ${targetLang}. Keep the exact same format and structure.`,
+          documentType: 'interview-questions',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Translation failed');
+      handleAdjustUpdate(data.result);
+    } catch (err) {
+      console.error('Translate error:', err);
+    } finally {
+      setTranslateLoading(false);
+    }
   };
 
   return (
@@ -271,7 +306,6 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
       {/* ── Section F: Tip ── */}
       <div className="tool-section" style={{ padding: '0 40px 60px' }}>
         <div className="tool-tip-box">
-          <span>💡</span>
           <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> {t[lang].interview_tip}</span>
         </div>
       </div>
@@ -280,6 +314,22 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
       {questions.length > 0 && !loading && (
         <div className="tool-section" style={{ padding: '0 40px 80px', marginTop: 40 }}>
           <div ref={resultRef}>
+            {showLangBanner && (
+              <div className="tool-tip-box" style={{ marginBottom: 12 }}>
+                <span style={{ fontSize: 12 }}>{t[lang].interview_lang_changed}</span>
+              </div>
+            )}
+            <div style={{ marginBottom: 16 }}>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={translateQuestions}
+                disabled={translateLoading}
+              >
+                {translateLoading
+                  ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'currentColor' }}></span> {t[lang].generating}</>
+                  : `✦ ${t[lang].interview_translate_btn}`}
+              </button>
+            </div>
             <LockedContent unlocked={unlocked} onUnlock={onUnlock}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, padding: '12px 16px', background: 'rgba(29,158,117,0.06)', border: '1px solid rgba(29,158,117,0.2)', borderRadius: 12 }}>
                 <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>

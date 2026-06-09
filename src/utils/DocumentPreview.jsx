@@ -100,8 +100,23 @@ function StandardPage({ lines, template, photo = null, showPlaceholder = false }
           </div>
         )
       }
-      case 'contact':
-        return <div key={key} style={{ ...s.contact, textAlign: s.contactAlign }}>{line.text}</div>
+      case 'contact': {
+        const items = line.text.split('|').map(i => i.trim()).filter(Boolean)
+        return (
+          <div key={key} style={{
+            ...s.contact,
+            display: 'flex', flexWrap: 'wrap',
+            gap: '4px 12px',
+            justifyContent: s.contactAlign === 'center' ? 'center' : 'flex-start',
+          }}>
+            {items.map((item, idx) => (
+              <span key={idx} style={{ whiteSpace: 'nowrap', fontSize: item.length > 40 ? '0.85em' : undefined }}>
+                {item}
+              </span>
+            ))}
+          </div>
+        )
+      }
       case 'divider':
         return <div key={key} style={s.divider} />
       case 'header':
