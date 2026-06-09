@@ -97,6 +97,7 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('minimal');
+  const [showPhotoPlaceholder, setShowPhotoPlaceholder] = useState(false);
   const [score, setScore] = useState(() => {
     const r = localStorage.getItem(LS.result);
     const jd = localStorage.getItem('sas_jd_text') || localStorage.getItem('sas_cv_jd') || '';
@@ -267,6 +268,11 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
           </div>
         </div>
 
+        <div className="tool-tip-box" style={{ marginBottom: error ? 16 : 0 }}>
+          <span>🔒</span>
+          <span style={{ fontSize: 12 }}>{t[lang].cv_privacy_note}</span>
+        </div>
+
         {error && (
           <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 'var(--radius-sm)', color: '#f87171', fontSize: 14, marginBottom: 16 }}>
             {error}
@@ -330,7 +336,7 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
                 </div>
               </div>
 
-              <DocumentPreview text={result} template={selectedTemplate} />
+              <DocumentPreview text={result} template={selectedTemplate} showPlaceholder={showPhotoPlaceholder} />
 
               <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
                 {t[lang].cv_review_note}
@@ -348,6 +354,17 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
               <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> {t[lang].cv_result_tip}</span>
             </div>
 
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowPhotoPlaceholder(p => !p)}
+                style={{ fontSize: 12 }}
+              >
+                {showPhotoPlaceholder
+                  ? (lang === 'DE' ? '👤 Foto-Platzhalter ausblenden' : '👤 Hide photo placeholder')
+                  : (lang === 'DE' ? '👤 Foto-Platzhalter anzeigen' : '👤 Show photo placeholder')}
+              </button>
+            </div>
             <TemplateSelector selectedTemplate={selectedTemplate} onSelect={setSelectedTemplate} />
           </div>
         </div>

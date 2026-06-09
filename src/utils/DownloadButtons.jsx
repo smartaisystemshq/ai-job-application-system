@@ -3,7 +3,7 @@ import { downloadAsPDF, downloadAsWord } from './downloadUtils'
 import { useLang } from '../context/LanguageContext'
 import { t } from '../translations'
 
-export default function DownloadButtons({ text, filename = 'document', template = 'minimal', isLetter = false, style = {} }) {
+export default function DownloadButtons({ text, filename = 'document', template = 'minimal', isLetter = false, style = {}, photo = null }) {
   const { lang } = useLang()
   const [pdfLoading, setPdfLoading] = useState(false)
   const [wordLoading, setWordLoading] = useState(false)
@@ -13,7 +13,7 @@ export default function DownloadButtons({ text, filename = 'document', template 
     setPdfLoading(true)
     setError('')
     try {
-      await downloadAsPDF(text, filename, template, isLetter)
+      await downloadAsPDF(text, filename, template, isLetter, photo)
     } catch (err) {
       console.error('PDF error:', err)
       setError('PDF generation failed. Please try again.')
@@ -26,7 +26,7 @@ export default function DownloadButtons({ text, filename = 'document', template 
     setWordLoading(true)
     setError('')
     try {
-      await downloadAsWord(text, filename, template, isLetter)
+      await downloadAsWord(text, filename, template, isLetter, photo)
     } catch (err) {
       console.error('Word error:', err)
       setError('Word generation failed. Please try again.')

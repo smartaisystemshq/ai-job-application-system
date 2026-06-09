@@ -63,8 +63,69 @@ const TEMPLATE_STYLES = {
 
 // ── Single-column page renderer ───────────────────────────────────────────────
 
-function StandardPage({ lines, template }) {
+function StandardPage({ lines, template, photo = null, showPlaceholder = false }) {
   const s = TEMPLATE_STYLES[template] || TEMPLATE_STYLES.minimal
+
+  // Split into header (name/contact) and body
+  const headerLines = []
+  const bodyLines = []
+  let headerDone = false
+  for (const line of lines) {
+    if (!headerDone && (line.type === 'name' || line.type === 'contact')) {
+      headerLines.push(line)
+    } else {
+      headerDone = true
+      bodyLines.push(line)
+    }
+  }
+
+  const showPhotoArea = photo || showPlaceholder
+
+  const renderLine = (line, key) => {
+    switch (line.type) {
+      case 'name': {
+        const nameText = template === 'executive' ? line.text.toUpperCase() : line.text
+        return (
+          <div key={key}>
+            <div style={{ ...s.name, textAlign: s.contactAlign }}>{nameText}</div>
+            {s.nameAccent === 'classic-double' && (
+              <>
+                <div style={{ height: 1.5, background: '#333', marginBottom: 1.5 }} />
+                <div style={{ height: 0.5, background: '#999', marginBottom: 8 }} />
+              </>
+            )}
+            {s.nameAccent && s.nameAccent !== 'classic-double' && (
+              <div style={s.nameAccent} />
+            )}
+          </div>
+        )
+      }
+      case 'contact':
+        return <div key={key} style={{ ...s.contact, textAlign: s.contactAlign }}>{line.text}</div>
+      case 'divider':
+        return <div key={key} style={s.divider} />
+      case 'header':
+        return (
+          <div key={key}>
+            <div style={s.headerText}>{line.text}</div>
+            <div style={s.headerLine} />
+          </div>
+        )
+      case 'bullet':
+        return (
+          <div key={key} style={{ display: 'flex', gap: 7, marginBottom: 2.5, paddingLeft: 4 }}>
+            <span style={{ color: s.bullet.color, flexShrink: 0, width: 10, fontSize: 12, lineHeight: '16px' }}>{s.bullet.text}</span>
+            <span style={{ color: s.bodyColor, flex: 1, fontSize: 11 }}>{line.text}</span>
+          </div>
+        )
+      case 'body':
+        return <div key={key} style={{ color: s.bodyColor, marginBottom: 2, fontSize: 11 }}>{line.text}</div>
+      case 'empty':
+        return <div key={key} style={{ height: 5 }} />
+      default:
+        return null
+    }
+  }
 
   return (
     <div style={{
@@ -81,68 +142,27 @@ function StandardPage({ lines, template }) {
       {template === 'modern' && (
         <div style={{ height: 6, background: GREEN, marginLeft: -40, marginRight: -40, marginTop: -32, marginBottom: 20 }} />
       )}
-      {lines.map((line, i) => {
-        switch (line.type) {
-          case 'name': {
-            const nameText = template === 'executive' ? line.text.toUpperCase() : line.text
-            return (
-              <div key={i}>
-                <div style={{ ...s.name, textAlign: s.contactAlign }}>{nameText}</div>
-                {s.nameAccent === 'classic-double' && (
-                  <>
-                    <div style={{ height: 1.5, background: '#333', marginBottom: 1.5 }} />
-                    <div style={{ height: 0.5, background: '#999', marginBottom: 8 }} />
-                  </>
-                )}
-                {s.nameAccent && s.nameAccent !== 'classic-double' && (
-                  <div style={s.nameAccent} />
-                )}
-              </div>
-            )
-          }
-
-          case 'contact':
-            return (
-              <div key={i} style={{ ...s.contact, textAlign: s.contactAlign }}>
-                {line.text}
-              </div>
-            )
-
-          case 'divider':
-            return <div key={i} style={s.divider} />
-
-          case 'header':
-            return (
-              <div key={i}>
-                <div style={s.headerText}>{line.text}</div>
-                <div style={s.headerLine} />
-              </div>
-            )
-
-          case 'bullet':
-            return (
-              <div key={i} style={{ display: 'flex', gap: 7, marginBottom: 2.5, paddingLeft: 4 }}>
-                <span style={{ color: s.bullet.color, flexShrink: 0, width: 10, fontSize: 12, lineHeight: '16px' }}>
-                  {s.bullet.text}
-                </span>
-                <span style={{ color: s.bodyColor, flex: 1, fontSize: 11 }}>{line.text}</span>
-              </div>
-            )
-
-          case 'body':
-            return (
-              <div key={i} style={{ color: s.bodyColor, marginBottom: 2, fontSize: 11 }}>
-                {line.text}
-              </div>
-            )
-
-          case 'empty':
-            return <div key={i} style={{ height: 5 }} />
-
-          default:
-            return null
-        }
-      })}
+      {showPhotoArea ? (
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 4 }}>
+          <div style={{ flex: 1 }}>
+            {headerLines.map((line, i) => renderLine(line, i))}
+          </div>
+          {photo ? (
+            <img src={photo} alt="CV Photo" style={{ width: 90, height: 115, objectFit: 'cover', objectPosition: 'center top', flexShrink: 0, borderRadius: 1 }} />
+          ) : (
+            <div style={{ width: 90, height: 115, flexShrink: 0, background: '#e8e8e8', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px solid #ddd', borderRadius: 1 }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="1.5">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+              </svg>
+              <span style={{ fontSize: 8, color: '#bbb', marginTop: 4 }}>Photo</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        headerLines.map((line, i) => renderLine(line, i))
+      )}
+      {bodyLines.map((line, i) => renderLine(line, headerLines.length + i))}
     </div>
   )
 }
@@ -151,7 +171,7 @@ function StandardPage({ lines, template }) {
 
 const SHARP_SIDEBAR_HEADERS_RE = /^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES|PERSONAL STRENGTHS|STRENGTHS|PERSÖNLICHE STÄRKEN|STÄRKEN|SOFT SKILLS|KEY STRENGTHS)$/
 
-function SharpPage({ lines }) {
+function SharpPage({ lines, photo = null, showPlaceholder = false }) {
   const leftLines = []
   const rightLines = []
   let inSidebarSection = false
@@ -171,14 +191,26 @@ function SharpPage({ lines }) {
   }
 
   // Pre-process leftLines: insert thin dividers before each header (except after name)
+  // Also inject photo marker after last contact line
   const leftLinesWithDividers = []
   let lastLeftType = null
-  for (const line of leftLines) {
+  let photoInjected = false
+  for (let li = 0; li < leftLines.length; li++) {
+    const line = leftLines[li]
+    // Inject photo after the last contact line (before first non-name/contact)
+    if (!photoInjected && (photo || showPlaceholder) && lastLeftType === 'contact' && line.type !== 'contact') {
+      leftLinesWithDividers.push({ type: 'sidebar-photo' })
+      photoInjected = true
+    }
     if (line.type === 'header' && lastLeftType && lastLeftType !== 'name') {
       leftLinesWithDividers.push({ type: 'sidebar-divider' })
     }
     leftLinesWithDividers.push(line)
     lastLeftType = line.type
+  }
+  // If photo not yet injected (no headers after contacts), add at end of contacts
+  if (!photoInjected && (photo || showPlaceholder)) {
+    leftLinesWithDividers.push({ type: 'sidebar-photo' })
   }
 
   return (
@@ -213,6 +245,17 @@ function SharpPage({ lines }) {
               )
             case 'contact':
               return <div key={i} style={{ fontSize: 8.5, color: '#aaa', marginBottom: 2, lineHeight: 1.4 }}>{line.text}</div>
+            case 'sidebar-photo':
+              return photo ? (
+                <img key={i} src={photo} alt="CV Photo" style={{ width: 68, height: 87, objectFit: 'cover', objectPosition: 'center top', display: 'block', margin: '8px auto 6px', borderRadius: 1 }} />
+              ) : showPlaceholder ? (
+                <div key={i} style={{ width: 68, height: 87, background: '#333', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '8px auto 6px', borderRadius: 1 }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="1.5">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                  </svg>
+                </div>
+              ) : null
             case 'header':
               return (
                 <div key={i} style={{ marginTop: 4, marginBottom: 5 }}>
@@ -388,7 +431,7 @@ function LetterPage({ text, template = 'minimal' }) {
 
 // ── Public component ──────────────────────────────────────────────────────────
 
-export default function DocumentPreview({ text, template = 'minimal', maxHeight = 900, type = 'cv' }) {
+export default function DocumentPreview({ text, template = 'minimal', maxHeight = 900, type = 'cv', photo = null, showPlaceholder = false }) {
   const lines = useMemo(() => parseDocumentLines(text || ''), [text])
 
   if (!text) return null
@@ -405,8 +448,8 @@ export default function DocumentPreview({ text, template = 'minimal', maxHeight 
       {type === 'letter'
         ? <LetterPage text={text} template={template} />
         : template === 'sharp'
-          ? <SharpPage lines={lines} />
-          : <StandardPage lines={lines} template={template} />
+          ? <SharpPage lines={lines} photo={photo} showPlaceholder={showPlaceholder} />
+          : <StandardPage lines={lines} template={template} photo={photo} showPlaceholder={showPlaceholder} />
       }
     </div>
   )

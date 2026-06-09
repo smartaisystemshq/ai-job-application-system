@@ -38,12 +38,13 @@ function StepProgressBar({ step }) {
   const { lang } = useLang();
   const STEP_NAMES = [
     t[lang].builder_step1,
+    t[lang].builder_step_photo,
     t[lang].builder_step2,
     t[lang].builder_step3,
     t[lang].builder_step4,
     t[lang].builder_step5,
   ];
-  const progress = (step / 5) * 100;
+  const progress = (step / 6) * 100;
   return (
     <div className="tool-section" style={{ padding: '0 40px 40px' }}>
       <div style={{ position: 'relative', height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 3, marginBottom: 16 }}>
@@ -95,15 +96,27 @@ function StepProgressBar({ step }) {
 // ── Step header ──────────────────────────────────────────────────
 function StepHeader({ step }) {
   const { lang } = useLang();
-  const titleKeys = ['builder_s1_title', 'builder_s2_title', 'builder_s3_title', 'builder_s4_title', 'builder_s5_title'];
-  const descKeys  = ['builder_s1_desc',  'builder_s2_desc',  'builder_s3_desc',  'builder_s4_desc',  'builder_s5_desc'];
+  const stepData = {
+    1: { titleKey: 'builder_s1_title', descKey: 'builder_s1_desc' },
+    2: { titleKey: 'builder_photo_title', descKey: 'builder_photo_desc', isPhoto: true },
+    3: { titleKey: 'builder_s2_title', descKey: 'builder_s2_desc' },
+    4: { titleKey: 'builder_s3_title', descKey: 'builder_s3_desc' },
+    5: { titleKey: 'builder_s4_title', descKey: 'builder_s4_desc' },
+    6: { titleKey: 'builder_s5_title', descKey: 'builder_s5_desc' },
+  };
+  const data = stepData[step] || stepData[1];
   return (
     <div style={{ marginBottom: 28 }}>
-      <h2 style={{ fontSize: 20, fontWeight: 700, color: '#e2ede8', marginBottom: 6, lineHeight: 1.3 }}>
-        {t[lang][titleKeys[step - 1]]}
+      <h2 style={{ fontSize: 20, fontWeight: 700, color: '#e2ede8', marginBottom: 6, lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: 8 }}>
+        {t[lang][data.titleKey]}
+        {data.isPhoto && (
+          <span style={{ fontSize: 12, fontWeight: 400, color: 'rgba(226,237,232,0.4)', fontStyle: 'italic' }}>
+            {t[lang].builder_photo_optional}
+          </span>
+        )}
       </h2>
       <p style={{ fontSize: 13, color: 'rgba(226,237,232,0.45)', lineHeight: 1.6 }}>
-        {t[lang][descKeys[step - 1]]}
+        {t[lang][data.descKey]}
       </p>
     </div>
   );
@@ -112,13 +125,15 @@ function StepHeader({ step }) {
 // ── Tip box ──────────────────────────────────────────────────────
 function TipBox({ step }) {
   const { lang } = useLang();
-  const tipKeys = ['builder_tip1', 'builder_tip2', 'builder_tip3', 'builder_tip4', 'builder_tip5'];
+  const tipKeys = { 1: 'builder_tip1', 3: 'builder_tip2', 4: 'builder_tip3', 5: 'builder_tip4', 6: 'builder_tip5' };
   const tipLabel = lang === 'DE' ? 'Tipp:' : 'Tip:';
+  const tipKey = tipKeys[step];
+  if (!tipKey) return null;
   return (
     <div className="tool-tip-box" style={{ marginBottom: 24 }}>
       <span>💡</span>
       <span>
-        <strong style={{ color: '#1D9E75' }}>{tipLabel}</strong>{' '}{t[lang][tipKeys[step - 1]]}
+        <strong style={{ color: '#1D9E75' }}>{tipLabel}</strong>{' '}{t[lang][tipKey]}
       </span>
     </div>
   );
@@ -295,13 +310,16 @@ export default function CVBuilder({ unlocked, onUnlock }) {
   const [selectedTemplate, setSelectedTemplate] = useState('minimal');
 
   const previewRef = useRef(null);
+  const photoInputRef = useRef(null);
+  const [photoBase64, setPhotoBase64] = useState('');
+  const [photoError, setPhotoError] = useState('');
 
   useEffect(() => {
     localStorage.setItem(LS_KEY, JSON.stringify(state));
   }, [state]);
 
   useEffect(() => {
-    if (state.step !== 6) setAdjustedCvText(null);
+    if (state.step !== 7) setAdjustedCvText(null);
   }, [state.step]);
 
   const set = (key, val) => setState(s => ({ ...s, [key]: val }));
@@ -310,7 +328,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
     setState(s => ({ ...s, step: n }));
     setApiError('');
     setSuggestedSkills([]);
-    if (n === 6) {
+    if (n === 7) {
       const text = adjustedCvText ?? buildCVText(state);
       setCvScore(calculateAttractivenessScore(text));
     }
@@ -402,7 +420,77 @@ export default function CVBuilder({ unlocked, onUnlock }) {
     localStorage.removeItem(LS_KEY);
     setSuggestedSkills([]);
     setAdjustedCvText(null);
+    setPhotoBase64('');
   };
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { setPhotoError(lang === 'DE' ? 'Datei zu groß (max. 5 MB).' : 'File too large (max 5 MB).'); return; }
+    if (!file.type.startsWith('image/')) { setPhotoError(lang === 'DE' ? 'Nur Bilddateien erlaubt.' : 'Image files only.'); return; }
+    setPhotoError('');
+    const reader = new FileReader();
+    reader.onload = (ev) => setPhotoBase64(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const renderStepPhoto = () => (
+    <div>
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/jpeg,image/png"
+        style={{ display: 'none' }}
+        onChange={handlePhotoUpload}
+      />
+      <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{
+          width: 100, height: 130, flexShrink: 0,
+          background: photoBase64 ? 'transparent' : 'rgba(255,255,255,0.04)',
+          border: photoBase64 ? 'none' : '2px dashed rgba(255,255,255,0.12)',
+          borderRadius: 4,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          overflow: 'hidden',
+        }}>
+          {photoBase64 ? (
+            <img src={photoBase64} alt="CV photo" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+          ) : (
+            <div style={{ textAlign: 'center', color: 'rgba(226,237,232,0.25)' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ display: 'block', margin: '0 auto 6px' }}>
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+              </svg>
+              <span style={{ fontSize: 11 }}>{t[lang].builder_photo_upload_btn}</span>
+            </div>
+          )}
+        </div>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+            <button className="btn btn-secondary" onClick={() => photoInputRef.current?.click()}>
+              {t[lang].builder_photo_upload_btn}
+            </button>
+            {photoBase64 && (
+              <button className="btn btn-danger btn-sm" onClick={() => { setPhotoBase64(''); setPhotoError(''); }}>
+                {t[lang].builder_photo_remove}
+              </button>
+            )}
+          </div>
+          <p style={{ fontSize: 12, color: 'rgba(226,237,232,0.4)', lineHeight: 1.6, marginBottom: 12 }}>
+            {t[lang].builder_photo_hint}
+          </p>
+          {photoError && (
+            <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 6, color: '#f87171', fontSize: 12 }}>
+              {photoError}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="tool-tip-box" style={{ marginTop: 20 }}>
+        <span>🔒</span>
+        <span style={{ fontSize: 12 }}>{t[lang].builder_photo_privacy}</span>
+      </div>
+    </div>
+  );
 
   const baseCvText = buildCVText(state);
   const displayCvText = adjustedCvText ?? baseCvText;
@@ -698,15 +786,16 @@ export default function CVBuilder({ unlocked, onUnlock }) {
               text={displayCvText}
               filename={`${(state.personal.name || 'my-cv').toLowerCase().replace(/\s+/g, '-')}`}
               template={selectedTemplate}
+              photo={photoBase64}
             />
             <CopyButton text={displayCvText} />
           </div>
         </div>
 
-        <DocumentPreview text={displayCvText} template={selectedTemplate} />
+        <DocumentPreview text={displayCvText} template={selectedTemplate} photo={photoBase64} />
 
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-          <button className="btn btn-secondary" onClick={() => setStep(5)}>{t[lang].builder_back_summary}</button>
+          <button className="btn btn-secondary" onClick={() => setStep(6)}>{t[lang].builder_back_summary}</button>
           <button className="btn btn-ghost" onClick={startOver} style={{ marginLeft: 'auto', color: 'var(--danger)' }}>
             {t[lang].builder_start_over}
           </button>
@@ -748,21 +837,22 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       {/* ── Section B: Divider ── */}
       <div className="tool-divider" style={{ margin: '24px 40px 40px' }} />
 
-      {/* ── Section C: Progress bar (steps 1–5 only) ── */}
-      {state.step <= 5 && <StepProgressBar step={state.step} />}
+      {/* ── Section C: Progress bar (steps 1–6 only) ── */}
+      {state.step <= 6 && <StepProgressBar step={state.step} />}
 
       {/* ── Sections D + G + E: Form card, tip box, nav ── */}
-      {state.step <= 5 && (
+      {state.step <= 6 && (
         <div className="tool-section" style={{ padding: '0 40px 32px' }}>
 
           {/* Form card */}
           <div className="cvb-form-card scroll-reveal">
             <StepHeader step={state.step} />
             {state.step === 1 && renderStep1()}
-            {state.step === 2 && renderStep2()}
-            {state.step === 3 && renderStep3()}
-            {state.step === 4 && renderStep4()}
-            {state.step === 5 && renderStep5()}
+            {state.step === 2 && renderStepPhoto()}
+            {state.step === 3 && renderStep2()}
+            {state.step === 4 && renderStep3()}
+            {state.step === 5 && renderStep4()}
+            {state.step === 6 && renderStep5()}
           </div>
 
           {/* Tip box */}
@@ -778,21 +868,21 @@ export default function CVBuilder({ unlocked, onUnlock }) {
               {t[lang].builder_previous}
             </button>
             <span style={{ fontSize: 12, color: 'rgba(226,237,232,0.38)' }}>
-              {t[lang].builder_step_label} {state.step} {t[lang].builder_step_of} 5
+              {t[lang].builder_step_label} {state.step} {t[lang].builder_step_of} 6
             </span>
             <button
               className="cvb-btn-next"
-              onClick={() => setStep(state.step < 5 ? state.step + 1 : 6)}
+              onClick={() => setStep(state.step < 6 ? state.step + 1 : 7)}
             >
-              {state.step === 5 ? t[lang].builder_preview_cv : t[lang].builder_next}
+              {state.step === 6 ? t[lang].builder_preview_cv : t[lang].builder_next}
             </button>
           </div>
 
         </div>
       )}
 
-      {/* ── Section F: Preview (step 6) ── */}
-      {state.step === 6 && (
+      {/* ── Section F: Preview (step 7) ── */}
+      {state.step === 7 && (
         <div className="tool-section" style={{ padding: '0 40px 80px' }}>
           <div style={{ textAlign: 'center', marginBottom: 32 }} className="scroll-reveal">
             <div style={{ fontSize: 32, marginBottom: 10 }}>🎉</div>
