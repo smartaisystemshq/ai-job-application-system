@@ -9,7 +9,15 @@ import { stripMarkdown } from '../utils/downloadUtils';
 import { TemplateSelector } from './TemplateSelector';
 import LockedContent from './LockedContent';
 
-const LS = { filename: 'sas_cover_filename', result: 'jas.cl.result' };
+const LS = {
+  filename: 'sas_cover_filename',
+  result: 'jas.cl.result',
+  cvPdf: 'sas_cover_cv_pdf',
+  cvIsPdf: 'sas_cover_cv_ispdf',
+  jdFilename: 'sas_cover_jd_filename',
+  jdPdf: 'sas_cover_jd_pdf',
+  jdIsPdf: 'sas_cover_jd_ispdf',
+};
 
 function CopyButton({ text }) {
   const { lang } = useLang();
@@ -104,9 +112,25 @@ export default function CoverLetterGenerator({ unlocked, onUnlock, cvText: cv, s
   const resultRef = useRef(null);
 
   useEffect(() => {
-    const savedFilename = localStorage.getItem(LS.filename);
-    if (savedFilename && !savedFilename.toLowerCase().endsWith('.pdf') && cv) {
-      setCvFile({ name: savedFilename, type: 'docx' });
+    const savedCvFilename = localStorage.getItem(LS.filename);
+    const cvIsPdf = localStorage.getItem(LS.cvIsPdf) === 'true';
+    if (savedCvFilename) {
+      if (cvIsPdf) {
+        const savedPdf = localStorage.getItem(LS.cvPdf);
+        if (savedPdf) { setCvFile({ name: savedCvFilename, type: 'pdf' }); setCvPdfBase64(savedPdf); }
+      } else if (cv) {
+        setCvFile({ name: savedCvFilename, type: 'docx' });
+      }
+    }
+    const savedJdFilename = localStorage.getItem(LS.jdFilename);
+    const jdIsPdf = localStorage.getItem(LS.jdIsPdf) === 'true';
+    if (savedJdFilename) {
+      if (jdIsPdf) {
+        const savedJdPdf = localStorage.getItem(LS.jdPdf);
+        if (savedJdPdf) { setJdFile({ name: savedJdFilename, type: 'pdf' }); setJdPdfBase64(savedJdPdf); }
+      } else if (jobDescription) {
+        setJdFile({ name: savedJdFilename, type: 'docx' });
+      }
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -115,6 +139,18 @@ export default function CoverLetterGenerator({ unlocked, onUnlock, cvText: cv, s
     if (cvFile?.name) localStorage.setItem(LS.filename, cvFile.name);
     else localStorage.removeItem(LS.filename);
   }, [cvFile]);
+  useEffect(() => {
+    if (cvPdfBase64) { localStorage.setItem(LS.cvPdf, cvPdfBase64); localStorage.setItem(LS.cvIsPdf, 'true'); }
+    else { localStorage.removeItem(LS.cvPdf); localStorage.removeItem(LS.cvIsPdf); }
+  }, [cvPdfBase64]);
+  useEffect(() => {
+    if (jdFile?.name) localStorage.setItem(LS.jdFilename, jdFile.name);
+    else localStorage.removeItem(LS.jdFilename);
+  }, [jdFile]);
+  useEffect(() => {
+    if (jdPdfBase64) { localStorage.setItem(LS.jdPdf, jdPdfBase64); localStorage.setItem(LS.jdIsPdf, 'true'); }
+    else { localStorage.removeItem(LS.jdPdf); localStorage.removeItem(LS.jdIsPdf); }
+  }, [jdPdfBase64]);
 
   const handleCvFileSelect = (fileInfo, content) => {
     setCvFile(fileInfo);

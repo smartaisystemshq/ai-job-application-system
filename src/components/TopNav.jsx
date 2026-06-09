@@ -33,7 +33,9 @@ export default function TopNav({ activePage, onNavigate, unlocked, onUnlock }) {
             <img src="/logo.png" alt="Smart AI Systems" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8 }} />
           </div>
           <span className="topnav-brand-name">
-            Smart <span className="topnav-ai">AI</span> Systems
+            <span style={{ color: '#e2ede8', fontWeight: 600 }}>Smart</span>{' '}
+            <span className="topnav-ai">AI</span>{' '}
+            <span style={{ color: '#e2ede8', fontWeight: 600 }}>Systems</span>
           </span>
         </div>
 

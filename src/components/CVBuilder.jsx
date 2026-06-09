@@ -732,7 +732,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       {/* ── Section A: Hero ── */}
       <div className="tool-hero scroll-reveal">
         <div className="tool-hero-badge">
-          <span>◈</span><span>{t[lang].builder_badge}</span>
+          <span>◈</span><span>{t[lang].cv_builder_badge}</span>
         </div>
         <h1 className="tool-hero-h1">
           {t[lang].builder_headline_pre} <span className="tool-kw">{t[lang].builder_headline_highlight}</span> {t[lang].builder_headline_post}

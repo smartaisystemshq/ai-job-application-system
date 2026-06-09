@@ -101,7 +101,7 @@ export default function FAQ() {
           {t[lang].faq_contact_label}
         </div>
         <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 10, color: '#e2ede8' }}>
-          We reply <span className="tool-kw">{t[lang].faq_contact_highlight}</span>
+          {t[lang].faq_contact_headline_pre} <span className="tool-kw">{t[lang].faq_contact_highlight}</span>
         </h2>
         <p style={{ fontSize: 14, color: 'rgba(226,237,232,0.45)', marginBottom: 24, lineHeight: 1.7, maxWidth: 440, margin: '0 auto 24px' }}>
           {t[lang].faq_contact_sub}

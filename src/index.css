@@ -110,8 +110,8 @@ body {
 }
 
 .topnav-logo {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -122,15 +122,17 @@ body {
 }
 
 .topnav-brand-name {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
   color: #e2ede8;
   white-space: nowrap;
+  filter: drop-shadow(0 0 8px rgba(29, 158, 117, 0.15));
 }
 
 .topnav-ai {
   color: #1D9E75;
-  text-shadow: 0 0 10px rgba(29, 158, 117, 0.5);
+  text-shadow: 0 0 12px rgba(29, 158, 117, 0.6);
+  font-weight: 700;
 }
 
 .topnav-tabs {
