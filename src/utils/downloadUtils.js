@@ -165,7 +165,7 @@ function getOptimalFontSize(text) {
 
 function wrapHeaderWithPhoto(headerItems, photo) {
   if (!photo || !headerItems.length) return headerItems
-  return [{ columns: [{ stack: headerItems, width: '*' }, { image: photo, width: 68, height: 87, alignment: 'right', margin: [4, 0, 0, 0] }], margin: [0, 0, 0, 6] }]
+  return [{ columns: [{ stack: headerItems, width: '*' }, { image: photo, fit: [68, 87], alignment: 'right', margin: [4, 0, 0, 0] }], margin: [0, 0, 0, 6] }]
 }
 
 // ── Template-specific PDF builders ──────────────────────────────────────────
@@ -436,7 +436,7 @@ function buildSharpPDF(text, sp, photo = null) {
   for (const line of sideLines) {
     // Inject photo after last contact line (before first header)
     if (!sharpPhotoInserted && photo && lastSideType === 'contact' && line.type !== 'contact') {
-      sideStack.push({ image: photo, width: sideInnerW * 0.75, height: Math.round(sideInnerW * 0.75 * 1.28), alignment: 'center', margin: [0, 5, 0, 5] })
+      sideStack.push({ image: photo, fit: [68, 87], alignment: 'center', margin: [0, 5, 0, 5] })
       sharpPhotoInserted = true
     }
     switch (line.type) {
@@ -473,7 +473,7 @@ function buildSharpPDF(text, sp, photo = null) {
   }
   // If photo not yet inserted (no headers in sidebar), add at end
   if (!sharpPhotoInserted && photo) {
-    sideStack.push({ image: photo, width: sideInnerW * 0.75, height: Math.round(sideInnerW * 0.75 * 1.28), alignment: 'center', margin: [0, 5, 0, 5] })
+    sideStack.push({ image: photo, fit: [68, 87], alignment: 'center', margin: [0, 5, 0, 5] })
   }
   if (sideStack.length === 0) sideStack.push({ text: '' })
 
@@ -507,6 +507,17 @@ function buildSharpPDF(text, sp, photo = null) {
     pageSize: 'A4',
     pageMargins,
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
+    background: function(_page, pageSize) {
+      return [{
+        canvas: [{
+          type: 'rect',
+          x: 0, y: 0,
+          w: pageMargins[0] + leftW,
+          h: pageSize.height,
+          color: DARK,
+        }]
+      }]
+    },
     content: [{
       table: {
         widths: [leftW, rightW],
@@ -772,6 +783,7 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
           children.push(new Paragraph({
             children: [new TextRun({ text: nameText, bold: true, size: isDarkBg ? nameHalfPt - 4 : nameHalfPt, font: 'Calibri', color: isDarkBg ? 'ffffff' : '111111' })],
             spacing: { after: template === 'executive' ? 40 : 60 },
+            border: { top: { style: BorderStyle.NONE, size: 0 }, bottom: { style: BorderStyle.NONE, size: 0 }, left: { style: BorderStyle.NONE, size: 0 }, right: { style: BorderStyle.NONE, size: 0 } },
           }))
           if (template === 'executive' || template === 'modern') {
             children.push(new Paragraph({
@@ -794,12 +806,23 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
           }
           break
         }
-        case 'contact':
+        case 'contact': {
+          const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
+          const fullLine = citems.join(' | ')
+          const isLongContact = fullLine.length > 70 && citems.length > 1
+          const contactRuns = isLongContact
+            ? citems.flatMap((ci, idx) => {
+                const r = [new TextRun({ text: ci, size: ci.length > 30 ? 14 : 16, font: 'Calibri', color: subColor })]
+                if (idx < citems.length - 1) r.push(new TextRun({ text: '  |  ', size: 14, font: 'Calibri', color: subColor }))
+                return r
+              })
+            : [new TextRun({ text: fullLine, size: 17, font: 'Calibri', color: subColor })]
           children.push(new Paragraph({
-            children: [new TextRun({ text: line.text, size: contactHalfPt, font: 'Calibri', color: subColor })],
+            children: contactRuns,
             spacing: { after: 30 },
             alignment: template === 'classic' ? 'center' : 'left',
           })); break
+        }
         case 'divider':
           children.push(new Paragraph({
             children: [new TextRun({ text: '' })],
@@ -872,6 +895,18 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
     const leftChildren = buildParagraphs(leftLines, true)
     const rightChildren = buildParagraphs(rightLines, false)
 
+    // Inject photo into left column after name/contact paragraphs
+    if (photoBytes) {
+      const nameCount = leftLines.filter(l => l.type === 'name').length
+      const contactCount = leftLines.filter(l => l.type === 'contact').length
+      // name generates 2 paragraphs (text + underline), each contact generates 1
+      const insertIdx = nameCount * 2 + contactCount
+      const photoImageRun = new ImageRun({ data: photoBytes, transformation: { width: 68, height: 87 }, type: photoType })
+      const photoPara = new Paragraph({ children: [photoImageRun], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })
+      leftChildren.splice(insertIdx, 0, photoPara)
+    }
+
+    const noBorder = { style: BorderStyle.NONE, size: 0 }
     const table = new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       rows: [
@@ -882,11 +917,13 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
               children: leftChildren,
               shading: { fill: '1a1a1a', type: ShadingType.CLEAR },
               margins: { top: 200, bottom: 200, left: 200, right: 200 },
+              borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
             }),
             new TableCell({
               width: { size: 67, type: WidthType.PERCENTAGE },
               children: rightChildren,
               margins: { top: 200, bottom: 200, left: 300, right: 200 },
+              borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
             }),
           ],
         }),

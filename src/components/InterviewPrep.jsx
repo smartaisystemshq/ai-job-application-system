@@ -5,7 +5,7 @@ import FileUploadField from './FileUploadField';
 import { stripMarkdown } from '../utils/downloadUtils';
 import LockedContent from './LockedContent';
 
-const LS = { jd: 'jas.ip.jd', rawResult: 'jas.ip.rawResult' };
+const LS = { jd: 'jas.ip.jd', rawResult: 'jas.ip.rawResult', questions: 'sas_interview_questions' };
 
 function parseQuestions(raw) {
   if (!raw) return [];
@@ -119,23 +119,37 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
 
   const [rawResult, setRawResult] = useState(() => localStorage.getItem(LS.rawResult) || '');
   const [questions, setQuestions] = useState(() => {
-    const saved = localStorage.getItem(LS.rawResult);
-    return saved ? parseQuestions(saved) : [];
+    try {
+      const savedQ = localStorage.getItem(LS.questions);
+      if (savedQ) return JSON.parse(savedQ);
+    } catch {}
+    const savedRaw = localStorage.getItem(LS.rawResult);
+    return savedRaw ? parseQuestions(savedRaw) : [];
   });
   const [loading, setLoading] = useState(false);
   const [newQuestionsLoading, setNewQuestionsLoading] = useState(false);
-  const [translateLoading, setTranslateLoading] = useState(false);
-  const [showLangBanner, setShowLangBanner] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [error, setError] = useState('');
 
   const resultRef = useRef(null);
-  const prevLangRef = useRef(lang);
+  const didMountRef = useRef(false);
 
+  // Persist parsed questions to localStorage
   useEffect(() => {
-    if (prevLangRef.current !== lang && questions.length > 0) {
-      setShowLangBanner(true);
+    if (questions && questions.length > 0) {
+      localStorage.setItem(LS.questions, JSON.stringify(questions));
     }
-    prevLangRef.current = lang;
+  }, [questions]);
+
+  // Auto-translate when language toggles
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    if (!rawResult) return;
+    const targetLang = lang === 'DE' ? 'German' : 'English';
+    translateQuestionsAuto(targetLang);
   }, [lang]);
 
   useEffect(() => { localStorage.setItem(LS.jd, jobDescription); }, [jobDescription]);
@@ -192,6 +206,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
     setQuestions([]);
     setError('');
     Object.values(LS).forEach(k => localStorage.removeItem(k));
+    localStorage.removeItem('sas_interview_jd');
   };
 
   const handleAdjustUpdate = (newRaw) => {
@@ -200,28 +215,26 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   };
 
-  const translateQuestions = async () => {
+  const translateQuestionsAuto = async (targetLang) => {
     if (!rawResult) return;
-    setTranslateLoading(true);
-    setShowLangBanner(false);
+    setIsTranslating(true);
     try {
-      const targetLang = lang === 'DE' ? 'German' : 'English';
       const res = await fetch('/api/adjust-document', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           documentText: rawResult,
-          instruction: `Translate all interview questions and their answer frameworks to ${targetLang}. Keep the exact same format and structure.`,
+          instruction: `Translate all interview questions and their answer frameworks entirely to ${targetLang}. Keep the exact same format, structure, numbering, and content — only change the language.`,
           documentType: 'interview-questions',
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Translation failed');
       handleAdjustUpdate(data.result);
-    } catch (err) {
-      console.error('Translate error:', err);
+    } catch (e) {
+      console.log('Auto-translate failed:', e);
     } finally {
-      setTranslateLoading(false);
+      setIsTranslating(false);
     }
   };
 
@@ -314,22 +327,6 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
       {questions.length > 0 && !loading && (
         <div className="tool-section" style={{ padding: '0 40px 80px', marginTop: 40 }}>
           <div ref={resultRef}>
-            {showLangBanner && (
-              <div className="tool-tip-box" style={{ marginBottom: 12 }}>
-                <span style={{ fontSize: 12 }}>{t[lang].interview_lang_changed}</span>
-              </div>
-            )}
-            <div style={{ marginBottom: 16 }}>
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={translateQuestions}
-                disabled={translateLoading}
-              >
-                {translateLoading
-                  ? <><span className="spinner" style={{ width: 13, height: 13, borderTopColor: 'currentColor' }}></span> {t[lang].generating}</>
-                  : `✦ ${t[lang].interview_translate_btn}`}
-              </button>
-            </div>
             <LockedContent unlocked={unlocked} onUnlock={onUnlock}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, padding: '12px 16px', background: 'rgba(29,158,117,0.06)', border: '1px solid rgba(29,158,117,0.2)', borderRadius: 12 }}>
                 <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -339,8 +336,15 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
                 <CopyButton text={rawResult} />
               </div>
 
+              {isTranslating && (
+                <div style={{ fontSize: 12, color: 'rgba(226,237,232,0.5)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="spinner" style={{ width: 12, height: 12, borderTopColor: '#1D9E75' }} />
+                  <span>{lang === 'DE' ? 'Übersetze...' : 'Translating...'}</span>
+                </div>
+              )}
+
               {questions.map((q, i) => (
-                <div key={i} className="question-item scroll-reveal" style={{ animationDelay: `${i * 0.04}s` }}>
+                <div key={i} className="question-item scroll-reveal" style={{ animationDelay: `${i * 0.04}s`, opacity: isTranslating ? 0.5 : 1, transition: 'opacity 0.3s' }}>
                   <div className="question-number">{t[lang].interview_question_num} {i + 1}</div>
                   <div className="question-text">{q.question}</div>
                   {q.framework && <div className="question-framework">{q.framework}</div>}

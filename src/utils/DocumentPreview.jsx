@@ -163,7 +163,7 @@ function StandardPage({ lines, template, photo = null, showPlaceholder = false }
             {headerLines.map((line, i) => renderLine(line, i))}
           </div>
           {photo ? (
-            <img src={photo} alt="CV Photo" style={{ width: 90, height: 115, objectFit: 'cover', objectPosition: 'center top', flexShrink: 0, borderRadius: 1 }} />
+            <img src={photo} alt="CV Photo" style={{ width: 90, height: 115, objectFit: 'cover', objectPosition: 'center top', imageRendering: 'high-quality', flexShrink: 0, borderRadius: 1 }} />
           ) : (
             <div style={{ width: 90, height: 115, flexShrink: 0, background: '#e8e8e8', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px solid #ddd', borderRadius: 1 }}>
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="1.5">
@@ -231,6 +231,7 @@ function SharpPage({ lines, photo = null, showPlaceholder = false }) {
   return (
     <div style={{
       display: 'flex',
+      alignItems: 'stretch',
       maxWidth: 680,
       margin: '0 auto',
       boxShadow: '0 20px 70px rgba(0,0,0,0.65)',
@@ -244,6 +245,8 @@ function SharpPage({ lines, photo = null, showPlaceholder = false }) {
         padding: '24px 14px',
         fontFamily: "'Inter', sans-serif",
         flexShrink: 0,
+        alignSelf: 'stretch',
+        minHeight: '100%',
       }}>
         {leftLinesWithDividers.map((line, i) => {
           switch (line.type) {

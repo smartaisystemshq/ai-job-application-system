@@ -45,7 +45,10 @@ Answer Framework: [Framework text here]
 
 - Each question MUST start on a new line with its number followed by a period and a space (e.g. "1. ")
 - Do NOT use bold, headers, bullets, or any other formatting
-- Keep exactly 8 questions unless the request explicitly asks for a different number`
+- Keep exactly 8 questions unless the request explicitly asks for a different number
+
+CRITICAL — IMPACT REQUIREMENT:
+You are a senior recruiter and interview coach. Make SIGNIFICANT and MEANINGFUL changes based on the user's request. If they ask for "more specific to the role", completely rewrite questions to be deeply tailored to the specific job title, industry, and company context mentioned. If they ask for "harder questions", substantially increase difficulty and specificity. Every adjustment must result in noticeably different, better questions — not minor wording changes.`
     } else {
       typeLabel = 'CV'
       formatInstructions = `IMPORTANT — PLAIN TEXT FORMATTING:

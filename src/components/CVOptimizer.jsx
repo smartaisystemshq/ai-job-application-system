@@ -338,9 +338,22 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
           </div>
         </div>
 
-        <div className="tool-tip-box" style={{ marginBottom: error ? 16 : 0, borderLeft: '2px solid rgba(29,158,117,0.4)', paddingLeft: 12 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: '#1D9E75', whiteSpace: 'nowrap' }}>{t[lang].cv_privacy_label}</span>
-          <span style={{ fontSize: 12 }}>{t[lang].cv_privacy_note}</span>
+        <div style={{
+          marginBottom: error ? 16 : 0,
+          background: 'transparent',
+          border: 'none',
+          borderLeft: '2px solid rgba(29,158,117,0.3)',
+          borderRadius: 0,
+          padding: '8px 0 8px 14px',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 10,
+        }}>
+          <span style={{ color: '#1D9E75', fontSize: 11, flexShrink: 0, marginTop: 1 }}>·</span>
+          <div>
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#1D9E75', display: 'block', marginBottom: 2 }}>{t[lang].cv_privacy_label}</span>
+            <span style={{ fontSize: 11, color: 'rgba(226,237,232,0.4)', lineHeight: 1.6 }}>{t[lang].cv_privacy_note}</span>
+          </div>
         </div>
 
         {error && (
