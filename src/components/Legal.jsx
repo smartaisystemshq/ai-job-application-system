@@ -2,13 +2,6 @@ import React, { useState } from 'react';
 import { useLang } from '../context/LanguageContext';
 import { t } from '../translations';
 
-const PLACEHOLDER_NAME = '[DEIN VOLLSTÄNDIGER NAME]';
-const PLACEHOLDER_CITY = '[DEIN ORT]';
-
-function Placeholder({ text }) {
-  return <span style={{ color: '#f87171', fontWeight: 600 }}>{text}</span>;
-}
-
 function LegalSection({ children }) {
   return (
     <div style={{
@@ -59,9 +52,9 @@ function ImpressumContent() {
       <H1>Impressum</H1>
       <P>Angaben gemäß § 5 ECG (E-Commerce-Gesetz)</P>
       <P>
-        <Placeholder text={PLACEHOLDER_NAME} /><br />
-        [DEINE STRASSE UND HAUSNUMMER]<br />
-        [PLZ ORT]<br />
+        Niklas Ihrybauer<br />
+        Dorf-Au Straße 23<br />
+        3203 Rabenstein an der Pielach<br />
         Österreich
       </P>
       <P>E-Mail: <A href="mailto:smartaisystemshq@gmail.com">smartaisystemshq@gmail.com</A></P>
@@ -73,9 +66,6 @@ function ImpressumContent() {
         Plattform der EU-Kommission zur Online-Streitbeilegung:{' '}
         <A href="https://ec.europa.eu/consumers/odr">https://ec.europa.eu/consumers/odr</A>
       </P>
-      <div style={{ marginTop: 24, padding: '12px 16px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: 8, fontSize: 12, color: '#f87171' }}>
-        ⚠ Bitte ersetze vor der Veröffentlichung: <strong>DEIN VOLLSTÄNDIGER NAME</strong>, <strong>DEINE STRASSE UND HAUSNUMMER</strong>, <strong>PLZ ORT</strong>
-      </div>
     </LegalSection>
   );
 }
@@ -89,7 +79,7 @@ function DatenschutzContent() {
       <P>Der Schutz Ihrer persönlichen Daten ist uns ein wichtiges Anliegen. Diese Datenschutzerklärung informiert Sie darüber, welche Daten wir erheben, wie wir sie verwenden und welche Rechte Sie haben.</P>
 
       <H>2. Verantwortlicher</H>
-      <P>Verantwortlicher im Sinne der DSGVO ist:<br /><Placeholder text={PLACEHOLDER_NAME} /><br />E-Mail: <A href="mailto:smartaisystemshq@gmail.com">smartaisystemshq@gmail.com</A></P>
+      <P>Verantwortlicher im Sinne der DSGVO ist:<br />Niklas Ihrybauer<br />E-Mail: <A href="mailto:smartaisystemshq@gmail.com">smartaisystemshq@gmail.com</A></P>
 
       <H>3. Welche Daten werden verarbeitet?</H>
 
@@ -137,10 +127,6 @@ function DatenschutzContent() {
       <P>Wir behalten uns vor, diese Datenschutzerklärung bei Bedarf zu aktualisieren. Die aktuelle Version ist stets auf dieser Seite abrufbar.</P>
 
       <P style={{ color: 'rgba(226,237,232,0.3)', fontSize: 12, marginTop: 24 }}>Stand: Juni 2025</P>
-
-      <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: 8, fontSize: 12, color: '#f87171' }}>
-        ⚠ Bitte ersetze vor der Veröffentlichung: <strong><Placeholder text={PLACEHOLDER_NAME} /></strong>
-      </div>
     </LegalSection>
   );
 }
@@ -151,7 +137,7 @@ function AgbContent() {
       <H1>Allgemeine Geschäftsbedingungen (AGB)</H1>
 
       <H>1. Geltungsbereich</H>
-      <P>Diese AGB gelten für alle Käufe und die Nutzung des AI Job Application System, betrieben von <Placeholder text={PLACEHOLDER_NAME} /> (nachfolgend "Anbieter").</P>
+      <P>Diese AGB gelten für alle Käufe und die Nutzung des AI Job Application System, betrieben von Niklas Ihrybauer (nachfolgend "Anbieter").</P>
 
       <H>2. Vertragsgegenstand</H>
       <P>Der Anbieter stellt eine webbasierte KI-Anwendung zur Verfügung, die Nutzern hilft, Bewerbungsunterlagen (Lebenslauf, Anschreiben, Interviewvorbereitung) mithilfe von KI zu optimieren.</P>
@@ -178,16 +164,12 @@ function AgbContent() {
       <P>Es gilt die Datenschutzerklärung, abrufbar auf dieser Seite.</P>
 
       <H>10. Anwendbares Recht</H>
-      <P>Es gilt österreichisches Recht unter Ausschluss des UN-Kaufrechts. Gerichtsstand ist <Placeholder text={PLACEHOLDER_CITY} />, Österreich.</P>
+      <P>Es gilt österreichisches Recht unter Ausschluss des UN-Kaufrechts. Gerichtsstand ist Rabenstein an der Pielach, Österreich.</P>
 
       <H>11. Streitbeilegung</H>
       <P>Wir sind nicht verpflichtet, an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen. Die EU-Kommission stellt eine Plattform zur Online-Streitbeilegung bereit: <A href="https://ec.europa.eu/consumers/odr">https://ec.europa.eu/consumers/odr</A></P>
 
       <P style={{ color: 'rgba(226,237,232,0.3)', fontSize: 12, marginTop: 24 }}>Stand: Juni 2025</P>
-
-      <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: 8, fontSize: 12, color: '#f87171' }}>
-        ⚠ Bitte ersetze vor der Veröffentlichung: <strong><Placeholder text={PLACEHOLDER_NAME} /></strong> und <strong><Placeholder text={PLACEHOLDER_CITY} /></strong>
-      </div>
     </LegalSection>
   );
 }
