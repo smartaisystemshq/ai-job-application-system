@@ -370,8 +370,6 @@ export const t = {
     dash_health_msg_building: 'Solid progress. Aim for interviews by tailoring each application with the AI tools.',
     dash_health_msg_strong: 'Strong pipeline! Keep your applications moving — interview prep will help seal the deal.',
     dash_health_msg_outstanding: 'Outstanding — your job search is well-organised and highly active. Keep the momentum going!',
-    paywall_success_title: 'Access unlocked!',
-    paywall_success_sub: 'Welcome — enjoy unlimited access.',
     builder_label_jd: 'Job Description (optional)',
     builder_jd_placeholder: 'Paste the job description you are applying for — AI will tailor your CV to match it.',
     builder_jd_hint: 'Adding a job description helps AI tailor your CV keywords and summary to the specific role.',
@@ -387,6 +385,10 @@ export const t = {
     builder_projects_tip: 'Include measurable results where possible — e.g. "Increased website traffic by 40%" or "Won 1st place at regional competition".',
     builder_no_projects: 'No projects yet. Click "Add Project" to start.',
     builder_add_project: '+ Add Project',
+    nav_legal: 'Legal',
+    legal_impressum_title: 'Impressum',
+    legal_privacy_title: 'Privacy Policy',
+    legal_agb_title: 'Terms & Conditions',
   },
   DE: {
     nav_home: 'Startseite',
@@ -758,8 +760,6 @@ export const t = {
     dash_health_msg_building: 'Solide Fortschritte. Strebe Interviews an, indem du jede Bewerbung mit den KI-Tools anpasst.',
     dash_health_msg_strong: 'Starke Pipeline! Halte deine Bewerbungen in Bewegung — Interview-Vorbereitung hilft den Deal zu besiegeln.',
     dash_health_msg_outstanding: 'Hervorragend — deine Jobsuche ist gut organisiert und sehr aktiv. Behalte das Tempo bei!',
-    paywall_success_title: 'Zugang freigeschaltet!',
-    paywall_success_sub: 'Willkommen — genieße unbegrenzten Zugang.',
     builder_label_jd: 'Stellenbeschreibung (optional)',
     builder_jd_placeholder: 'Füge die Stellenbeschreibung ein, auf die du dich bewirbst — die KI passt deinen CV entsprechend an.',
     builder_jd_hint: 'Eine Stellenbeschreibung hilft der KI, Keywords und Zusammenfassung deines CVs gezielt auf die Stelle anzupassen.',
@@ -775,5 +775,9 @@ export const t = {
     builder_projects_tip: 'Füge messbare Ergebnisse ein wenn möglich — z.B. "Website-Traffic um 40% gesteigert" oder "1. Platz bei regionalem Wettbewerb".',
     builder_no_projects: 'Noch keine Projekte. Klicke auf "Projekt hinzufügen".',
     builder_add_project: '+ Projekt hinzufügen',
+    nav_legal: 'Rechtliches',
+    legal_impressum_title: 'Impressum',
+    legal_privacy_title: 'Datenschutzerklärung',
+    legal_agb_title: 'Allgemeine Geschäftsbedingungen',
   }
 };

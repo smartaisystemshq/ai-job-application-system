@@ -9,6 +9,7 @@ import CoverLetterGenerator from './components/CoverLetterGenerator';
 import InterviewPrep from './components/InterviewPrep';
 import CVBuilder from './components/CVBuilder';
 import FAQ from './components/FAQ';
+import Legal from './components/Legal';
 import { PAGES } from './constants';
 import { isUnlocked } from './utils/accessControl';
 
@@ -70,6 +71,7 @@ export default function App() {
             {activePage === PAGES.INTERVIEW_PREP && <InterviewPrep unlocked={unlocked} onUnlock={handleUnlock} />}
             {activePage === PAGES.CV_BUILDER    && <CVBuilder unlocked={unlocked} onUnlock={handleUnlock} />}
             {activePage === PAGES.FAQ           && <FAQ />}
+            {activePage === PAGES.LEGAL         && <Legal />}
           </div>
         </main>
 
@@ -81,8 +83,27 @@ export default function App() {
           color: 'var(--text-muted)',
           position: 'relative',
           zIndex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 16,
+          flexWrap: 'wrap',
         }}>
-          © {new Date().getFullYear()} Smart AI Systems · AI Job Application System
+          <span>© {new Date().getFullYear()} Smart AI Systems · AI Job Application System</span>
+          <button
+            onClick={() => navigate(PAGES.LEGAL)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 13, color: 'rgba(226,237,232,0.4)',
+              fontFamily: 'inherit', padding: 0,
+              textDecoration: 'underline',
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#1D9E75'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(226,237,232,0.4)'; }}
+          >
+            Legal
+          </button>
         </footer>
       </div>
     </div>

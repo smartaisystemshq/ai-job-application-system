@@ -6,4 +6,5 @@ export const PAGES = {
   INTERVIEW_PREP: 'interview-prep',
   CV_BUILDER: 'cv-builder',
   FAQ: 'faq',
+  LEGAL: 'legal',
 };
