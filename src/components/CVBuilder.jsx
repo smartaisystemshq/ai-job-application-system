@@ -12,8 +12,9 @@ const LS_KEY = 'jas.cvb';
 
 const BLANK = {
   step: 1,
-  personal: { name: '', email: '', phone: '', street: '', city: '', postalCode: '', country: '', linkedin: '', portfolio: '', targetRole: '' },
+  personal: { name: '', email: '', phone: '', street: '', city: '', postalCode: '', country: '', linkedin: '', portfolio: '', targetRole: '', jobDescription: '' },
   experience: [],
+  projects: [],
   education: [],
   skills: [],
   summary: '',
@@ -32,6 +33,7 @@ function load() {
 
 function newExp() { return { id: Date.now(), jobTitle: '', company: '', startDate: '', endDate: '', isCurrent: false, description: '', bullets: '' }; }
 function newEdu() { return { id: Date.now() + 1, institution: '', degree: '', field: '', startYear: '', endYear: '' }; }
+function newProject() { return { id: Date.now() + 2, title: '', description: '', year: '' }; }
 
 // ── Step Progress Bar ────────────────────────────────────────────
 function StepProgressBar({ step }) {
@@ -40,11 +42,12 @@ function StepProgressBar({ step }) {
     t[lang].builder_step1,
     t[lang].builder_step_photo,
     t[lang].builder_step2,
+    t[lang].builder_step_projects,
     t[lang].builder_step3,
     t[lang].builder_step4,
     t[lang].builder_step5,
   ];
-  const progress = (step / 6) * 100;
+  const progress = (step / 7) * 100;
   return (
     <div className="tool-section" style={{ padding: '0 40px 40px' }}>
       <div style={{ position: 'relative', height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 3, marginBottom: 16 }}>
@@ -100,9 +103,10 @@ function StepHeader({ step }) {
     1: { titleKey: 'builder_s1_title', descKey: 'builder_s1_desc' },
     2: { titleKey: 'builder_photo_title', descKey: 'builder_photo_desc', isPhoto: true },
     3: { titleKey: 'builder_s2_title', descKey: 'builder_s2_desc' },
-    4: { titleKey: 'builder_s3_title', descKey: 'builder_s3_desc' },
-    5: { titleKey: 'builder_s4_title', descKey: 'builder_s4_desc' },
-    6: { titleKey: 'builder_s5_title', descKey: 'builder_s5_desc' },
+    4: { titleKey: 'builder_projects_title', descKey: 'builder_projects_desc' },
+    5: { titleKey: 'builder_s3_title', descKey: 'builder_s3_desc' },
+    6: { titleKey: 'builder_s4_title', descKey: 'builder_s4_desc' },
+    7: { titleKey: 'builder_s5_title', descKey: 'builder_s5_desc' },
   };
   const data = stepData[step] || stepData[1];
   return (
@@ -125,7 +129,7 @@ function StepHeader({ step }) {
 // ── Tip box ──────────────────────────────────────────────────────
 function TipBox({ step }) {
   const { lang } = useLang();
-  const tipKeys = { 1: 'builder_tip1', 3: 'builder_tip2', 4: 'builder_tip3', 5: 'builder_tip4', 6: 'builder_tip5' };
+  const tipKeys = { 1: 'builder_tip1', 3: 'builder_tip2', 4: 'builder_projects_tip', 5: 'builder_tip3', 6: 'builder_tip4', 7: 'builder_tip5' };
   const tipLabel = lang === 'DE' ? 'Tipp:' : 'Tip:';
   const tipKey = tipKeys[step];
   if (!tipKey) return null;
@@ -231,7 +235,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
 }
 
 // ── CV Text Generator ────────────────────────────────────────────
-function buildCVText({ personal, experience, education, skills, summary }) {
+function buildCVText({ personal, experience, projects, education, skills, summary }) {
   const { name, email, phone, street, city, postalCode, country, linkedin, portfolio } = personal;
   const lines = [];
   lines.push((name || 'YOUR NAME').toUpperCase());
@@ -264,6 +268,20 @@ function buildCVText({ personal, experience, education, skills, summary }) {
       if (exp.bullets) {
         exp.bullets.split('\n').filter(l => l.trim()).forEach(l => lines.push(l.trim()));
       }
+      lines.push('');
+    });
+  }
+
+  const validProjects = (projects || []).filter(p => p.title?.trim() || p.description?.trim());
+  if (validProjects.length > 0) {
+    lines.push('─'.repeat(58));
+    lines.push('');
+    lines.push('PROJECTS & ACHIEVEMENTS');
+    lines.push('');
+    validProjects.forEach(proj => {
+      const header = [proj.title, proj.year].filter(s => s?.trim()).join(' | ');
+      if (header) lines.push(header);
+      if (proj.description?.trim()) lines.push(proj.description.trim());
       lines.push('');
     });
   }
@@ -318,7 +336,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
   }, [state]);
 
   useEffect(() => {
-    if (state.step !== 7) setAdjustedCvText(null);
+    if (state.step !== 8) setAdjustedCvText(null);
   }, [state.step]);
 
   const set = (key, val) => setState(s => ({ ...s, [key]: val }));
@@ -327,7 +345,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
     setState(s => ({ ...s, step: n }));
     setApiError('');
     setSuggestedSkills([]);
-    if (n === 7) {
+    if (n === 8) {
       const text = adjustedCvText ?? buildCVText(state);
       setCvScore(calculateAttractivenessScore(text));
     }
@@ -340,6 +358,10 @@ export default function CVBuilder({ unlocked, onUnlock }) {
   const addEdu = () => set('education', [...state.education, newEdu()]);
   const updEdu = (id, key, val) => set('education', state.education.map(e => e.id === id ? { ...e, [key]: val } : e));
   const delEdu = (id) => set('education', state.education.filter(e => e.id !== id));
+
+  const addProject = () => set('projects', [...(state.projects || []), newProject()]);
+  const updProject = (id, key, val) => set('projects', (state.projects || []).map(p => p.id === id ? { ...p, [key]: val } : p));
+  const delProject = (id) => set('projects', (state.projects || []).filter(p => p.id !== id));
 
   const addSkill = (sk) => {
     const t = sk.trim();
@@ -402,7 +424,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       const res = await fetch('/api/cv-builder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate-summary', data: { name: state.personal.name, targetRole: state.personal.targetRole, experience: state.experience, education: state.education, skills: state.skills } }),
+        body: JSON.stringify({ action: 'generate-summary', data: { name: state.personal.name, targetRole: state.personal.targetRole, jobDescription: state.personal.jobDescription, experience: state.experience, projects: state.projects, education: state.education, skills: state.skills } }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -581,6 +603,20 @@ export default function CVBuilder({ unlocked, onUnlock }) {
           <input className="input" placeholder="janesmith.com or github.com/janesmith" value={state.personal.portfolio} onChange={e => setP('portfolio', e.target.value)} />
         </div>
       </div>
+      <div style={{ marginTop: '16px' }}>
+        <label className="label">{t[lang].builder_label_jd}</label>
+        <textarea
+          className="textarea"
+          value={state.personal.jobDescription || ''}
+          onChange={e => setP('jobDescription', e.target.value)}
+          placeholder={t[lang].builder_jd_placeholder}
+          rows={4}
+          style={{ resize: 'vertical' }}
+        />
+        <div style={{ fontSize: '11px', color: 'rgba(226,237,232,0.35)', marginTop: '4px' }}>
+          {t[lang].builder_jd_hint}
+        </div>
+      </div>
     </div>
   );
 
@@ -647,6 +683,58 @@ export default function CVBuilder({ unlocked, onUnlock }) {
         {t[lang].builder_add_exp}
       </button>
       <ErrBox msg={apiError} />
+    </div>
+  );
+
+  const renderStepProjects = () => (
+    <div>
+      {(state.projects || []).length === 0 && (
+        <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)', marginTop: 16 }}>
+          <p>{t[lang].builder_no_projects}</p>
+        </div>
+      )}
+
+      {(state.projects || []).map((proj, idx) => (
+        <div key={proj.id} className="card" style={{ marginTop: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>{t[lang].builder_entry} {idx + 1}</span>
+            <button className="btn btn-danger btn-sm" onClick={() => delProject(proj.id)}>{t[lang].builder_remove}</button>
+          </div>
+          <div className="form-group">
+            <label className="label">{t[lang].builder_project_title_label}</label>
+            <input
+              className="input"
+              placeholder={t[lang].builder_project_title_placeholder}
+              value={proj.title}
+              onChange={e => updProject(proj.id, 'title', e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label className="label">{t[lang].builder_project_desc_label}</label>
+            <textarea
+              className="textarea"
+              rows={3}
+              placeholder={t[lang].builder_project_desc_placeholder}
+              value={proj.description}
+              onChange={e => updProject(proj.id, 'description', e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label className="label">{t[lang].builder_project_year_label}</label>
+            <input
+              className="input"
+              placeholder={t[lang].builder_project_year_placeholder}
+              value={proj.year}
+              onChange={e => updProject(proj.id, 'year', e.target.value)}
+              style={{ maxWidth: 160 }}
+            />
+          </div>
+        </div>
+      ))}
+
+      <button className="btn btn-secondary" style={{ marginTop: 16 }} onClick={addProject}>
+        {t[lang].builder_add_project}
+      </button>
     </div>
   );
 
@@ -818,7 +906,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
         <DocumentPreview text={displayCvText} template={selectedTemplate} photo={photoBase64} />
 
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-          <button className="btn btn-secondary" onClick={() => setStep(6)}>{t[lang].builder_back_summary}</button>
+          <button className="btn btn-secondary" onClick={() => setStep(7)}>{t[lang].builder_back_summary}</button>
           <button className="btn btn-ghost" onClick={startOver} style={{ marginLeft: 'auto', color: 'var(--danger)' }}>
             {t[lang].builder_start_over}
           </button>
@@ -860,11 +948,11 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       {/* ── Section B: Divider ── */}
       <div className="tool-divider" style={{ margin: '24px 40px 40px' }} />
 
-      {/* ── Section C: Progress bar (steps 1–6 only) ── */}
-      {state.step <= 6 && <StepProgressBar step={state.step} />}
+      {/* ── Section C: Progress bar (steps 1–7 only) ── */}
+      {state.step <= 7 && <StepProgressBar step={state.step} />}
 
       {/* ── Sections D + G + E: Form card, tip box, nav ── */}
-      {state.step <= 6 && (
+      {state.step <= 7 && (
         <div className="tool-section" style={{ padding: '0 40px 32px' }}>
 
           {/* Form card */}
@@ -873,9 +961,10 @@ export default function CVBuilder({ unlocked, onUnlock }) {
             {state.step === 1 && renderStep1()}
             {state.step === 2 && renderStepPhoto()}
             {state.step === 3 && renderStep2()}
-            {state.step === 4 && renderStep3()}
-            {state.step === 5 && renderStep4()}
-            {state.step === 6 && renderStep5()}
+            {state.step === 4 && renderStepProjects()}
+            {state.step === 5 && renderStep3()}
+            {state.step === 6 && renderStep4()}
+            {state.step === 7 && renderStep5()}
           </div>
 
           {/* Tip box */}
@@ -891,21 +980,21 @@ export default function CVBuilder({ unlocked, onUnlock }) {
               {t[lang].builder_previous}
             </button>
             <span style={{ fontSize: 12, color: 'rgba(226,237,232,0.38)' }}>
-              {t[lang].builder_step_label} {state.step} {t[lang].builder_step_of} 6
+              {t[lang].builder_step_label} {state.step} {t[lang].builder_step_of} 7
             </span>
             <button
               className="cvb-btn-next"
-              onClick={() => setStep(state.step < 6 ? state.step + 1 : 7)}
+              onClick={() => setStep(state.step < 7 ? state.step + 1 : 8)}
             >
-              {state.step === 6 ? t[lang].builder_preview_cv : t[lang].builder_next}
+              {state.step === 7 ? t[lang].builder_preview_cv : t[lang].builder_next}
             </button>
           </div>
 
         </div>
       )}
 
-      {/* ── Section F: Preview (step 7) ── */}
-      {state.step === 7 && (
+      {/* ── Section F: Preview (step 8) ── */}
+      {state.step === 8 && (
         <div className="tool-section" style={{ padding: '0 40px 80px' }}>
           <div style={{ textAlign: 'center', marginBottom: 32 }} className="scroll-reveal">
             <h2 style={{ fontSize: 22, fontWeight: 700, color: '#e2ede8', marginBottom: 6 }}>

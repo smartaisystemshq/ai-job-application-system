@@ -7,6 +7,7 @@ export default function Paywall({ onUnlock, onClose }) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [unlockSuccess, setUnlockSuccess] = useState(false);
   const { lang } = useLang();
 
   const FEATURES = [
@@ -26,13 +27,17 @@ export default function Paywall({ onUnlock, onClose }) {
     try {
       const valid = await unlockApp(code.trim());
       if (valid) {
-        onUnlock?.();
+        setUnlockSuccess(true);
+        setTimeout(() => {
+          onUnlock?.();
+          onClose?.();
+        }, 1200);
       } else {
         setError(t[lang].paywall_invalid);
+        setLoading(false);
       }
     } catch {
       setError('Could not verify code. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
@@ -44,6 +49,10 @@ export default function Paywall({ onUnlock, onClose }) {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         .paywall-cta-btn {
           display: block;
@@ -93,8 +102,8 @@ export default function Paywall({ onUnlock, onClose }) {
           position: 'relative',
           boxShadow: '0 0 60px rgba(29,158,117,0.1), 0 24px 48px rgba(0,0,0,0.6)',
         }}>
-          {/* Close button */}
-          {onClose && (
+          {/* Close button — only when not showing success state */}
+          {onClose && !unlockSuccess && (
             <button
               onClick={onClose}
               style={{
@@ -110,113 +119,136 @@ export default function Paywall({ onUnlock, onClose }) {
             >✕</button>
           )}
 
-          {/* Badge */}
-          <div style={{
-            display: 'inline-flex', alignItems: 'center',
-            background: 'rgba(29,158,117,0.08)', border: '1px solid rgba(29,158,117,0.2)',
-            borderRadius: 20, padding: '4px 12px', marginBottom: 14,
-          }}>
-            <span style={{ fontSize: 11, color: '#1D9E75', letterSpacing: '0.5px' }}>✦ Smart AI Systems</span>
-          </div>
+          {unlockSuccess ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '32px 0',
+              animation: 'fadeIn 0.3s ease',
+            }}>
+              <div style={{
+                fontSize: '32px',
+                color: '#1D9E75',
+                marginBottom: '12px',
+                textShadow: '0 0 20px rgba(29,158,117,0.5)',
+              }}>✓</div>
+              <div style={{ fontSize: '18px', fontWeight: 600, color: '#e2ede8', marginBottom: '6px' }}>
+                {t[lang].paywall_success_title}
+              </div>
+              <div style={{ fontSize: '13px', color: 'rgba(226,237,232,0.5)' }}>
+                {t[lang].paywall_success_sub}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Badge */}
+              <div style={{
+                display: 'inline-flex', alignItems: 'center',
+                background: 'rgba(29,158,117,0.08)', border: '1px solid rgba(29,158,117,0.2)',
+                borderRadius: 20, padding: '4px 12px', marginBottom: 14,
+              }}>
+                <span style={{ fontSize: 11, color: '#1D9E75', letterSpacing: '0.5px' }}>✦ Smart AI Systems</span>
+              </div>
 
-          {/* Headline */}
-          <h2 style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.5px', marginBottom: 8, marginTop: 0 }}>
-            <span style={{ color: '#ffffff' }}>Stop getting ignored.</span>
-            <br />
-            <span style={{ color: '#1D9E75', textShadow: '0 0 20px rgba(29,158,117,0.4)' }}>Start getting callbacks.</span>
-          </h2>
-          <p style={{ fontSize: 13, color: 'rgba(226,237,232,0.5)', marginBottom: 4, marginTop: 0 }}>
-            The unfair advantage serious job seekers use.
-          </p>
-          <p style={{ fontSize: 13, color: 'rgba(226,237,232,0.4)', margin: 0 }}>
-            Land your next job faster — AI does the heavy lifting.
-          </p>
+              {/* Headline */}
+              <h2 style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.5px', marginBottom: 8, marginTop: 0 }}>
+                <span style={{ color: '#ffffff' }}>Stop getting ignored.</span>
+                <br />
+                <span style={{ color: '#1D9E75', textShadow: '0 0 20px rgba(29,158,117,0.4)' }}>Start getting callbacks.</span>
+              </h2>
+              <p style={{ fontSize: 13, color: 'rgba(226,237,232,0.5)', marginBottom: 4, marginTop: 0 }}>
+                The unfair advantage serious job seekers use.
+              </p>
+              <p style={{ fontSize: 13, color: 'rgba(226,237,232,0.4)', margin: 0 }}>
+                Land your next job faster — AI does the heavy lifting.
+              </p>
 
-          {/* Divider */}
-          <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(29,158,117,0.3), transparent)', margin: '18px 0' }} />
+              {/* Divider */}
+              <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(29,158,117,0.3), transparent)', margin: '18px 0' }} />
 
-          {/* Price */}
-          <div style={{ textAlign: 'center', margin: '20px 0' }}>
-            <div style={{ fontSize: 42, fontWeight: 700, color: '#1D9E75', textShadow: '0 0 24px rgba(29,158,117,0.45)', lineHeight: 1 }}>€27</div>
-            <div style={{ fontSize: 11, color: 'rgba(226,237,232,0.4)', letterSpacing: '0.3px', marginTop: 6 }}>one-time payment · unlimited use</div>
-          </div>
+              {/* Price */}
+              <div style={{ textAlign: 'center', margin: '20px 0' }}>
+                <div style={{ fontSize: 42, fontWeight: 700, color: '#1D9E75', textShadow: '0 0 24px rgba(29,158,117,0.45)', lineHeight: 1 }}>€27</div>
+                <div style={{ fontSize: 11, color: 'rgba(226,237,232,0.4)', letterSpacing: '0.3px', marginTop: 6 }}>one-time payment · unlimited use</div>
+              </div>
 
-          {/* What you get */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 9, letterSpacing: '2px', color: 'rgba(29,158,117,0.55)', textTransform: 'uppercase', marginBottom: 12 }}>WHAT YOU GET</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              {FEATURES.map((f, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                  <span style={{ color: '#1D9E75', fontSize: 13, flexShrink: 0, marginTop: 1 }}>✓</span>
-                  <span style={{ fontSize: 12, color: 'rgba(226,237,232,0.7)', lineHeight: 1.4 }}>{f}</span>
+              {/* What you get */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 9, letterSpacing: '2px', color: 'rgba(29,158,117,0.55)', textTransform: 'uppercase', marginBottom: 12 }}>WHAT YOU GET</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {FEATURES.map((f, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                      <span style={{ color: '#1D9E75', fontSize: 13, flexShrink: 0, marginTop: 1 }}>✓</span>
+                      <span style={{ fontSize: 12, color: 'rgba(226,237,232,0.7)', lineHeight: 1.4 }}>{f}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* CTA Button */}
-          <a
-            href="https://systemsbyniklas.gumroad.com/l/zilhaq"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="paywall-cta-btn"
-          >
-            {t[lang].paywall_cta}
-          </a>
-
-          {/* Divider */}
-          <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(29,158,117,0.3), transparent)', margin: '20px 0' }} />
-
-          {/* Code section */}
-          <div>
-            <p style={{ fontSize: 12, color: 'rgba(226,237,232,0.45)', marginBottom: 8, marginTop: 0 }}>{t[lang].paywall_code_label}</p>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                placeholder={t[lang].paywall_code_placeholder}
-                value={code}
-                onChange={e => setCode(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && !loading && handleUnlock()}
-                disabled={loading}
-                style={{
-                  flex: 1,
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 8,
-                  padding: '10px 14px',
-                  fontSize: 13,
-                  color: '#e2ede8',
-                  outline: 'none',
-                  transition: 'border-color 0.15s',
-                }}
-                onFocus={e => { e.target.style.borderColor = '#1D9E75'; }}
-                onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; }}
-              />
-              <button
-                onClick={handleUnlock}
-                disabled={loading || !code.trim()}
-                style={{
-                  padding: '10px 18px',
-                  background: 'rgba(29,158,117,0.15)',
-                  border: '1px solid rgba(29,158,117,0.3)',
-                  borderRadius: 8,
-                  color: '#1D9E75',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: loading || !code.trim() ? 'default' : 'pointer',
-                  opacity: loading || !code.trim() ? 0.5 : 1,
-                  transition: 'background 0.15s',
-                  flexShrink: 0,
-                }}
-                onMouseEnter={e => { if (!loading && code.trim()) e.currentTarget.style.background = 'rgba(29,158,117,0.25)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(29,158,117,0.15)'; }}
+              {/* CTA Button */}
+              <a
+                href="https://systemsbyniklas.gumroad.com/l/zilhaq"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="paywall-cta-btn"
               >
-                {loading
-                  ? <span className="spinner" style={{ width: 14, height: 14, borderTopColor: '#1D9E75' }} />
-                  : t[lang].paywall_code_btn}
-              </button>
-            </div>
-            {error && <p style={{ fontSize: 13, color: '#f87171', marginTop: 8 }}>{error}</p>}
-          </div>
+                {t[lang].paywall_cta}
+              </a>
+
+              {/* Divider */}
+              <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(29,158,117,0.3), transparent)', margin: '20px 0' }} />
+
+              {/* Code section */}
+              <div>
+                <p style={{ fontSize: 12, color: 'rgba(226,237,232,0.45)', marginBottom: 8, marginTop: 0 }}>{t[lang].paywall_code_label}</p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    placeholder={t[lang].paywall_code_placeholder}
+                    value={code}
+                    onChange={e => setCode(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && !loading && handleUnlock()}
+                    disabled={loading}
+                    style={{
+                      flex: 1,
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 8,
+                      padding: '10px 14px',
+                      fontSize: 13,
+                      color: '#e2ede8',
+                      outline: 'none',
+                      transition: 'border-color 0.15s',
+                    }}
+                    onFocus={e => { e.target.style.borderColor = '#1D9E75'; }}
+                    onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                  />
+                  <button
+                    onClick={handleUnlock}
+                    disabled={loading || !code.trim()}
+                    style={{
+                      padding: '10px 18px',
+                      background: 'rgba(29,158,117,0.15)',
+                      border: '1px solid rgba(29,158,117,0.3)',
+                      borderRadius: 8,
+                      color: '#1D9E75',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: loading || !code.trim() ? 'default' : 'pointer',
+                      opacity: loading || !code.trim() ? 0.5 : 1,
+                      transition: 'background 0.15s',
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={e => { if (!loading && code.trim()) e.currentTarget.style.background = 'rgba(29,158,117,0.25)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(29,158,117,0.15)'; }}
+                  >
+                    {loading
+                      ? <span className="spinner" style={{ width: 14, height: 14, borderTopColor: '#1D9E75' }} />
+                      : t[lang].paywall_code_btn}
+                  </button>
+                </div>
+                {error && <p style={{ fontSize: 13, color: '#f87171', marginTop: 8 }}>{error}</p>}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>

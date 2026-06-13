@@ -57,7 +57,7 @@ RULES:
 - Return ONLY a comma-separated list of 10 skills, nothing else. No numbering, no bullets, no explanation.`
 
     } else if (action === 'generate-summary') {
-      const { name, targetRole, experience, education, skills } = data || {}
+      const { name, targetRole, jobDescription, experience, projects, education, skills } = data || {}
       const expText = (experience || [])
         .filter(e => e.jobTitle || e.company)
         .map(e => `${e.jobTitle || 'Role'} at ${e.company || 'Company'} (${e.startDate || ''}${e.endDate ? ' – ' + e.endDate : ''})`)
@@ -66,13 +66,18 @@ RULES:
         .filter(e => e.institution?.trim())
         .map(e => [e.degree, e.field, e.institution].filter(s => s?.trim()).join(' — '))
         .join(', ')
+      const projText = (projects || [])
+        .filter(p => p.title?.trim())
+        .map(p => [p.title, p.year, p.description].filter(s => s?.trim()).join(' — '))
+        .join('; ')
       prompt = `You are an elite CV writer. Write a professional summary section (3 sentences, under 75 words).
 
 Candidate name: ${name || 'the candidate'}
 Target role: ${targetRole || 'not specified'}
-Work experience: ${expText || 'not provided'}
+${jobDescription ? `Job description to tailor to:\n${jobDescription}\n` : ''}Work experience: ${expText || 'not provided'}
 Education: ${eduText || 'not provided'}
 Key skills: ${(skills || []).join(', ') || 'not provided'}
+${projText ? `Projects & achievements: ${projText}` : ''}
 
 REQUIREMENTS:
 - Sentence 1: Professional identity + years/level of experience relevant to the target role (implied third-person, no "I")
@@ -81,7 +86,7 @@ REQUIREMENTS:
 - Zero banned phrases: "passionate", "dynamic", "results-driven", "synergy", "team player", "motivated", "detail-oriented"
 - Reads like it was written by a skilled human — specific, confident, direct
 - Under 75 words total
-
+${jobDescription ? '- Tailor keywords and focus areas naturally to match the job description\n' : ''}
 PLAIN TEXT ONLY — no markdown, no **, no #. Just the paragraph text.
 
 GRAMMAR: Review the summary for grammatical correctness — complete sentences, natural phrasing, professional tone.
