@@ -154,19 +154,25 @@ function AgbContent() {
       <H>6. Haftungsausschluss</H>
       <P>Die durch die KI generierten Inhalte (Lebensläufe, Anschreiben, Interviewfragen) sind Vorschläge und ersetzen keine professionelle Beratung. Der Anbieter übernimmt keine Garantie für den Erfolg von Bewerbungen. Die generierten Dokumente sollten vom Nutzer vor der Verwendung überprüft und angepasst werden.</P>
 
-      <H>7. Nutzungsrechte</H>
+      <H>7. Einsatz von Künstlicher Intelligenz (EU AI Act)</H>
+      <P>Diese Anwendung nutzt KI-Technologie (Claude API von Anthropic, Inc.) zur Erstellung von Bewerbungsunterlagen. Gemäß dem EU AI Act informieren wir Sie hiermit ausdrücklich über den Einsatz von KI-Systemen. Die generierten Inhalte werden von einer KI erstellt und sollten vom Nutzer vor der Verwendung überprüft werden. Die KI-Verarbeitung erfolgt durch Anthropic, Inc. (San Francisco, USA) gemäß deren Nutzungsbedingungen: <A href="https://www.anthropic.com/legal/usage-policy">https://www.anthropic.com/legal/usage-policy</A></P>
+
+      <H>8. Urheberrecht und hochgeladene Inhalte</H>
+      <P>Durch das Hochladen von Dokumenten, Fotos oder anderen Inhalten versichern Sie, dass Sie berechtigt sind, diese Inhalte zu verwenden und zu verarbeiten. Sie übernehmen die volle Verantwortung dafür, dass hochgeladene Inhalte keine Rechte Dritter verletzen. Der Anbieter haftet nicht für urheberrechtsverletzende Inhalte, die von Nutzern hochgeladen werden. Hochgeladene Fotos und Dokumente werden ausschließlich zur einmaligen Verarbeitung verwendet und nicht dauerhaft gespeichert.</P>
+
+      <H>9. Nutzungsrechte</H>
       <P>Die generierten Dokumente gehören dem Nutzer. Der Anbieter beansprucht keine Rechte an den erstellten Inhalten.</P>
 
-      <H>8. Verfügbarkeit</H>
+      <H>10. Verfügbarkeit</H>
       <P>Der Anbieter bemüht sich um eine hohe Verfügbarkeit der Anwendung, übernimmt jedoch keine Garantie für ununterbrochenen Zugang. Wartungsarbeiten werden wenn möglich im Voraus angekündigt.</P>
 
-      <H>9. Datenschutz</H>
+      <H>11. Datenschutz</H>
       <P>Es gilt die Datenschutzerklärung, abrufbar auf dieser Seite.</P>
 
-      <H>10. Anwendbares Recht</H>
+      <H>12. Anwendbares Recht</H>
       <P>Es gilt österreichisches Recht unter Ausschluss des UN-Kaufrechts. Gerichtsstand ist Rabenstein an der Pielach, Österreich.</P>
 
-      <H>11. Streitbeilegung</H>
+      <H>13. Streitbeilegung</H>
       <P>Wir sind nicht verpflichtet, an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen. Die EU-Kommission stellt eine Plattform zur Online-Streitbeilegung bereit: <A href="https://ec.europa.eu/consumers/odr">https://ec.europa.eu/consumers/odr</A></P>
 
       <P style={{ color: 'rgba(226,237,232,0.3)', fontSize: 12, marginTop: 24 }}>Stand: Juni 2025</P>

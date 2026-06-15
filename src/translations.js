@@ -389,6 +389,8 @@ export const t = {
     legal_impressum_title: 'Impressum',
     legal_privacy_title: 'Privacy Policy',
     legal_agb_title: 'Terms & Conditions',
+    footer_legal: 'Legal',
+    footer_ai_disclosure: 'Powered by Claude AI (Anthropic)',
   },
   DE: {
     nav_home: 'Startseite',
@@ -779,5 +781,7 @@ export const t = {
     legal_impressum_title: 'Impressum',
     legal_privacy_title: 'Datenschutzerklärung',
     legal_agb_title: 'Allgemeine Geschäftsbedingungen',
+    footer_legal: 'Rechtliches',
+    footer_ai_disclosure: 'Betrieben mit Claude AI (Anthropic)',
   }
 };

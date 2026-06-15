@@ -1,4 +1,7 @@
 const Anthropic = require('@anthropic-ai/sdk')
+const { checkRateLimit } = require('./rateLimit.js')
+const { validateAndSanitize } = require('./validation.js')
+const { applySecurityHeaders } = require('./securityHeaders.js')
 
 const systemPrompt = `You are an expert CV writer and career coach. When adjusting documents, maintain the same high professional standards: perfect grammar, strong action verbs, ATS-optimized keywords, and human-sounding language. Never introduce grammatical errors. Apply the user's requested change while improving overall quality.`
 
@@ -7,9 +10,21 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   res.setHeader('Content-Type', 'application/json')
+  applySecurityHeaders(res)
 
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+  const rateLimit = checkRateLimit(req)
+  if (!rateLimit.allowed) {
+    return res.status(429).json({ error: rateLimit.message, retryAfter: rateLimit.retryAfter })
+  }
+
+  const MAX_BODY_SIZE = 50000
+  const bodyStr = JSON.stringify(req.body)
+  if (bodyStr.length > MAX_BODY_SIZE) {
+    return res.status(413).json({ error: 'Request too large.' })
+  }
 
   try {
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -19,6 +34,15 @@ module.exports = async function handler(req, res) {
     const { documentText, instruction, documentType } = req.body || {}
     if (!documentText) return res.status(400).json({ error: 'documentText is required.' })
     if (!instruction) return res.status(400).json({ error: 'instruction is required.' })
+
+    const docValidation = validateAndSanitize(documentText, 'cvText')
+    if (!docValidation.valid) return res.status(400).json({ error: docValidation.error })
+
+    const instrValidation = validateAndSanitize(instruction, 'adjustRequest')
+    if (!instrValidation.valid) return res.status(400).json({ error: instrValidation.error })
+
+    const sanitizedDoc = docValidation.value
+    const sanitizedInstruction = instrValidation.value
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -59,10 +83,10 @@ You are a senior recruiter and interview coach. Make SIGNIFICANT and MEANINGFUL 
     const prompt = `You are an expert ${typeLabel} writer. The user has a ${typeLabel} and wants a specific adjustment made to it.
 
 === CURRENT ${typeLabel.toUpperCase()} ===
-${documentText}
+${sanitizedDoc}
 
 === USER'S ADJUSTMENT REQUEST ===
-"${instruction}"
+"${sanitizedInstruction}"
 
 === INSTRUCTIONS ===
 Apply the requested adjustment while:
@@ -81,7 +105,7 @@ Return ONLY the complete updated ${typeLabel} text — no commentary, no "Here i
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 4096,
+      max_tokens: 2000,
       system: systemPrompt,
       messages: [{ role: 'user', content: prompt }],
     })

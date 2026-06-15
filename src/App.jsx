@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { LanguageProvider } from './context/LanguageContext';
+import { LanguageProvider, useLang } from './context/LanguageContext';
+import { t } from './translations';
 import TopNav from './components/TopNav';
 import WaveBackground from './components/WaveBackground';
 import Home from './components/Home';
@@ -12,6 +13,45 @@ import FAQ from './components/FAQ';
 import Legal from './components/Legal';
 import { PAGES } from './constants';
 import { isUnlocked } from './utils/accessControl';
+
+function FooterContent({ onNavigate }) {
+  const { lang } = useLang();
+  return (
+    <footer style={{
+      borderTop: '1px solid var(--border)',
+      padding: '16px 24px',
+      textAlign: 'center',
+      fontSize: 13,
+      color: 'var(--text-muted)',
+      position: 'relative',
+      zIndex: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 16,
+      flexWrap: 'wrap',
+    }}>
+      <span>© {new Date().getFullYear()} Smart AI Systems · AI Job Application System</span>
+      <button
+        onClick={() => onNavigate(PAGES.LEGAL)}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          fontSize: 13, color: 'rgba(226,237,232,0.4)',
+          fontFamily: 'inherit', padding: 0,
+          textDecoration: 'underline',
+          transition: 'color 0.15s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.color = '#1D9E75'; }}
+        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(226,237,232,0.4)'; }}
+      >
+        {t[lang].footer_legal}
+      </button>
+      <span style={{ fontSize: 11, color: 'rgba(226,237,232,0.25)' }}>
+        {t[lang].footer_ai_disclosure}
+      </span>
+    </footer>
+  );
+}
 
 export default function App() {
   const [activePage, setActivePage] = useState(PAGES.HOME);
@@ -75,36 +115,7 @@ export default function App() {
           </div>
         </main>
 
-        <footer style={{
-          borderTop: '1px solid var(--border)',
-          padding: '16px 24px',
-          textAlign: 'center',
-          fontSize: 13,
-          color: 'var(--text-muted)',
-          position: 'relative',
-          zIndex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 16,
-          flexWrap: 'wrap',
-        }}>
-          <span>© {new Date().getFullYear()} Smart AI Systems · AI Job Application System</span>
-          <button
-            onClick={() => navigate(PAGES.LEGAL)}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: 13, color: 'rgba(226,237,232,0.4)',
-              fontFamily: 'inherit', padding: 0,
-              textDecoration: 'underline',
-              transition: 'color 0.15s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#1D9E75'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(226,237,232,0.4)'; }}
-          >
-            Legal
-          </button>
-        </footer>
+        <FooterContent onNavigate={navigate} />
       </div>
     </div>
     </LanguageProvider>

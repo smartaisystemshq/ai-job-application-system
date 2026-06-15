@@ -1,25 +1,36 @@
+const { checkRateLimit } = require('./rateLimit.js')
+const { validateCode } = require('./validation.js')
+const { applySecurityHeaders } = require('./securityHeaders.js')
+
 module.exports = function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Content-Type', 'application/json');
+  applySecurityHeaders(res);
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { code } = req.body || {};
-  if (!code || typeof code !== 'string') return res.status(200).json({ valid: false });
+  const rateLimit = checkRateLimit(req);
+  if (!rateLimit.allowed) {
+    return res.status(429).json({ error: rateLimit.message, retryAfter: rateLimit.retryAfter });
+  }
 
-  console.log('ENV CODES:', process.env.VALID_ACCESS_CODES);
+  const MAX_BODY_SIZE = 50000;
+  const bodyStr = JSON.stringify(req.body);
+  if (bodyStr.length > MAX_BODY_SIZE) {
+    return res.status(413).json({ error: 'Request too large.' });
+  }
+
+  const { code } = req.body || {};
+
+  const codeValidation = validateCode(code);
+  if (!codeValidation.valid) return res.status(200).json({ valid: false });
 
   const codesEnv = process.env.VALID_ACCESS_CODES || '';
-  console.log('[validate-code] VALID_ACCESS_CODES present:', codesEnv.length > 0);
-  console.log('[validate-code] Raw value:', codesEnv);
-
   const validCodes = codesEnv.split(',').map(c => c.trim().toUpperCase()).filter(Boolean);
-  console.log('[validate-code] Parsed codes:', validCodes);
-  console.log('[validate-code] Submitted code:', code.trim().toUpperCase());
 
-  const valid = validCodes.includes(code.trim().toUpperCase());
-  console.log('[validate-code] Result:', valid);
+  const valid = validCodes.includes(codeValidation.value);
   return res.status(200).json({ valid });
 };

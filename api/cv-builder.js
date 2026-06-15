@@ -1,13 +1,28 @@
 const Anthropic = require('@anthropic-ai/sdk')
+const { checkRateLimit } = require('./rateLimit.js')
+const { validateAndSanitize } = require('./validation.js')
+const { applySecurityHeaders } = require('./securityHeaders.js')
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   res.setHeader('Content-Type', 'application/json')
+  applySecurityHeaders(res)
 
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+  const rateLimit = checkRateLimit(req)
+  if (!rateLimit.allowed) {
+    return res.status(429).json({ error: rateLimit.message, retryAfter: rateLimit.retryAfter })
+  }
+
+  const MAX_BODY_SIZE = 50000
+  const bodyStr = JSON.stringify(req.body)
+  if (bodyStr.length > MAX_BODY_SIZE) {
+    return res.status(413).json({ error: 'Request too large.' })
+  }
 
   try {
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -24,12 +39,19 @@ module.exports = async function handler(req, res) {
     if (action === 'generate-bullets') {
       const { jobTitle, company, description, targetRole } = data || {}
       if (!description) return res.status(400).json({ error: 'description is required.' })
+
+      const descValidation = validateAndSanitize(description, 'cvText')
+      if (!descValidation.valid) return res.status(400).json({ error: descValidation.error })
+
+      const roleValidation = validateAndSanitize(targetRole || '', 'nameField')
+      if (!roleValidation.valid) return res.status(400).json({ error: roleValidation.error })
+
       prompt = `You are an elite CV writer. Generate exactly 4 CV bullet points for this work experience entry.
 
 Job Title: ${jobTitle || 'Not specified'}
 Company: ${company || 'Not specified'}
-Target Role (candidate is applying for): ${targetRole || 'Not specified'}
-Candidate's description of their work: ${description}
+Target Role (candidate is applying for): ${roleValidation.value || 'Not specified'}
+Candidate's description of their work: ${descValidation.value}
 
 REQUIREMENTS FOR EACH BULLET:
 - Start with the strongest possible action verb: Spearheaded, Architected, Doubled, Slashed, Launched, Negotiated, Automated, Secured, Mentored, Overhauled, Streamlined, Drove
@@ -44,7 +66,11 @@ Return exactly 4 bullet points. Each starts with • on its own line. No preambl
     } else if (action === 'suggest-skills') {
       const { targetRole, existingSkills } = data || {}
       if (!targetRole) return res.status(400).json({ error: 'targetRole is required.' })
-      prompt = `You are a senior recruiter and career expert. Suggest exactly 10 highly relevant skills for a "${targetRole}" position.
+
+      const roleValidation = validateAndSanitize(targetRole, 'nameField')
+      if (!roleValidation.valid) return res.status(400).json({ error: roleValidation.error })
+
+      prompt = `You are a senior recruiter and career expert. Suggest exactly 10 highly relevant skills for a "${roleValidation.value}" position.
 
 Skills the candidate already has listed: ${(existingSkills || []).join(', ') || 'none listed'}
 
@@ -58,6 +84,10 @@ RULES:
 
     } else if (action === 'generate-summary') {
       const { name, targetRole, jobDescription, experience, projects, education, skills } = data || {}
+
+      const jdValidation = validateAndSanitize(jobDescription || '', 'jobDescription')
+      if (!jdValidation.valid) return res.status(400).json({ error: jdValidation.error })
+
       const expText = (experience || [])
         .filter(e => e.jobTitle || e.company)
         .map(e => `${e.jobTitle || 'Role'} at ${e.company || 'Company'} (${e.startDate || ''}${e.endDate ? ' – ' + e.endDate : ''})`)
@@ -70,11 +100,14 @@ RULES:
         .filter(p => p.title?.trim())
         .map(p => [p.title, p.year, p.description].filter(s => s?.trim()).join(' — '))
         .join('; ')
+
+      const sanitizedJd = jdValidation.value
+
       prompt = `You are an elite CV writer. Write a professional summary section (3 sentences, under 75 words).
 
 Candidate name: ${name || 'the candidate'}
 Target role: ${targetRole || 'not specified'}
-${jobDescription ? `Job description to tailor to:\n${jobDescription}\n` : ''}Work experience: ${expText || 'not provided'}
+${sanitizedJd ? `Job description to tailor to:\n${sanitizedJd}\n` : ''}Work experience: ${expText || 'not provided'}
 Education: ${eduText || 'not provided'}
 Key skills: ${(skills || []).join(', ') || 'not provided'}
 ${projText ? `Projects & achievements: ${projText}` : ''}
@@ -86,7 +119,7 @@ REQUIREMENTS:
 - Zero banned phrases: "passionate", "dynamic", "results-driven", "synergy", "team player", "motivated", "detail-oriented"
 - Reads like it was written by a skilled human — specific, confident, direct
 - Under 75 words total
-${jobDescription ? '- Tailor keywords and focus areas naturally to match the job description\n' : ''}
+${sanitizedJd ? '- Tailor keywords and focus areas naturally to match the job description\n' : ''}
 PLAIN TEXT ONLY — no markdown, no **, no #. Just the paragraph text.
 
 GRAMMAR: Review the summary for grammatical correctness — complete sentences, natural phrasing, professional tone.

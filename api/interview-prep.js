@@ -1,13 +1,28 @@
 const Anthropic = require('@anthropic-ai/sdk')
+const { checkRateLimit } = require('./rateLimit.js')
+const { validateAndSanitize } = require('./validation.js')
+const { applySecurityHeaders } = require('./securityHeaders.js')
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   res.setHeader('Content-Type', 'application/json')
+  applySecurityHeaders(res)
 
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+  const rateLimit = checkRateLimit(req)
+  if (!rateLimit.allowed) {
+    return res.status(429).json({ error: rateLimit.message, retryAfter: rateLimit.retryAfter })
+  }
+
+  const MAX_BODY_SIZE = 4000000
+  const bodyStr = JSON.stringify(req.body)
+  if (bodyStr.length > MAX_BODY_SIZE) {
+    return res.status(413).json({ error: 'Request too large.' })
+  }
 
   try {
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -16,6 +31,14 @@ module.exports = async function handler(req, res) {
 
     const { jobDescription, jdPdf, language } = req.body || {}
     if (!jobDescription && !jdPdf) return res.status(400).json({ error: 'jobDescription is required.' })
+
+    let sanitizedJd = jobDescription
+
+    if (jobDescription) {
+      const jdValidation = validateAndSanitize(jobDescription, 'jobDescription')
+      if (!jdValidation.valid) return res.status(400).json({ error: jdValidation.error })
+      sanitizedJd = jdValidation.value
+    }
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -73,7 +96,7 @@ GRAMMAR: Write all questions and frameworks in grammatically correct, natural ${
         { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: jdPdf } },
       ]
     } else {
-      userContent = `${prompt}\n\n=== JOB DESCRIPTION ===\n${jobDescription}`
+      userContent = `${prompt}\n\n=== JOB DESCRIPTION ===\n${sanitizedJd}`
     }
 
     const message = await client.messages.create({

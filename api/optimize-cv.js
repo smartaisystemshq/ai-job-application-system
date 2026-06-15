@@ -1,5 +1,8 @@
 const Anthropic = require('@anthropic-ai/sdk')
 const { CV_EXPERT_KNOWLEDGE } = require('./expertKnowledge.js')
+const { checkRateLimit } = require('./rateLimit.js')
+const { validateAndSanitize } = require('./validation.js')
+const { applySecurityHeaders } = require('./securityHeaders.js')
 
 const systemPrompt = `You are a world-class professional CV writer and career coach with 15+ years of experience helping candidates land jobs at top companies. You have deep expertise in ATS optimization, recruiter psychology, and industry-specific CV standards.
 
@@ -24,9 +27,21 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   res.setHeader('Content-Type', 'application/json')
+  applySecurityHeaders(res)
 
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+  const rateLimit = checkRateLimit(req)
+  if (!rateLimit.allowed) {
+    return res.status(429).json({ error: rateLimit.message, retryAfter: rateLimit.retryAfter })
+  }
+
+  const MAX_BODY_SIZE = 4000000
+  const bodyStr = JSON.stringify(req.body)
+  if (bodyStr.length > MAX_BODY_SIZE) {
+    return res.status(413).json({ error: 'Request too large.' })
+  }
 
   try {
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -37,6 +52,21 @@ module.exports = async function handler(req, res) {
     if (!jobDescription && !jdPdf) return res.status(400).json({ error: 'jobDescription is required.' })
     if (!cv && !cvPdf) return res.status(400).json({ error: 'Either cv text or cvPdf is required.' })
 
+    let sanitizedCv = cv
+    let sanitizedJd = jobDescription
+
+    if (cv) {
+      const cvValidation = validateAndSanitize(cv, 'cvText')
+      if (!cvValidation.valid) return res.status(400).json({ error: cvValidation.error })
+      sanitizedCv = cvValidation.value
+    }
+
+    if (jobDescription) {
+      const jdValidation = validateAndSanitize(jobDescription, 'jobDescription')
+      if (!jdValidation.valid) return res.status(400).json({ error: jdValidation.error })
+      sanitizedJd = jdValidation.value
+    }
+
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
     let userContent
@@ -44,7 +74,7 @@ module.exports = async function handler(req, res) {
     if (cvPdf) {
       const jdPart = jdPdf
         ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: jdPdf } }
-        : { type: 'text', text: `=== JOB DESCRIPTION ===\n${jobDescription}` }
+        : { type: 'text', text: `=== JOB DESCRIPTION ===\n${sanitizedJd}` }
 
       userContent = [
         { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: cvPdf } },
@@ -53,17 +83,17 @@ module.exports = async function handler(req, res) {
     } else {
       const jdSection = jdPdf
         ? [
-            { type: 'text', text: `=== ORIGINAL CV ===\n${cv}` },
+            { type: 'text', text: `=== ORIGINAL CV ===\n${sanitizedCv}` },
             { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: jdPdf } },
           ]
-        : `=== ORIGINAL CV ===\n${cv}\n\n=== JOB DESCRIPTION ===\n${jobDescription}`
+        : `=== ORIGINAL CV ===\n${sanitizedCv}\n\n=== JOB DESCRIPTION ===\n${sanitizedJd}`
 
       userContent = jdSection
     }
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 4096,
+      max_tokens: 2000,
       temperature: 0,
       system: systemPrompt,
       messages: [{ role: 'user', content: userContent }],
