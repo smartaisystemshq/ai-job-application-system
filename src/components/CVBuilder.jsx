@@ -561,46 +561,46 @@ export default function CVBuilder({ unlocked, onUnlock }) {
         </div>
         <div className="form-group">
           <label className="label">{t[lang].builder_label_phone}</label>
-          <input className="input" placeholder="+44 7000 000000" value={state.personal.phone} onChange={e => setP('phone', e.target.value)} />
+          <input className="input" placeholder={t[lang].builder_phone_placeholder} value={state.personal.phone} onChange={e => setP('phone', e.target.value)} />
         </div>
         <div className="form-group">
           <label className="label">
             {t[lang].builder_label_street}
-            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>(optional)</span>
+            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>{t[lang].edu_optional}</span>
           </label>
-          <input className="input" placeholder="123 High Street" value={state.personal.street} onChange={e => setP('street', e.target.value)} />
+          <input className="input" placeholder={t[lang].builder_street_placeholder} value={state.personal.street} onChange={e => setP('street', e.target.value)} />
         </div>
         <div className="form-group">
           <label className="label">{t[lang].builder_label_city}</label>
-          <input className="input" placeholder="London" value={state.personal.city} onChange={e => setP('city', e.target.value)} />
+          <input className="input" placeholder={t[lang].builder_city_placeholder} value={state.personal.city} onChange={e => setP('city', e.target.value)} />
         </div>
         <div className="form-group">
           <label className="label">
             {t[lang].builder_label_postal}
-            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>(optional)</span>
+            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>{t[lang].edu_optional}</span>
           </label>
-          <input className="input" placeholder="SW1A 1AA" value={state.personal.postalCode} onChange={e => setP('postalCode', e.target.value)} />
+          <input className="input" placeholder={t[lang].builder_postal_placeholder} value={state.personal.postalCode} onChange={e => setP('postalCode', e.target.value)} />
         </div>
         <div className="form-group">
           <label className="label">
             {t[lang].builder_label_country}
-            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>(optional)</span>
+            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>{t[lang].edu_optional}</span>
           </label>
-          <input className="input" placeholder="United Kingdom" value={state.personal.country} onChange={e => setP('country', e.target.value)} />
+          <input className="input" placeholder={t[lang].builder_country_placeholder} value={state.personal.country} onChange={e => setP('country', e.target.value)} />
         </div>
         <div className="form-group">
           <label className="label">
             LinkedIn URL
-            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>(optional)</span>
+            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>{t[lang].edu_optional}</span>
           </label>
           <input className="input" placeholder={t[lang].builder_linkedin_placeholder} value={state.personal.linkedin} onChange={e => setP('linkedin', e.target.value)} />
         </div>
         <div className="form-group">
           <label className="label">
             Portfolio / Website
-            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>(optional)</span>
+            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6, textTransform: 'none', fontSize: 12 }}>{t[lang].edu_optional}</span>
           </label>
-          <input className="input" placeholder="janesmith.com or github.com/janesmith" value={state.personal.portfolio} onChange={e => setP('portfolio', e.target.value)} />
+          <input className="input" placeholder={t[lang].builder_portfolio_placeholder} value={state.personal.portfolio} onChange={e => setP('portfolio', e.target.value)} />
         </div>
       </div>
       <div style={{ marginTop: '16px' }}>
@@ -644,12 +644,12 @@ export default function CVBuilder({ unlocked, onUnlock }) {
               <input className="input" placeholder={t[lang].builder_exp_placeholder_company} value={exp.company} onChange={e => updExp(exp.id, 'company', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="label">{t[lang].builder_label_from} <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', fontSize: 11 }}>(e.g. Jan 2022)</span></label>
+              <label className="label">{t[lang].builder_label_from} <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', fontSize: 11 }}>{t[lang].builder_date_from_hint}</span></label>
               <input className="input" placeholder="Jan 2022" value={exp.startDate} onChange={e => updExp(exp.id, 'startDate', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="label">{t[lang].builder_label_to} <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', fontSize: 11 }}>(e.g. Dec 2023 or "Present")</span></label>
-              <input className="input" placeholder={exp.isCurrent ? 'Present' : 'Dec 2023'} value={exp.isCurrent ? 'Present' : exp.endDate} onChange={e => updExp(exp.id, 'endDate', e.target.value)} disabled={exp.isCurrent} />
+              <label className="label">{t[lang].builder_label_to} <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', fontSize: 11 }}>{t[lang].builder_date_to_hint}</span></label>
+              <input className="input" placeholder={exp.isCurrent ? (lang === 'DE' ? 'Aktuell' : 'Present') : 'Dec 2023'} value={exp.isCurrent ? (lang === 'DE' ? 'Aktuell' : 'Present') : exp.endDate} onChange={e => updExp(exp.id, 'endDate', e.target.value)} disabled={exp.isCurrent} />
               <label style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13, color: 'var(--text-secondary)' }}>
                 <input type="checkbox" checked={exp.isCurrent} onChange={e => updExp(exp.id, 'isCurrent', e.target.checked)} />
                 {t[lang].builder_current_role}
@@ -767,11 +767,11 @@ export default function CVBuilder({ unlocked, onUnlock }) {
             </div>
             <div className="form-group">
               <label className="label">{t[lang].builder_label_from}</label>
-              <input className="input" placeholder="e.g. 2019" value={edu.startYear} onChange={e => updEdu(edu.id, 'startYear', e.target.value)} />
+              <input className="input" placeholder={t[lang].builder_year_from_hint} value={edu.startYear} onChange={e => updEdu(edu.id, 'startYear', e.target.value)} />
             </div>
             <div className="form-group">
               <label className="label">{t[lang].builder_label_to}</label>
-              <input className="input" placeholder="e.g. 2023 or 'Present'" value={edu.endYear} onChange={e => updEdu(edu.id, 'endYear', e.target.value)} />
+              <input className="input" placeholder={t[lang].builder_year_to_hint} value={edu.endYear} onChange={e => updEdu(edu.id, 'endYear', e.target.value)} />
             </div>
           </div>
         </div>

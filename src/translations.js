@@ -28,7 +28,7 @@ export const t = {
     home_feat3_title: 'Interview Prep',
     home_feat3_desc: 'The 8 most likely questions for your role with answer frameworks so you walk in prepared',
     home_feat4_title: 'CV Builder',
-    home_feat4_desc: 'No CV yet? Build a professional one from scratch with AI guidance in 6 simple steps',
+    home_feat4_desc: 'No CV yet? Build a professional one from scratch with AI guidance in 7 simple steps',
     home_stats_label: 'BY THE NUMBERS',
     home_stat1_label: 'More interviews on average',
     home_stat2_label: 'Per full application',
@@ -76,7 +76,7 @@ export const t = {
     builder_badge: 'CV BUILDER',
     cv_builder_badge: 'CV BUILDER',
     builder_headline_highlight: 'CV',
-    builder_sub: 'No CV yet? No problem. AI guides you through 5 simple steps — enter your info and we build a polished CV at the end.',
+    builder_sub: 'No CV yet? No problem. AI guides you through 7 simple steps — enter your info and we build a polished CV at the end.',
     builder_timing: 'Takes about 5 minutes. Download as PDF or Word when finished.',
     builder_step1: 'Personal Info',
     builder_step2: 'Experience',
@@ -220,7 +220,7 @@ export const t = {
     builder_start_over: 'Start Over',
     builder_copy_cv: '⎘ Copy CV',
     builder_copied_cv: '✓ Copied to Clipboard',
-    builder_no_exp: 'No experience entries yet. Click "Add Role" to start.',
+    builder_no_exp: 'No experience entries yet. Click "+ Add Experience" to start.',
     builder_no_edu: 'No education entries yet. Click "Add Education" to start.',
     builder_add_role: '+ Add Role',
     builder_add_edu: '+ Add Education',
@@ -318,6 +318,16 @@ export const t = {
     builder_edu_placeholder_field: 'e.g. Business, Computer Science',
     builder_target_placeholder: 'e.g. Senior Product Manager',
     builder_linkedin_placeholder: 'linkedin.com/in/yourname',
+    builder_portfolio_placeholder: 'janesmith.com or github.com/janesmith',
+    builder_phone_placeholder: '+44 7000 000 000',
+    builder_street_placeholder: '123 Main Street',
+    builder_city_placeholder: 'Vienna',
+    builder_postal_placeholder: '1010',
+    builder_country_placeholder: 'Austria',
+    builder_date_from_hint: '(e.g. Jan 2022)',
+    builder_date_to_hint: '(e.g. Dec 2023 or "Present")',
+    builder_year_from_hint: 'e.g. 2019',
+    builder_year_to_hint: "e.g. 2023 or 'Present'",
     upload_pdf_docx: 'Upload PDF or DOCX',
     or_paste_below: 'or paste text below',
     pdf_ready_msg: 'PDF ready — Claude will analyse it directly for best results',
@@ -447,7 +457,7 @@ export const t = {
 <h3>6. Disclaimer</h3>
 <p>The AI-generated content (CVs, cover letters, interview questions) constitutes suggestions and does not replace professional advice. The Provider does not guarantee the success of job applications. Generated documents should be reviewed and adapted by the user before use.</p>
 <h3>7. Use of Artificial Intelligence (EU AI Act)</h3>
-<p>This application uses AI technology (Claude API by Anthropic, Inc.) to create job application documents. In accordance with the EU AI Act, we hereby explicitly inform you of the use of AI systems. The generated content is created by an AI and should be reviewed by the user before use. AI processing is carried out by Anthropic, Inc. (San Francisco, USA) in accordance with their terms of use: <a href="https://www.anthropic.com/aup" target="_blank" rel="noopener noreferrer">https://www.anthropic.com/aup</a></p>
+<p>This application uses AI technology (Claude API by Anthropic, Inc.) to create job application documents. In accordance with the EU AI Act, we hereby explicitly inform you of the use of AI systems. The generated content is created by an AI and should be reviewed by the user before use. AI processing is carried out by Anthropic, Inc. (San Francisco, USA) in accordance with their terms of use: <a href="https://www.anthropic.com/legal/usage-policy" target="_blank" rel="noopener noreferrer">https://www.anthropic.com/legal/usage-policy</a></p>
 <h3>8. Copyright and Uploaded Content</h3>
 <p>By uploading documents, photos, or other content, you confirm that you are authorised to use and process such content. You assume full responsibility for ensuring that uploaded content does not infringe the rights of third parties. The Provider is not liable for copyright-infringing content uploaded by users. Uploaded photos and documents are used exclusively for one-time processing and are not stored permanently.</p>
 <h3>9. Intellectual Property Rights</h3>
@@ -490,7 +500,7 @@ export const t = {
     home_feat3_title: 'Interview-Vorbereitung',
     home_feat3_desc: 'Die 8 wahrscheinlichsten Fragen mit Antwort-Frameworks',
     home_feat4_title: 'CV Builder',
-    home_feat4_desc: 'Noch kein CV? Erstelle einen professionellen in 6 einfachen Schritten',
+    home_feat4_desc: 'Noch kein CV? Erstelle einen professionellen in 7 einfachen Schritten',
     home_stats_label: 'IN ZAHLEN',
     home_stat1_label: 'Mehr Interviews im Schnitt',
     home_stat2_label: 'Pro vollständige Bewerbung',
@@ -538,8 +548,8 @@ export const t = {
     builder_badge: 'CV BUILDER',
     cv_builder_badge: 'CV ERSTELLER',
     builder_headline_highlight: 'CV',
-    builder_sub: 'Noch kein CV? Kein Problem. Die KI führt dich in 5 einfachen Schritten durch — gib deine Infos ein und wir erstellen einen fertigen CV.',
-    builder_timing: 'Dauert etwa 5 Minuten. Als PDF oder Word herunterladen wenn fertig.',
+    builder_sub: 'Noch kein CV? Kein Problem. Die KI führt dich in 7 einfachen Schritten durch — gib deine Infos ein und wir erstellen einen fertigen CV.',
+    builder_timing: 'Dauert etwa 5 Minuten. Als PDF oder Word herunterladen, wenn fertig.',
     builder_step1: 'Persönliche Daten',
     builder_step2: 'Berufserfahrung',
     builder_step3: 'Ausbildung',
@@ -682,7 +692,7 @@ export const t = {
     builder_start_over: 'Neu starten',
     builder_copy_cv: '⎘ CV kopieren',
     builder_copied_cv: '✓ In Zwischenablage kopiert',
-    builder_no_exp: 'Noch keine Einträge. Klicke auf "Stelle hinzufügen".',
+    builder_no_exp: 'Noch keine Einträge. Klicke auf "Erfahrung hinzufügen".',
     builder_no_edu: 'Noch keine Einträge. Klicke auf "Ausbildung hinzufügen".',
     builder_add_role: '+ Stelle hinzufügen',
     builder_add_edu: '+ Ausbildung hinzufügen',
@@ -780,6 +790,16 @@ export const t = {
     builder_edu_placeholder_field: 'z.B. Business, Informatik',
     builder_target_placeholder: 'z.B. Senior Product Manager',
     builder_linkedin_placeholder: 'linkedin.com/in/deinname',
+    builder_portfolio_placeholder: 'janesmith.com oder github.com/janesmith',
+    builder_phone_placeholder: '+43 676 000 0000',
+    builder_street_placeholder: 'Hauptstraße 1',
+    builder_city_placeholder: 'Wien',
+    builder_postal_placeholder: '1010',
+    builder_country_placeholder: 'Österreich',
+    builder_date_from_hint: '(z.B. Jan 2022)',
+    builder_date_to_hint: '(z.B. Dez 2023 oder "Aktuell")',
+    builder_year_from_hint: 'z.B. 2019',
+    builder_year_to_hint: "z.B. 2023 oder 'Aktuell'",
     upload_pdf_docx: 'PDF oder DOCX hochladen',
     or_paste_below: 'oder Text einfügen',
     pdf_ready_msg: 'PDF bereit — Claude analysiert es direkt für beste Ergebnisse',
@@ -909,7 +929,7 @@ export const t = {
 <h3>6. Haftungsausschluss</h3>
 <p>Die durch die KI generierten Inhalte (Lebensläufe, Anschreiben, Interviewfragen) sind Vorschläge und ersetzen keine professionelle Beratung. Der Anbieter übernimmt keine Garantie für den Erfolg von Bewerbungen. Die generierten Dokumente sollten vom Nutzer vor der Verwendung überprüft und angepasst werden.</p>
 <h3>7. Einsatz von Künstlicher Intelligenz (EU AI Act)</h3>
-<p>Diese Anwendung nutzt KI-Technologie (Claude API von Anthropic, Inc.) zur Erstellung von Bewerbungsunterlagen. Gemäß dem EU AI Act informieren wir Sie hiermit ausdrücklich über den Einsatz von KI-Systemen. Die generierten Inhalte werden von einer KI erstellt und sollten vom Nutzer vor der Verwendung überprüft werden. Die KI-Verarbeitung erfolgt durch Anthropic, Inc. (San Francisco, USA) gemäß deren Nutzungsbedingungen: <a href="https://www.anthropic.com/aup" target="_blank" rel="noopener noreferrer">https://www.anthropic.com/aup</a></p>
+<p>Diese Anwendung nutzt KI-Technologie (Claude API von Anthropic, Inc.) zur Erstellung von Bewerbungsunterlagen. Gemäß dem EU AI Act informieren wir Sie hiermit ausdrücklich über den Einsatz von KI-Systemen. Die generierten Inhalte werden von einer KI erstellt und sollten vom Nutzer vor der Verwendung überprüft werden. Die KI-Verarbeitung erfolgt durch Anthropic, Inc. (San Francisco, USA) gemäß deren Nutzungsbedingungen: <a href="https://www.anthropic.com/legal/usage-policy" target="_blank" rel="noopener noreferrer">https://www.anthropic.com/legal/usage-policy</a></p>
 <h3>8. Urheberrecht und hochgeladene Inhalte</h3>
 <p>Durch das Hochladen von Dokumenten, Fotos oder anderen Inhalten versichern Sie, dass Sie berechtigt sind, diese Inhalte zu verwenden und zu verarbeiten. Sie übernehmen die volle Verantwortung dafür, dass hochgeladene Inhalte keine Rechte Dritter verletzen. Der Anbieter haftet nicht für urheberrechtsverletzende Inhalte, die von Nutzern hochgeladen werden. Hochgeladene Fotos und Dokumente werden ausschließlich zur einmaligen Verarbeitung verwendet und nicht dauerhaft gespeichert.</p>
 <h3>9. Nutzungsrechte</h3>

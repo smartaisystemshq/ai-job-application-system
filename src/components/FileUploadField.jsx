@@ -13,7 +13,7 @@ function arrayBufferToBase64(buffer) {
 
 export default function FileUploadField({
   label, value, onChange, onFileSelect, onFileRemove,
-  file, placeholder, rows = 12,
+  file, placeholder, rows = 12, onRawFile,
 }) {
   const { lang } = useLang();
   const fileInputRef = useRef(null);
@@ -31,6 +31,7 @@ export default function FileUploadField({
     }
 
     setFileError('');
+    onRawFile?.(f);
     const ext = f.name.split('.').pop().toLowerCase();
 
     if (ext === 'pdf') {

@@ -4,8 +4,6 @@ const { checkRateLimit } = require('./rateLimit.js')
 const { validateAndSanitize } = require('./validation.js')
 const { applySecurityHeaders } = require('./securityHeaders.js')
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -25,6 +23,10 @@ module.exports = async function handler(req, res) {
   const bodyStr = JSON.stringify(req.body)
   if (bodyStr.length > MAX_BODY_SIZE) {
     return res.status(413).json({ error: 'Request too large.' })
+  }
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(500).json({ error: 'API key not configured' })
   }
 
   const { jobDescription, language } = req.body || {}
@@ -52,6 +54,8 @@ YOUR TASK:
 - Match the seniority level and industry of the job description
 - Write entirely in ${language === 'DE' ? 'German' : 'English'}
 - Questions should be challenging but fair`
+
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
   try {
     const message = await client.messages.create({
