@@ -5,7 +5,7 @@ import FileUploadField from './FileUploadField';
 import { stripMarkdown } from '../utils/downloadUtils';
 import LockedContent from './LockedContent';
 
-const LS = { jd: 'jas.ip.jd', rawResult: 'jas.ip.rawResult', questions: 'sas_interview_questions' };
+const LS = { jd: 'sas_interview_jd', rawResult: 'sas_interview_result', questions: 'sas_interview_questions' };
 
 function parseQuestions(raw) {
   if (!raw) return [];
@@ -319,7 +319,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
       {/* ── Section F: Tip ── */}
       <div className="tool-section" style={{ padding: '0 40px 60px' }}>
         <div className="tool-tip-box">
-          <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> {t[lang].interview_tip}</span>
+          <span><strong style={{ color: '#1D9E75' }}>{t[lang].tip_label}</strong> {t[lang].interview_tip}</span>
         </div>
       </div>
 

@@ -393,7 +393,7 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
       {/* ── Section F: Tip ── */}
       <div className="tool-section" style={{ padding: '0 40px 60px' }}>
         <div className="tool-tip-box">
-          <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> {t[lang].cv_tip}</span>
+          <span><strong style={{ color: '#1D9E75' }}>{t[lang].tip_label}</strong> {t[lang].cv_tip}</span>
         </div>
       </div>
 
@@ -432,7 +432,7 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
             </LockedContent>
 
             <div className="tool-tip-box" style={{ marginTop: 20, marginBottom: 16 }}>
-              <span><strong style={{ color: '#1D9E75' }}>Tip:</strong> {t[lang].cv_result_tip}</span>
+              <span><strong style={{ color: '#1D9E75' }}>{t[lang].tip_label}</strong> {t[lang].cv_result_tip}</span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>

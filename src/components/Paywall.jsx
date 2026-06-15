@@ -33,7 +33,7 @@ export default function Paywall({ onUnlock, onClose }) {
         setLoading(false);
       }
     } catch {
-      setError('Could not verify code. Please try again.');
+      setError(t[lang].paywall_error_verify);
       setLoading(false);
     }
   };
@@ -122,15 +122,15 @@ export default function Paywall({ onUnlock, onClose }) {
 
           {/* Headline */}
           <h2 style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.5px', marginBottom: 8, marginTop: 0 }}>
-            <span style={{ color: '#ffffff' }}>Stop getting ignored.</span>
+            <span style={{ color: '#ffffff' }}>{t[lang].paywall_tagline1}</span>
             <br />
-            <span style={{ color: '#1D9E75', textShadow: '0 0 20px rgba(29,158,117,0.4)' }}>Start getting callbacks.</span>
+            <span style={{ color: '#1D9E75', textShadow: '0 0 20px rgba(29,158,117,0.4)' }}>{t[lang].paywall_tagline2}</span>
           </h2>
           <p style={{ fontSize: 13, color: 'rgba(226,237,232,0.5)', marginBottom: 4, marginTop: 0 }}>
-            The unfair advantage serious job seekers use.
+            {t[lang].paywall_tagline3}
           </p>
           <p style={{ fontSize: 13, color: 'rgba(226,237,232,0.4)', margin: 0 }}>
-            Land your next job faster — AI does the heavy lifting.
+            {t[lang].paywall_tagline4}
           </p>
 
           {/* Divider */}
@@ -139,12 +139,12 @@ export default function Paywall({ onUnlock, onClose }) {
           {/* Price */}
           <div style={{ textAlign: 'center', margin: '20px 0' }}>
             <div style={{ fontSize: 42, fontWeight: 700, color: '#1D9E75', textShadow: '0 0 24px rgba(29,158,117,0.45)', lineHeight: 1 }}>€27</div>
-            <div style={{ fontSize: 11, color: 'rgba(226,237,232,0.4)', letterSpacing: '0.3px', marginTop: 6 }}>one-time payment · unlimited use</div>
+            <div style={{ fontSize: 11, color: 'rgba(226,237,232,0.4)', letterSpacing: '0.3px', marginTop: 6 }}>{t[lang].paywall_price_note}</div>
           </div>
 
           {/* What you get */}
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 9, letterSpacing: '2px', color: 'rgba(29,158,117,0.55)', textTransform: 'uppercase', marginBottom: 12 }}>WHAT YOU GET</div>
+            <div style={{ fontSize: 9, letterSpacing: '2px', color: 'rgba(29,158,117,0.55)', textTransform: 'uppercase', marginBottom: 12 }}>{t[lang].paywall_what_you_get}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {FEATURES.map((f, i) => (
                 <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
