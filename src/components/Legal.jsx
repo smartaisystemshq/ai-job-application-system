@@ -2,6 +2,17 @@ import React, { useState } from 'react';
 import { useLang } from '../context/LanguageContext';
 import { t } from '../translations';
 
+const LEGAL_STYLES = `
+  .legal-content h2 { font-size: 18px; font-weight: 700; color: #e2ede8; margin: 0 0 16px; line-height: 1.3; }
+  .legal-content h3 { font-size: 15px; font-weight: 600; color: #e2ede8; margin: 24px 0 8px; line-height: 1.4; }
+  .legal-content p { margin: 0 0 10px; }
+  .legal-content a { color: #1D9E75; text-decoration: underline; }
+  .legal-content strong { color: #e2ede8; }
+  .legal-content .indent { padding-left: 16px; margin-bottom: 10px; }
+  .legal-content .muted { color: rgba(226,237,232,0.3); font-size: 12px; margin-top: 24px; margin-bottom: 0; }
+  .legal-content .italic-note { font-style: italic; color: rgba(226,237,232,0.4); }
+`;
+
 function LegalSection({ children }) {
   return (
     <div style={{
@@ -18,187 +29,33 @@ function LegalSection({ children }) {
   );
 }
 
-function H({ children }) {
-  return (
-    <h3 style={{ fontSize: 15, fontWeight: 600, color: '#e2ede8', marginTop: 24, marginBottom: 8, lineHeight: 1.4 }}>
-      {children}
-    </h3>
-  );
-}
-
-function H1({ children }) {
-  return (
-    <h2 style={{ fontSize: 18, fontWeight: 700, color: '#e2ede8', marginTop: 0, marginBottom: 16, lineHeight: 1.3 }}>
-      {children}
-    </h2>
-  );
-}
-
-function A({ href, children }) {
-  return (
-    <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: '#1D9E75', textDecoration: 'underline' }}>
-      {children}
-    </a>
-  );
-}
-
-function P({ children, style }) {
-  return <p style={{ margin: '0 0 10px', ...style }}>{children}</p>;
-}
-
-function ImpressumContent() {
-  return (
-    <LegalSection>
-      <H1>Impressum</H1>
-      <P>Angaben gemäß § 5 ECG (E-Commerce-Gesetz)</P>
-      <P>
-        Niklas Ihrybauer<br />
-        Dorf-Au Straße 23<br />
-        3203 Rabenstein an der Pielach<br />
-        Österreich
-      </P>
-      <P>E-Mail: <A href="mailto:smartaisystemshq@gmail.com">smartaisystemshq@gmail.com</A></P>
-      <P style={{ fontStyle: 'italic', color: 'rgba(226,237,232,0.4)' }}>
-        Hinweis: Diese Website wird privat betrieben. Für eine rechtsgültige Kontaktaufnahme verwenden Sie bitte ausschließlich die oben angegebene E-Mail-Adresse.
-      </P>
-      <H>Online-Streitbeilegung</H>
-      <P>
-        Plattform der EU-Kommission zur Online-Streitbeilegung:{' '}
-        <A href="https://ec.europa.eu/consumers/odr">https://ec.europa.eu/consumers/odr</A>
-      </P>
-    </LegalSection>
-  );
-}
-
-function DatenschutzContent() {
-  return (
-    <LegalSection>
-      <H1>Datenschutzerklärung</H1>
-
-      <H>1. Allgemeines</H>
-      <P>Der Schutz Ihrer persönlichen Daten ist uns ein wichtiges Anliegen. Diese Datenschutzerklärung informiert Sie darüber, welche Daten wir erheben, wie wir sie verwenden und welche Rechte Sie haben.</P>
-
-      <H>2. Verantwortlicher</H>
-      <P>Verantwortlicher im Sinne der DSGVO ist:<br />Niklas Ihrybauer<br />E-Mail: <A href="mailto:smartaisystemshq@gmail.com">smartaisystemshq@gmail.com</A></P>
-
-      <H>3. Welche Daten werden verarbeitet?</H>
-
-      <P><strong style={{ color: '#e2ede8' }}>a) CV und Bewerbungsdaten</strong><br />
-      Wenn Sie den CV Optimizer, den Anschreiben-Generator, die Interview-Vorbereitung oder den CV Builder nutzen, laden Sie Ihren Lebenslauf und Stellenbeschreibungen hoch. Diese Daten werden ausschließlich zur Verarbeitung durch die KI (Claude API von Anthropic) verwendet und unmittelbar danach gelöscht. Wir speichern keine CV-Inhalte, Stellenbeschreibungen oder persönliche Bewerbungsdaten auf unseren Servern.</P>
-
-      <P><strong style={{ color: '#e2ede8' }}>b) Lokale Speicherung (localStorage)</strong><br />
-      Zur Verbesserung der Benutzerfreundlichkeit speichert die App Ihre Eingaben temporär in Ihrem Browser (localStorage). Diese Daten verlassen Ihren Browser nicht und werden nicht an uns übertragen. Sie können diese Daten jederzeit durch Löschen des Browser-Caches entfernen.</P>
-
-      <P><strong style={{ color: '#e2ede8' }}>c) Zugangscode</strong><br />
-      Ihr Zugangscode wird ausschließlich lokal in Ihrem Browser gespeichert, um Ihren Zugang dauerhaft zu erhalten. Er wird nicht auf unseren Servern gespeichert.</P>
-
-      <P><strong style={{ color: '#e2ede8' }}>d) Zahlungsdaten</strong><br />
-      Zahlungen werden ausschließlich über Gumroad abgewickelt. Wir haben keinen Zugriff auf Ihre Zahlungsdaten. Es gelten die Datenschutzbestimmungen von Gumroad: <A href="https://gumroad.com/privacy">https://gumroad.com/privacy</A></P>
-
-      <P><strong style={{ color: '#e2ede8' }}>e) E-Mail-Kontakt</strong><br />
-      Wenn Sie uns per E-Mail kontaktieren, werden Ihre Angaben zur Bearbeitung der Anfrage gespeichert. Wir geben diese Daten nicht an Dritte weiter.</P>
-
-      <H>4. Drittanbieter — Anthropic (Claude API)</H>
-      <P>Zur KI-Verarbeitung Ihrer Dokumente verwenden wir die API von Anthropic, Inc. (USA). Die übermittelten Daten werden von Anthropic gemäß deren Datenschutzrichtlinien verarbeitet: <A href="https://www.anthropic.com/privacy">https://www.anthropic.com/privacy</A></P>
-
-      <H>5. Keine Cookies</H>
-      <P>Wir verwenden keine Tracking-Cookies oder Analyse-Tools. Es werden keine Daten für Werbezwecke erhoben.</P>
-
-      <H>6. Ihre Rechte (DSGVO)</H>
-      <P>Sie haben das Recht auf:</P>
-      <div style={{ paddingLeft: 16, marginBottom: 10 }}>
-        <P>— Auskunft über Ihre gespeicherten Daten (Art. 15 DSGVO)</P>
-        <P>— Berichtigung unrichtiger Daten (Art. 16 DSGVO)</P>
-        <P>— Löschung Ihrer Daten (Art. 17 DSGVO)</P>
-        <P>— Einschränkung der Verarbeitung (Art. 18 DSGVO)</P>
-        <P>— Datenübertragbarkeit (Art. 20 DSGVO)</P>
-        <P>— Widerspruch gegen die Verarbeitung (Art. 21 DSGVO)</P>
-      </div>
-      <P>Zur Ausübung Ihrer Rechte kontaktieren Sie uns unter: <A href="mailto:smartaisystemshq@gmail.com">smartaisystemshq@gmail.com</A></P>
-
-      <H>7. Beschwerderecht</H>
-      <P>Sie haben das Recht, sich bei der österreichischen Datenschutzbehörde zu beschweren:<br />
-      Datenschutzbehörde<br />
-      Barichgasse 40-42<br />
-      1030 Wien<br />
-      <A href="mailto:dsb@dsb.gv.at">dsb@dsb.gv.at</A></P>
-
-      <H>8. Änderungen dieser Datenschutzerklärung</H>
-      <P>Wir behalten uns vor, diese Datenschutzerklärung bei Bedarf zu aktualisieren. Die aktuelle Version ist stets auf dieser Seite abrufbar.</P>
-
-      <P style={{ color: 'rgba(226,237,232,0.3)', fontSize: 12, marginTop: 24 }}>Stand: Juni 2025</P>
-    </LegalSection>
-  );
-}
-
-function AgbContent() {
-  return (
-    <LegalSection>
-      <H1>Allgemeine Geschäftsbedingungen (AGB)</H1>
-
-      <H>1. Geltungsbereich</H>
-      <P>Diese AGB gelten für alle Käufe und die Nutzung des AI Job Application System, betrieben von Niklas Ihrybauer (nachfolgend "Anbieter").</P>
-
-      <H>2. Vertragsgegenstand</H>
-      <P>Der Anbieter stellt eine webbasierte KI-Anwendung zur Verfügung, die Nutzern hilft, Bewerbungsunterlagen (Lebenslauf, Anschreiben, Interviewvorbereitung) mithilfe von KI zu optimieren.</P>
-
-      <H>3. Zugang und Nutzung</H>
-      <P>Nach einmaligem Kauf über Gumroad erhalten Sie einen persönlichen Zugangscode. Dieser Code gewährt Ihnen unbegrenzten Zugang zur Anwendung. Der Code ist nicht übertragbar und darf nicht weitergegeben werden.</P>
-
-      <H>4. Preise und Zahlung</H>
-      <P>Der Kaufpreis beträgt einmalig €27 (inkl. etwaiger Steuern). Die Zahlung erfolgt über Gumroad. Es fallen keine wiederkehrenden Kosten an.</P>
-
-      <H>5. Widerrufsrecht</H>
-      <P>Da es sich um digitale Inhalte handelt, die sofort nach dem Kauf zugänglich sind, erlischt das Widerrufsrecht gemäß § 18 Abs. 1 Z 11 FAGG mit Beginn der Ausführung des Vertrags, sofern Sie ausdrücklich zugestimmt haben, dass wir mit der Ausführung beginnen.</P>
-
-      <H>6. Haftungsausschluss</H>
-      <P>Die durch die KI generierten Inhalte (Lebensläufe, Anschreiben, Interviewfragen) sind Vorschläge und ersetzen keine professionelle Beratung. Der Anbieter übernimmt keine Garantie für den Erfolg von Bewerbungen. Die generierten Dokumente sollten vom Nutzer vor der Verwendung überprüft und angepasst werden.</P>
-
-      <H>7. Einsatz von Künstlicher Intelligenz (EU AI Act)</H>
-      <P>Diese Anwendung nutzt KI-Technologie (Claude API von Anthropic, Inc.) zur Erstellung von Bewerbungsunterlagen. Gemäß dem EU AI Act informieren wir Sie hiermit ausdrücklich über den Einsatz von KI-Systemen. Die generierten Inhalte werden von einer KI erstellt und sollten vom Nutzer vor der Verwendung überprüft werden. Die KI-Verarbeitung erfolgt durch Anthropic, Inc. (San Francisco, USA) gemäß deren Nutzungsbedingungen: <A href="https://www.anthropic.com/legal/usage-policy">https://www.anthropic.com/legal/usage-policy</A></P>
-
-      <H>8. Urheberrecht und hochgeladene Inhalte</H>
-      <P>Durch das Hochladen von Dokumenten, Fotos oder anderen Inhalten versichern Sie, dass Sie berechtigt sind, diese Inhalte zu verwenden und zu verarbeiten. Sie übernehmen die volle Verantwortung dafür, dass hochgeladene Inhalte keine Rechte Dritter verletzen. Der Anbieter haftet nicht für urheberrechtsverletzende Inhalte, die von Nutzern hochgeladen werden. Hochgeladene Fotos und Dokumente werden ausschließlich zur einmaligen Verarbeitung verwendet und nicht dauerhaft gespeichert.</P>
-
-      <H>9. Nutzungsrechte</H>
-      <P>Die generierten Dokumente gehören dem Nutzer. Der Anbieter beansprucht keine Rechte an den erstellten Inhalten.</P>
-
-      <H>10. Verfügbarkeit</H>
-      <P>Der Anbieter bemüht sich um eine hohe Verfügbarkeit der Anwendung, übernimmt jedoch keine Garantie für ununterbrochenen Zugang. Wartungsarbeiten werden wenn möglich im Voraus angekündigt.</P>
-
-      <H>11. Datenschutz</H>
-      <P>Es gilt die Datenschutzerklärung, abrufbar auf dieser Seite.</P>
-
-      <H>12. Anwendbares Recht</H>
-      <P>Es gilt österreichisches Recht unter Ausschluss des UN-Kaufrechts. Gerichtsstand ist Rabenstein an der Pielach, Österreich.</P>
-
-      <H>13. Streitbeilegung</H>
-      <P>Wir sind nicht verpflichtet, an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen. Die EU-Kommission stellt eine Plattform zur Online-Streitbeilegung bereit: <A href="https://ec.europa.eu/consumers/odr">https://ec.europa.eu/consumers/odr</A></P>
-
-      <P style={{ color: 'rgba(226,237,232,0.3)', fontSize: 12, marginTop: 24 }}>Stand: Juni 2025</P>
-    </LegalSection>
-  );
-}
-
 export default function Legal() {
   const { lang } = useLang();
   const [activeTab, setActiveTab] = useState('impressum');
 
   const tabs = [
-    { id: 'impressum', label: t[lang].legal_impressum_title },
-    { id: 'datenschutz', label: t[lang].legal_privacy_title },
-    { id: 'agb', label: t[lang].legal_agb_title },
+    { id: 'impressum', label: t[lang].legal_tab_impressum },
+    { id: 'datenschutz', label: t[lang].legal_tab_privacy },
+    { id: 'agb', label: t[lang].legal_tab_agb },
   ];
+
+  const contentMap = {
+    impressum: lang === 'DE' ? t.DE.legal_impressum_content_de : t.EN.legal_impressum_content_en,
+    datenschutz: lang === 'DE' ? t.DE.legal_privacy_content_de : t.EN.legal_privacy_content_en,
+    agb: lang === 'DE' ? t.DE.legal_agb_content_de : t.EN.legal_agb_content_en,
+  };
 
   return (
     <div>
+      <style>{LEGAL_STYLES}</style>
+
       {/* Hero */}
       <div className="tool-hero scroll-reveal">
         <div className="tool-hero-badge">
           <span>§</span><span>{t[lang].nav_legal}</span>
         </div>
         <h1 className="tool-hero-h1">
-          {t[lang].legal_impressum_title} · {t[lang].legal_privacy_title} · {t[lang].legal_agb_title}
+          {t[lang].legal_tab_impressum} · {t[lang].legal_tab_privacy} · {t[lang].legal_tab_agb}
         </h1>
         <p className="tool-hero-sub" style={{ maxWidth: 520 }}>
           {lang === 'DE'
@@ -236,9 +93,12 @@ export default function Legal() {
         </div>
 
         {/* Tab content */}
-        {activeTab === 'impressum' && <ImpressumContent />}
-        {activeTab === 'datenschutz' && <DatenschutzContent />}
-        {activeTab === 'agb' && <AgbContent />}
+        <LegalSection>
+          <div
+            className="legal-content"
+            dangerouslySetInnerHTML={{ __html: contentMap[activeTab] }}
+          />
+        </LegalSection>
       </div>
     </div>
   );

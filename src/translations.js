@@ -391,6 +391,68 @@ export const t = {
     legal_agb_title: 'Terms & Conditions',
     footer_legal: 'Legal',
     footer_ai_disclosure: 'Powered by Claude AI (Anthropic)',
+    legal_tab_impressum: 'Impressum',
+    legal_tab_privacy: 'Privacy Policy',
+    legal_tab_agb: 'Terms & Conditions',
+    legal_impressum_content_en: `<h2>Legal Notice</h2>
+<p>Information pursuant to Section 5 of the Austrian E-Commerce Act (ECG)</p>
+<p>Niklas Ihrybauer<br>Dorf-Au Straße 23<br>3203 Rabenstein an der Pielach<br>Austria</p>
+<p>Email: <a href="mailto:smartaisystemshq@gmail.com">smartaisystemshq@gmail.com</a></p>
+<p class="italic-note">Note: This website is privately operated. For legally valid contact, please use only the email address provided above.</p>
+<h3>Online Dispute Resolution</h3>
+<p>EU Commission platform for online dispute resolution: <a href="https://consumer-redress.ec.europa.eu/dispute-resolution-bodies" target="_blank" rel="noopener noreferrer">https://consumer-redress.ec.europa.eu/dispute-resolution-bodies</a></p>`,
+    legal_privacy_content_en: `<h2>Privacy Policy</h2>
+<h3>1. General</h3>
+<p>The protection of your personal data is important to us. This Privacy Policy informs you about what data we collect, how we use it, and what rights you have.</p>
+<h3>2. Controller</h3>
+<p>The controller within the meaning of the GDPR is:<br>Niklas Ihrybauer<br>Email: <a href="mailto:smartaisystemshq@gmail.com">smartaisystemshq@gmail.com</a></p>
+<h3>3. What data is processed?</h3>
+<p><strong>a) CV and application data</strong><br>When you use the CV Optimizer, Cover Letter Generator, Interview Preparation, or CV Builder, you upload your CV and job descriptions. This data is used exclusively for processing by the AI (Claude API by Anthropic) and is deleted immediately afterwards. We do not store any CV content, job descriptions, or personal application data on our servers.</p>
+<p><strong>b) Local storage (localStorage)</strong><br>To improve usability, the app temporarily stores your inputs in your browser (localStorage). This data does not leave your browser and is not transmitted to us. You can remove this data at any time by clearing your browser cache.</p>
+<p><strong>c) Access code</strong><br>Your access code is stored exclusively in your local browser to maintain your access permanently. It is not stored on our servers.</p>
+<p><strong>d) Payment data</strong><br>Payments are processed exclusively via Gumroad. We have no access to your payment data. Gumroad's privacy policy applies: <a href="https://gumroad.com/privacy" target="_blank" rel="noopener noreferrer">https://gumroad.com/privacy</a></p>
+<p><strong>e) Email contact</strong><br>If you contact us by email, your details are stored for the purpose of handling your enquiry. We do not share this data with third parties.</p>
+<h3>4. Third-party provider — Anthropic (Claude API)</h3>
+<p>For AI processing of your documents, we use the API of Anthropic, Inc. (USA). The transmitted data is processed by Anthropic in accordance with their privacy policy: <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer">https://www.anthropic.com/privacy</a></p>
+<h3>5. No cookies</h3>
+<p>We do not use tracking cookies or analytics tools. No data is collected for advertising purposes.</p>
+<h3>6. Your rights (GDPR)</h3>
+<p>You have the right to:</p>
+<div class="indent"><p>— Access your stored data (Art. 15 GDPR)</p><p>— Rectification of inaccurate data (Art. 16 GDPR)</p><p>— Erasure of your data (Art. 17 GDPR)</p><p>— Restriction of processing (Art. 18 GDPR)</p><p>— Data portability (Art. 20 GDPR)</p><p>— Objection to processing (Art. 21 GDPR)</p></div>
+<p>To exercise your rights, contact us at: <a href="mailto:smartaisystemshq@gmail.com">smartaisystemshq@gmail.com</a></p>
+<h3>7. Right to lodge a complaint</h3>
+<p>You have the right to lodge a complaint with the Austrian Data Protection Authority:<br>Österreichische Datenschutzbehörde<br>Barichgasse 40-42<br>1030 Wien, Austria<br>Email: <a href="mailto:dsb@dsb.gv.at">dsb@dsb.gv.at</a><br>Web: <a href="https://www.dsb.gv.at" target="_blank" rel="noopener noreferrer">https://www.dsb.gv.at</a></p>
+<h3>8. Changes to this Privacy Policy</h3>
+<p>We reserve the right to update this Privacy Policy as necessary. The current version is always available on this page.</p>
+<p class="muted">Last updated: June 2025</p>`,
+    legal_agb_content_en: `<h2>Terms &amp; Conditions</h2>
+<h3>1. Scope</h3>
+<p>These Terms &amp; Conditions apply to all purchases and use of the AI Job Application System, operated by Niklas Ihrybauer (hereinafter "Provider").</p>
+<h3>2. Subject Matter</h3>
+<p>The Provider makes available a web-based AI application that helps users optimise their job application documents (CV, cover letter, interview preparation) using artificial intelligence.</p>
+<h3>3. Access and Use</h3>
+<p>After a one-time purchase via Gumroad, you receive a personal access code. This code grants you unlimited access to the application. The code is non-transferable and must not be shared.</p>
+<h3>4. Prices and Payment</h3>
+<p>The purchase price is a one-time fee of €27 (including any applicable taxes). Payment is made via Gumroad. No recurring costs apply.</p>
+<h3>5. Right of Withdrawal</h3>
+<p>As this involves digital content accessible immediately after purchase, the right of withdrawal expires pursuant to Section 18(1)(11) of the Austrian Distance and Off-Premises Contracts Act (FAGG) upon commencement of performance, provided you have expressly agreed that we may begin performance.</p>
+<h3>6. Disclaimer</h3>
+<p>The AI-generated content (CVs, cover letters, interview questions) constitutes suggestions and does not replace professional advice. The Provider does not guarantee the success of job applications. Generated documents should be reviewed and adapted by the user before use.</p>
+<h3>7. Use of Artificial Intelligence (EU AI Act)</h3>
+<p>This application uses AI technology (Claude API by Anthropic, Inc.) to create job application documents. In accordance with the EU AI Act, we hereby explicitly inform you of the use of AI systems. The generated content is created by an AI and should be reviewed by the user before use. AI processing is carried out by Anthropic, Inc. (San Francisco, USA) in accordance with their terms of use: <a href="https://www.anthropic.com/aup" target="_blank" rel="noopener noreferrer">https://www.anthropic.com/aup</a></p>
+<h3>8. Copyright and Uploaded Content</h3>
+<p>By uploading documents, photos, or other content, you confirm that you are authorised to use and process such content. You assume full responsibility for ensuring that uploaded content does not infringe the rights of third parties. The Provider is not liable for copyright-infringing content uploaded by users. Uploaded photos and documents are used exclusively for one-time processing and are not stored permanently.</p>
+<h3>9. Intellectual Property Rights</h3>
+<p>The generated documents belong to the user. The Provider claims no rights to the created content.</p>
+<h3>10. Availability</h3>
+<p>The Provider endeavours to ensure high availability of the application but does not guarantee uninterrupted access. Maintenance work will be announced in advance where possible.</p>
+<h3>11. Data Protection</h3>
+<p>The Privacy Policy available on this page applies.</p>
+<h3>12. Governing Law</h3>
+<p>Austrian law applies, excluding the UN Convention on Contracts for the International Sale of Goods. The place of jurisdiction is Rabenstein an der Pielach, Austria.</p>
+<h3>13. Dispute Resolution</h3>
+<p>We are not obliged to participate in dispute resolution proceedings before a consumer arbitration board. The EU Commission provides a platform for online dispute resolution: <a href="https://consumer-redress.ec.europa.eu/dispute-resolution-bodies" target="_blank" rel="noopener noreferrer">https://consumer-redress.ec.europa.eu/dispute-resolution-bodies</a></p>
+<p class="muted">Last updated: June 2025</p>`,
   },
   DE: {
     nav_home: 'Startseite',
@@ -783,5 +845,67 @@ export const t = {
     legal_agb_title: 'Allgemeine Geschäftsbedingungen',
     footer_legal: 'Rechtliches',
     footer_ai_disclosure: 'Betrieben mit Claude AI (Anthropic)',
+    legal_tab_impressum: 'Impressum',
+    legal_tab_privacy: 'Datenschutzerklärung',
+    legal_tab_agb: 'Allgemeine Geschäftsbedingungen',
+    legal_impressum_content_de: `<h2>Impressum</h2>
+<p>Angaben gemäß § 5 ECG (E-Commerce-Gesetz)</p>
+<p>Niklas Ihrybauer<br>Dorf-Au Straße 23<br>3203 Rabenstein an der Pielach<br>Österreich</p>
+<p>E-Mail: <a href="mailto:smartaisystemshq@gmail.com">smartaisystemshq@gmail.com</a></p>
+<p class="italic-note">Hinweis: Diese Website wird privat betrieben. Für eine rechtsgültige Kontaktaufnahme verwenden Sie bitte ausschließlich die oben angegebene E-Mail-Adresse.</p>
+<h3>Online-Streitbeilegung</h3>
+<p>Plattform der EU-Kommission zur Online-Streitbeilegung: <a href="https://consumer-redress.ec.europa.eu/dispute-resolution-bodies" target="_blank" rel="noopener noreferrer">https://consumer-redress.ec.europa.eu/dispute-resolution-bodies</a></p>`,
+    legal_privacy_content_de: `<h2>Datenschutzerklärung</h2>
+<h3>1. Allgemeines</h3>
+<p>Der Schutz Ihrer persönlichen Daten ist uns ein wichtiges Anliegen. Diese Datenschutzerklärung informiert Sie darüber, welche Daten wir erheben, wie wir sie verwenden und welche Rechte Sie haben.</p>
+<h3>2. Verantwortlicher</h3>
+<p>Verantwortlicher im Sinne der DSGVO ist:<br>Niklas Ihrybauer<br>E-Mail: <a href="mailto:smartaisystemshq@gmail.com">smartaisystemshq@gmail.com</a></p>
+<h3>3. Welche Daten werden verarbeitet?</h3>
+<p><strong>a) CV und Bewerbungsdaten</strong><br>Wenn Sie den CV Optimizer, den Anschreiben-Generator, die Interview-Vorbereitung oder den CV Builder nutzen, laden Sie Ihren Lebenslauf und Stellenbeschreibungen hoch. Diese Daten werden ausschließlich zur Verarbeitung durch die KI (Claude API von Anthropic) verwendet und unmittelbar danach gelöscht. Wir speichern keine CV-Inhalte, Stellenbeschreibungen oder persönliche Bewerbungsdaten auf unseren Servern.</p>
+<p><strong>b) Lokale Speicherung (localStorage)</strong><br>Zur Verbesserung der Benutzerfreundlichkeit speichert die App Ihre Eingaben temporär in Ihrem Browser (localStorage). Diese Daten verlassen Ihren Browser nicht und werden nicht an uns übertragen. Sie können diese Daten jederzeit durch Löschen des Browser-Caches entfernen.</p>
+<p><strong>c) Zugangscode</strong><br>Ihr Zugangscode wird ausschließlich lokal in Ihrem Browser gespeichert, um Ihren Zugang dauerhaft zu erhalten. Er wird nicht auf unseren Servern gespeichert.</p>
+<p><strong>d) Zahlungsdaten</strong><br>Zahlungen werden ausschließlich über Gumroad abgewickelt. Wir haben keinen Zugriff auf Ihre Zahlungsdaten. Es gelten die Datenschutzbestimmungen von Gumroad: <a href="https://gumroad.com/privacy" target="_blank" rel="noopener noreferrer">https://gumroad.com/privacy</a></p>
+<p><strong>e) E-Mail-Kontakt</strong><br>Wenn Sie uns per E-Mail kontaktieren, werden Ihre Angaben zur Bearbeitung der Anfrage gespeichert. Wir geben diese Daten nicht an Dritte weiter.</p>
+<h3>4. Drittanbieter — Anthropic (Claude API)</h3>
+<p>Zur KI-Verarbeitung Ihrer Dokumente verwenden wir die API von Anthropic, Inc. (USA). Die übermittelten Daten werden von Anthropic gemäß deren Datenschutzrichtlinien verarbeitet: <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer">https://www.anthropic.com/privacy</a></p>
+<h3>5. Keine Cookies</h3>
+<p>Wir verwenden keine Tracking-Cookies oder Analyse-Tools. Es werden keine Daten für Werbezwecke erhoben.</p>
+<h3>6. Ihre Rechte (DSGVO)</h3>
+<p>Sie haben das Recht auf:</p>
+<div class="indent"><p>— Auskunft über Ihre gespeicherten Daten (Art. 15 DSGVO)</p><p>— Berichtigung unrichtiger Daten (Art. 16 DSGVO)</p><p>— Löschung Ihrer Daten (Art. 17 DSGVO)</p><p>— Einschränkung der Verarbeitung (Art. 18 DSGVO)</p><p>— Datenübertragbarkeit (Art. 20 DSGVO)</p><p>— Widerspruch gegen die Verarbeitung (Art. 21 DSGVO)</p></div>
+<p>Zur Ausübung Ihrer Rechte kontaktieren Sie uns unter: <a href="mailto:smartaisystemshq@gmail.com">smartaisystemshq@gmail.com</a></p>
+<h3>7. Beschwerderecht</h3>
+<p>Sie haben das Recht, sich bei der österreichischen Datenschutzbehörde zu beschweren:<br>Österreichische Datenschutzbehörde<br>Barichgasse 40-42<br>1030 Wien<br>E-Mail: <a href="mailto:dsb@dsb.gv.at">dsb@dsb.gv.at</a><br>Web: <a href="https://www.dsb.gv.at" target="_blank" rel="noopener noreferrer">https://www.dsb.gv.at</a></p>
+<h3>8. Änderungen dieser Datenschutzerklärung</h3>
+<p>Wir behalten uns vor, diese Datenschutzerklärung bei Bedarf zu aktualisieren. Die aktuelle Version ist stets auf dieser Seite abrufbar.</p>
+<p class="muted">Stand: Juni 2025</p>`,
+    legal_agb_content_de: `<h2>Allgemeine Geschäftsbedingungen (AGB)</h2>
+<h3>1. Geltungsbereich</h3>
+<p>Diese AGB gelten für alle Käufe und die Nutzung des AI Job Application System, betrieben von Niklas Ihrybauer (nachfolgend "Anbieter").</p>
+<h3>2. Vertragsgegenstand</h3>
+<p>Der Anbieter stellt eine webbasierte KI-Anwendung zur Verfügung, die Nutzern hilft, Bewerbungsunterlagen (Lebenslauf, Anschreiben, Interviewvorbereitung) mithilfe von KI zu optimieren.</p>
+<h3>3. Zugang und Nutzung</h3>
+<p>Nach einmaligem Kauf über Gumroad erhalten Sie einen persönlichen Zugangscode. Dieser Code gewährt Ihnen unbegrenzten Zugang zur Anwendung. Der Code ist nicht übertragbar und darf nicht weitergegeben werden.</p>
+<h3>4. Preise und Zahlung</h3>
+<p>Der Kaufpreis beträgt einmalig €27 (inkl. etwaiger Steuern). Die Zahlung erfolgt über Gumroad. Es fallen keine wiederkehrenden Kosten an.</p>
+<h3>5. Widerrufsrecht</h3>
+<p>Da es sich um digitale Inhalte handelt, die sofort nach dem Kauf zugänglich sind, erlischt das Widerrufsrecht gemäß § 18 Abs. 1 Z 11 FAGG mit Beginn der Ausführung des Vertrags, sofern Sie ausdrücklich zugestimmt haben, dass wir mit der Ausführung beginnen.</p>
+<h3>6. Haftungsausschluss</h3>
+<p>Die durch die KI generierten Inhalte (Lebensläufe, Anschreiben, Interviewfragen) sind Vorschläge und ersetzen keine professionelle Beratung. Der Anbieter übernimmt keine Garantie für den Erfolg von Bewerbungen. Die generierten Dokumente sollten vom Nutzer vor der Verwendung überprüft und angepasst werden.</p>
+<h3>7. Einsatz von Künstlicher Intelligenz (EU AI Act)</h3>
+<p>Diese Anwendung nutzt KI-Technologie (Claude API von Anthropic, Inc.) zur Erstellung von Bewerbungsunterlagen. Gemäß dem EU AI Act informieren wir Sie hiermit ausdrücklich über den Einsatz von KI-Systemen. Die generierten Inhalte werden von einer KI erstellt und sollten vom Nutzer vor der Verwendung überprüft werden. Die KI-Verarbeitung erfolgt durch Anthropic, Inc. (San Francisco, USA) gemäß deren Nutzungsbedingungen: <a href="https://www.anthropic.com/aup" target="_blank" rel="noopener noreferrer">https://www.anthropic.com/aup</a></p>
+<h3>8. Urheberrecht und hochgeladene Inhalte</h3>
+<p>Durch das Hochladen von Dokumenten, Fotos oder anderen Inhalten versichern Sie, dass Sie berechtigt sind, diese Inhalte zu verwenden und zu verarbeiten. Sie übernehmen die volle Verantwortung dafür, dass hochgeladene Inhalte keine Rechte Dritter verletzen. Der Anbieter haftet nicht für urheberrechtsverletzende Inhalte, die von Nutzern hochgeladen werden. Hochgeladene Fotos und Dokumente werden ausschließlich zur einmaligen Verarbeitung verwendet und nicht dauerhaft gespeichert.</p>
+<h3>9. Nutzungsrechte</h3>
+<p>Die generierten Dokumente gehören dem Nutzer. Der Anbieter beansprucht keine Rechte an den erstellten Inhalten.</p>
+<h3>10. Verfügbarkeit</h3>
+<p>Der Anbieter bemüht sich um eine hohe Verfügbarkeit der Anwendung, übernimmt jedoch keine Garantie für ununterbrochenen Zugang. Wartungsarbeiten werden wenn möglich im Voraus angekündigt.</p>
+<h3>11. Datenschutz</h3>
+<p>Es gilt die Datenschutzerklärung, abrufbar auf dieser Seite.</p>
+<h3>12. Anwendbares Recht</h3>
+<p>Es gilt österreichisches Recht unter Ausschluss des UN-Kaufrechts. Gerichtsstand ist Rabenstein an der Pielach, Österreich.</p>
+<h3>13. Streitbeilegung</h3>
+<p>Wir sind nicht verpflichtet, an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen. Die EU-Kommission stellt eine Plattform zur Online-Streitbeilegung bereit: <a href="https://consumer-redress.ec.europa.eu/dispute-resolution-bodies" target="_blank" rel="noopener noreferrer">https://consumer-redress.ec.europa.eu/dispute-resolution-bodies</a></p>
+<p class="muted">Stand: Juni 2025</p>`,
   }
 };

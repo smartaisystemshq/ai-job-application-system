@@ -12,7 +12,6 @@ const NAV_TABS = [
   { id: PAGES.CV_BUILDER,     labelKey: 'nav_builder' },
   { id: PAGES.DASHBOARD,      labelKey: 'nav_dashboard' },
   { id: PAGES.FAQ,            labelKey: 'nav_faq' },
-  { id: PAGES.LEGAL,          labelKey: 'nav_legal' },
 ];
 
 export default function TopNav({ activePage, onNavigate, unlocked, onUnlock }) {

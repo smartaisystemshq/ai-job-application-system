@@ -17,36 +17,19 @@ import { isUnlocked } from './utils/accessControl';
 function FooterContent({ onNavigate }) {
   const { lang } = useLang();
   return (
-    <footer style={{
-      borderTop: '1px solid var(--border)',
-      padding: '16px 24px',
-      textAlign: 'center',
-      fontSize: 13,
-      color: 'var(--text-muted)',
-      position: 'relative',
-      zIndex: 1,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 16,
-      flexWrap: 'wrap',
-    }}>
-      <span>© {new Date().getFullYear()} Smart AI Systems · AI Job Application System</span>
-      <button
+    <footer style={{ textAlign: 'center', padding: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', position: 'relative', zIndex: 1 }}>
+      <span style={{ fontSize: '12px', color: 'rgba(226,237,232,0.25)' }}>
+        © {new Date().getFullYear()} Smart AI Systems · AI Job Application System
+      </span>
+      <span style={{ margin: '0 8px', color: 'rgba(226,237,232,0.15)' }}>·</span>
+      <span
         onClick={() => onNavigate(PAGES.LEGAL)}
-        style={{
-          background: 'none', border: 'none', cursor: 'pointer',
-          fontSize: 13, color: 'rgba(226,237,232,0.4)',
-          fontFamily: 'inherit', padding: 0,
-          textDecoration: 'underline',
-          transition: 'color 0.15s',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.color = '#1D9E75'; }}
-        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(226,237,232,0.4)'; }}
+        style={{ fontSize: '12px', color: 'rgba(226,237,232,0.35)', cursor: 'pointer', textDecoration: 'underline' }}
       >
-        {t[lang].footer_legal}
-      </button>
-      <span style={{ fontSize: 11, color: 'rgba(226,237,232,0.25)' }}>
+        {t[lang].nav_legal}
+      </span>
+      <span style={{ margin: '0 8px', color: 'rgba(226,237,232,0.15)' }}>·</span>
+      <span style={{ fontSize: '11px', color: 'rgba(226,237,232,0.2)' }}>
         {t[lang].footer_ai_disclosure}
       </span>
     </footer>
