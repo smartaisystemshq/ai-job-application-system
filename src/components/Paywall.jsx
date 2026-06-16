@@ -5,7 +5,6 @@ import { t } from '../translations';
 
 export default function Paywall({ onUnlock, onClose }) {
   const [code, setCode] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { lang } = useLang();
 
@@ -20,21 +19,14 @@ export default function Paywall({ onUnlock, onClose }) {
   ];
 
   const handleUnlock = async () => {
-    if (!code.trim() || loading) return;
-    setLoading(true);
+    if (!code.trim()) return;
     setError('');
-    try {
-      const valid = await unlockApp(code.trim());
-      if (valid) {
-        onUnlock?.();
-        onClose?.();
-      } else {
-        setError(t[lang].paywall_invalid);
-        setLoading(false);
-      }
-    } catch {
-      setError(t[lang].paywall_error_verify);
-      setLoading(false);
+    const valid = await unlockApp(code.trim().toUpperCase());
+    if (valid) {
+      onUnlock?.();
+      onClose?.();
+    } else {
+      setError(t[lang].paywall_invalid);
     }
   };
 
@@ -176,8 +168,7 @@ export default function Paywall({ onUnlock, onClose }) {
                 placeholder={t[lang].paywall_code_placeholder}
                 value={code}
                 onChange={e => setCode(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && !loading && handleUnlock()}
-                disabled={loading}
+                onKeyDown={e => { if (e.key === 'Enter') handleUnlock(); }}
                 style={{
                   flex: 1,
                   background: 'rgba(255,255,255,0.04)',
@@ -194,7 +185,7 @@ export default function Paywall({ onUnlock, onClose }) {
               />
               <button
                 onClick={handleUnlock}
-                disabled={loading || !code.trim()}
+                disabled={!code.trim()}
                 style={{
                   padding: '10px 18px',
                   background: 'rgba(29,158,117,0.15)',
@@ -203,17 +194,15 @@ export default function Paywall({ onUnlock, onClose }) {
                   color: '#1D9E75',
                   fontSize: 13,
                   fontWeight: 600,
-                  cursor: loading || !code.trim() ? 'default' : 'pointer',
-                  opacity: loading || !code.trim() ? 0.5 : 1,
+                  cursor: !code.trim() ? 'default' : 'pointer',
+                  opacity: !code.trim() ? 0.5 : 1,
                   transition: 'background 0.15s',
                   flexShrink: 0,
                 }}
-                onMouseEnter={e => { if (!loading && code.trim()) e.currentTarget.style.background = 'rgba(29,158,117,0.25)'; }}
+                onMouseEnter={e => { if (code.trim()) e.currentTarget.style.background = 'rgba(29,158,117,0.25)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(29,158,117,0.15)'; }}
               >
-                {loading
-                  ? <span className="spinner" style={{ width: 14, height: 14, borderTopColor: '#1D9E75' }} />
-                  : t[lang].paywall_code_btn}
+                {t[lang].paywall_code_btn}
               </button>
             </div>
             {error && <p style={{ fontSize: 13, color: '#f87171', marginTop: 8 }}>{error}</p>}

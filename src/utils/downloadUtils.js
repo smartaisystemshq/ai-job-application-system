@@ -187,11 +187,7 @@ function buildMinimalPDF(text, sp, photo = null) {
     }
     if (!headerDone && line.type === 'contact') {
       const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
-      if (citems.length > 1) {
-        headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
-      } else {
-        headerItems.push({ text: line.text, fontSize: contactSize, color: '#555555', margin: [0, 0, 0, 1] })
-      }
+      headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
       continue
     }
     headerDone = true
@@ -202,8 +198,10 @@ function buildMinimalPDF(text, sp, photo = null) {
         bodyContent.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: pw, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 2] }); break
       case 'name':
         bodyContent.push({ text: line.text, fontSize: nameSize, bold: true, color: '#111111', margin: [0, 0, 0, 2] }); break
-      case 'contact':
-        bodyContent.push({ text: line.text, fontSize: contactSize, color: '#555555', margin: [0, 0, 0, 1] }); break
+      case 'contact': {
+        const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
+        bodyContent.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] }); break
+      }
       case 'header':
         bodyContent.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', margin: [0, hSpB, 0, 1] })
         bodyContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 0.6, lineColor: '#888888' }], margin: [0, 0, 0, hSpA] }); break
@@ -240,11 +238,7 @@ function buildModernPDF(text, sp, photo = null) {
     }
     if (!headerDone && line.type === 'contact') {
       const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
-      if (citems.length > 1) {
-        headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#666666', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
-      } else {
-        headerItems.push({ text: line.text, fontSize: contactSize, color: '#666666', margin: [0, 0, 0, 1] })
-      }
+      headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#666666', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
       continue
     }
     headerDone = true
@@ -255,8 +249,10 @@ function buildModernPDF(text, sp, photo = null) {
         bodyContent.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: pw, y2: 1, lineWidth: 0.4, lineColor: '#dddddd' }], margin: [0, 2, 0, 2] }); break
       case 'name':
         bodyContent.push({ text: line.text, fontSize: nameSize, bold: true, color: '#111111', margin: [0, 0, 0, 2] }); break
-      case 'contact':
-        bodyContent.push({ text: line.text, fontSize: contactSize, color: '#666666', margin: [0, 0, 0, 1] }); break
+      case 'contact': {
+        const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
+        bodyContent.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#666666', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] }); break
+      }
       case 'header':
         bodyContent.push({ text: line.text, fontSize: headerSize, bold: true, color: GREEN, margin: [0, hSpB, 0, 1] })
         bodyContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 1.0, lineColor: GREEN }], margin: [0, 0, 0, hSpA] }); break
@@ -295,11 +291,7 @@ function buildClassicPDF(text, sp, photo = null) {
     }
     if (!headerDone && line.type === 'contact') {
       const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
-      if (citems.length > 1) {
-        headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
-      } else {
-        headerItems.push({ text: line.text, fontSize: contactSize, color: '#555555', alignment: photo ? 'left' : 'center', margin: [0, 0, 0, 1] })
-      }
+      headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true, alignment: photo ? 'left' : 'center' })), columnGap: 8, margin: [0, 0, 0, 1] })
       continue
     }
     headerDone = true
@@ -318,8 +310,10 @@ function buildClassicPDF(text, sp, photo = null) {
         bodyContent.push({ text: line.text, fontSize: nameSize, bold: true, color: '#111111', alignment: 'center', margin: [0, 0, 0, 2] })
         bodyContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 1.5, lineColor: '#333333' }], margin: [0, 0, 0, 1] })
         bodyContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 0.5, lineColor: '#333333' }], margin: [0, 2, 0, 2] }); break
-      case 'contact':
-        bodyContent.push({ text: line.text, fontSize: contactSize, color: '#555555', alignment: 'center', margin: [0, 0, 0, 1] }); break
+      case 'contact': {
+        const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
+        bodyContent.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true, alignment: 'center' })), columnGap: 8, margin: [0, 0, 0, 1] }); break
+      }
       case 'header':
         bodyContent.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', margin: [0, hSpB, 0, 1] })
         bodyContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 0.8, lineColor: '#555555' }], margin: [0, 0, 0, hSpA] }); break
@@ -357,11 +351,7 @@ function buildExecutivePDF(text, sp, photo = null) {
     }
     if (!headerDone && line.type === 'contact') {
       const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
-      if (citems.length > 1) {
-        headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
-      } else {
-        headerItems.push({ text: line.text, fontSize: contactSize, color: '#555555', margin: [0, 0, 0, 1] })
-      }
+      headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
       continue
     }
     headerDone = true
@@ -373,8 +363,10 @@ function buildExecutivePDF(text, sp, photo = null) {
       case 'name':
         bodyContent.push({ text: line.text.toUpperCase(), fontSize: nameSize, bold: true, color: '#111111', letterSpacing: 2, margin: [0, 0, 0, 3] })
         bodyContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 1.5, lineColor: GREEN }], margin: [0, 0, 0, 4] }); break
-      case 'contact':
-        bodyContent.push({ text: line.text, fontSize: contactSize, color: '#555555', margin: [0, 0, 0, 1] }); break
+      case 'contact': {
+        const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
+        bodyContent.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] }); break
+      }
       case 'header':
         bodyContent.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', characterSpacing: 0.5, margin: [0, hSpB, 0, 1] })
         bodyContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 0.6, lineColor: '#aaaaaa' }], margin: [0, 0, 0, hSpA] }); break
@@ -446,7 +438,7 @@ function buildSharpPDF(text, sp, photo = null) {
         lastSideType = 'name'
         break
       case 'contact':
-        sideStack.push({ text: line.text, fontSize: contactSize, color: '#aaaaaa', margin: [0, 0, 0, 2] })
+        sideStack.push({ text: line.text, fontSize: line.text.length > 30 ? contactSize - 1 : contactSize, color: '#aaaaaa', margin: [0, 0, 0, 2], noWrap: true })
         lastSideType = 'contact'
         break
       case 'header':
@@ -808,15 +800,11 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
         }
         case 'contact': {
           const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
-          const fullLine = citems.join(' | ')
-          const isLongContact = fullLine.length > 70 && citems.length > 1
-          const contactRuns = isLongContact
-            ? citems.flatMap((ci, idx) => {
-                const r = [new TextRun({ text: ci, size: ci.length > 30 ? 14 : 16, font: 'Calibri', color: subColor })]
-                if (idx < citems.length - 1) r.push(new TextRun({ text: '  |  ', size: 14, font: 'Calibri', color: subColor }))
-                return r
-              })
-            : [new TextRun({ text: fullLine, size: 17, font: 'Calibri', color: subColor })]
+          const contactRuns = citems.flatMap((ci, idx) => {
+            const r = [new TextRun({ text: ci, size: ci.length > 30 ? 14 : 16, font: 'Calibri', color: subColor, noProof: true })]
+            if (idx < citems.length - 1) r.push(new TextRun({ text: '  |  ', size: 14, font: 'Calibri', color: subColor }))
+            return r
+          })
           children.push(new Paragraph({
             children: contactRuns,
             spacing: { after: 30 },

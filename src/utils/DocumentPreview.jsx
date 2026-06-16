@@ -106,7 +106,8 @@ function StandardPage({ lines, template, photo = null, showPlaceholder = false }
           <div key={key} style={{
             ...s.contact,
             display: 'flex', flexWrap: 'wrap',
-            gap: '4px 12px',
+            gap: '4px 14px',
+            alignItems: 'center',
             justifyContent: s.contactAlign === 'center' ? 'center' : 'flex-start',
           }}>
             {items.map((item, idx) => (
