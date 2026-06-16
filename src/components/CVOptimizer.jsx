@@ -99,6 +99,7 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
   const [selectedTemplate, setSelectedTemplate] = useState('minimal');
   const [showPhotoPlaceholder, setShowPhotoPlaceholder] = useState(false);
   const [cvPhoto, setCvPhoto] = useState(() => localStorage.getItem('sas_cv_photo') || null);
+  const [photoHover, setPhotoHover] = useState(false);
 
   const [score, setScore] = useState(() => {
     const r = localStorage.getItem(LS.result);
@@ -156,15 +157,30 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
   }, [cvPhoto]);
 
   const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      alert(lang === 'DE' ? 'Foto ist zu groß. Maximal 5MB.' : 'Photo is too large. Maximum 5MB.');
+
+    if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+      alert(lang === 'DE' ? 'Bitte nur JPG oder PNG Dateien hochladen.' : 'Please upload JPG or PNG files only.');
+      e.target.value = '';
       return;
     }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert(lang === 'DE' ? 'Foto ist zu groß. Maximal 5MB.' : 'Photo is too large. Maximum 5MB.');
+      e.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
-    reader.onload = (ev) => setCvPhoto(ev.target.result);
+    reader.onloadend = (ev) => {
+      if (ev.target.result) setCvPhoto(ev.target.result);
+    };
+    reader.onerror = () => {
+      alert(lang === 'DE' ? 'Foto konnte nicht geladen werden. Bitte versuche es erneut.' : 'Could not load photo. Please try again.');
+    };
     reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   const handleCvFileSelect = (fileInfo, content) => {
@@ -300,23 +316,33 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
                     onChange={handlePhotoUpload} />
                 </label>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ position: 'relative', display: 'inline-block' }}
+                  onMouseEnter={() => setPhotoHover(true)}
+                  onMouseLeave={() => setPhotoHover(false)}
+                >
                   <img src={cvPhoto} alt="CV Photo"
-                    style={{ width: '46px', height: '59px', borderRadius: '6px', objectFit: 'cover',
-                    border: '1px solid rgba(29,158,117,0.3)' }} />
-                  <div>
-                    <div style={{ fontSize: '12px', color: '#1D9E75', fontWeight: 600 }}>
-                      ✓ {t[lang].cv_photo_ready}
+                    style={{ width: '52px', height: '67px', borderRadius: '6px',
+                    objectFit: 'cover', objectPosition: 'center top',
+                    border: '1px solid rgba(29,158,117,0.3)', display: 'block' }} />
+                  {photoHover && (
+                    <div
+                      onClick={() => { setCvPhoto(null); localStorage.removeItem('sas_cv_photo'); }}
+                      style={{
+                        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                        background: 'rgba(0,0,0,0.55)', borderRadius: '6px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', transition: 'all 0.15s'
+                      }}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                        <path d="M10 11v6M14 11v6"/>
+                        <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                      </svg>
                     </div>
-                    <div style={{ fontSize: '11px', color: 'rgba(226,237,232,0.4)', marginTop: '2px' }}>
-                      {t[lang].cv_photo_hint}
-                    </div>
-                    <button onClick={() => setCvPhoto(null)}
-                      style={{ fontSize: '11px', color: 'rgba(226,237,232,0.35)', background: 'none',
-                      border: 'none', cursor: 'pointer', marginTop: '2px', padding: 0 }}>
-                      {t[lang].cv_photo_remove}
-                    </button>
-                  </div>
+                  )}
                 </div>
               )}
               <div style={{ fontSize: '11px', color: 'rgba(226,237,232,0.3)', marginTop: '10px' }}>

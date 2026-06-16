@@ -328,8 +328,12 @@ export default function CVBuilder({ unlocked, onUnlock }) {
 
   const previewRef = useRef(null);
   const photoInputRef = useRef(null);
+  const jdFileRef = useRef(null);
   const [photoBase64, setPhotoBase64] = useState('');
   const [photoError, setPhotoError] = useState('');
+  const [photoHover, setPhotoHover] = useState(false);
+  const [builderJdFilename, setBuilderJdFilename] = useState(null);
+  const [builderJdLoading, setBuilderJdLoading] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(LS_KEY, JSON.stringify(state));
@@ -442,17 +446,99 @@ export default function CVBuilder({ unlocked, onUnlock }) {
     setSuggestedSkills([]);
     setAdjustedCvText(null);
     setPhotoBase64('');
+    setBuilderJdFilename(null);
   };
 
   const handlePhotoUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { setPhotoError(lang === 'DE' ? 'Datei zu groß (max. 5 MB).' : 'File too large (max 5 MB).'); return; }
-    if (!file.type.startsWith('image/')) { setPhotoError(lang === 'DE' ? 'Nur Bilddateien erlaubt.' : 'Image files only.'); return; }
+
+    if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+      setPhotoError(lang === 'DE' ? 'Bitte nur JPG oder PNG Dateien hochladen.' : 'Please upload JPG or PNG files only.');
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError(lang === 'DE' ? 'Foto ist zu groß. Maximal 5MB.' : 'Photo is too large. Maximum 5MB.');
+      e.target.value = '';
+      return;
+    }
+
     setPhotoError('');
     const reader = new FileReader();
-    reader.onload = (ev) => setPhotoBase64(ev.target.result);
+    reader.onloadend = (ev) => {
+      if (ev.target.result) setPhotoBase64(ev.target.result);
+    };
+    reader.onerror = () => {
+      setPhotoError(lang === 'DE' ? 'Foto konnte nicht geladen werden. Bitte versuche es erneut.' : 'Could not load photo. Please try again.');
+    };
     reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleBuilderJdUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['pdf', 'docx'].includes(ext)) {
+      setApiError(lang === 'DE' ? 'Bitte PDF oder DOCX hochladen.' : 'Please upload a PDF or DOCX file.');
+      return;
+    }
+
+    setBuilderJdLoading(true);
+    setApiError('');
+
+    try {
+      if (ext === 'pdf') {
+        const pdfjsLib = await import('pdfjs-dist');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+          'pdfjs-dist/build/pdf.worker.min.mjs',
+          import.meta.url
+        ).href;
+        const arrayBuf = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuf }).promise;
+        let text = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          text += content.items.map(item => item.str).join(' ') + '\n';
+        }
+        setP('jobDescription', text.trim());
+        setBuilderJdFilename(file.name);
+      } else {
+        function toBase64(buffer) {
+          let binary = '';
+          const bytes = new Uint8Array(buffer);
+          for (let i = 0; i < bytes.length; i += 8192) {
+            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+          }
+          return btoa(binary);
+        }
+        const buffer = await file.arrayBuffer();
+        const base64 = toBase64(buffer);
+        const res = await fetch('/api/extract-docx', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileData: base64 }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Extraction failed');
+        setP('jobDescription', data.text);
+        setBuilderJdFilename(file.name);
+      }
+    } catch (err) {
+      setApiError(err.message || (lang === 'DE' ? 'Datei konnte nicht gelesen werden.' : 'Could not read file.'));
+    } finally {
+      setBuilderJdLoading(false);
+    }
+  };
+
+  const clearBuilderJd = () => {
+    setBuilderJdFilename(null);
+    setP('jobDescription', '');
   };
 
   const renderStepPhoto = () => (
@@ -478,16 +564,42 @@ export default function CVBuilder({ unlocked, onUnlock }) {
           {t[lang].cv_photo_section_desc}
         </div>
         <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-          <div style={{
-            width: 100, height: 130, flexShrink: 0,
-            background: photoBase64 ? 'transparent' : 'rgba(255,255,255,0.04)',
-            border: photoBase64 ? 'none' : '2px dashed rgba(255,255,255,0.12)',
-            borderRadius: 4,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            overflow: 'hidden',
-          }}>
+          <div
+            style={{
+              width: 100, height: 130, flexShrink: 0,
+              background: photoBase64 ? 'transparent' : 'rgba(255,255,255,0.04)',
+              border: photoBase64 ? 'none' : '2px dashed rgba(255,255,255,0.12)',
+              borderRadius: 4,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden',
+              position: 'relative',
+            }}
+            onMouseEnter={() => photoBase64 && setPhotoHover(true)}
+            onMouseLeave={() => setPhotoHover(false)}
+          >
             {photoBase64 ? (
-              <img src={photoBase64} alt="CV photo" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+              <>
+                <img src={photoBase64} alt="CV photo" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+                {photoHover && (
+                  <div
+                    onClick={() => { setPhotoBase64(''); setPhotoError(''); setPhotoHover(false); }}
+                    style={{
+                      position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                      background: 'rgba(0,0,0,0.55)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', transition: 'all 0.15s'
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                      stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                    </svg>
+                  </div>
+                )}
+              </>
             ) : (
               <div style={{ textAlign: 'center', color: 'rgba(226,237,232,0.25)' }}>
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ display: 'block', margin: '0 auto 6px' }}>
@@ -503,11 +615,6 @@ export default function CVBuilder({ unlocked, onUnlock }) {
               <button className="btn btn-secondary" onClick={() => photoInputRef.current?.click()}>
                 {t[lang].builder_photo_upload_btn}
               </button>
-              {photoBase64 && (
-                <button className="btn btn-danger btn-sm" onClick={() => { setPhotoBase64(''); setPhotoError(''); }}>
-                  {t[lang].builder_photo_remove}
-                </button>
-              )}
             </div>
             {photoError && (
               <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 6, color: '#f87171', fontSize: 12 }}>
@@ -605,14 +712,48 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       </div>
       <div style={{ marginTop: '16px' }}>
         <label className="label">{t[lang].builder_label_jd}</label>
-        <textarea
-          className="textarea"
-          value={state.personal.jobDescription || ''}
-          onChange={e => setP('jobDescription', e.target.value)}
-          placeholder={t[lang].builder_jd_placeholder}
-          rows={4}
-          style={{ resize: 'vertical' }}
-        />
+        <div style={{ marginBottom: '8px' }}>
+          <button
+            className="upload-btn"
+            onClick={() => jdFileRef.current?.click()}
+            disabled={builderJdLoading}
+          >
+            {builderJdLoading ? (
+              <><span className="spinner" style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: 'currentColor' }}></span> {t[lang].file_extracting}</>
+            ) : (
+              <>{t[lang].upload_pdf_docx}</>
+            )}
+          </button>
+          <input
+            ref={jdFileRef}
+            type="file"
+            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            style={{ display: 'none' }}
+            onChange={handleBuilderJdUpload}
+          />
+        </div>
+        {builderJdFilename ? (
+          <div className="file-badge">
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-primary)' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              {builderJdFilename}
+              <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginLeft: 4 }}>{t[lang].docx_extracted}</span>
+            </span>
+            <button onClick={clearBuilderJd} className="file-remove-btn" title="Remove file">✕</button>
+          </div>
+        ) : (
+          <textarea
+            className="textarea"
+            value={state.personal.jobDescription || ''}
+            onChange={e => setP('jobDescription', e.target.value)}
+            placeholder={t[lang].builder_jd_placeholder}
+            rows={4}
+            style={{ resize: 'vertical' }}
+          />
+        )}
         <div style={{ fontSize: '11px', color: 'rgba(226,237,232,0.35)', marginTop: '4px' }}>
           {t[lang].builder_jd_hint}
         </div>

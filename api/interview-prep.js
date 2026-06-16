@@ -29,7 +29,7 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: 'API key not configured' })
     }
 
-    const { jobDescription, jdPdf, language } = req.body || {}
+    const { jobDescription, jdPdf } = req.body || {}
     if (!jobDescription && !jdPdf) return res.status(400).json({ error: 'jobDescription is required.' })
 
     let sanitizedJd = jobDescription
@@ -42,51 +42,31 @@ module.exports = async function handler(req, res) {
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-    const langName = language === 'DE' ? 'German' : 'English'
+    const prompt = `Generate exactly 8 interview questions for this role.
+Return ONLY valid JSON, no other text, no markdown fences.
 
-    const prompt = `You are an expert interview coach preparing a candidate for the role described in the job description.
+Format:
+{
+  "en": [
+    {"question": "question text in English", "framework": "answer framework in English (2-4 sentences)"},
+    ... 8 items total
+  ],
+  "de": [
+    {"question": "Frage auf Deutsch", "framework": "Antwort-Leitfaden auf Deutsch (formelles Sie, 2-4 Sätze)"},
+    ... 8 items total
+  ]
+}
 
-LANGUAGE RULE: Generate all 8 questions AND all answer frameworks in ${langName}. Write entirely in ${langName}. Do not mix languages.
-
-OUTPUT FORMAT — follow this exactly:
-
-1. [Write the actual interview question here — a real question the interviewer would ask out loud]
-Answer Framework: [2-4 sentences of specific, practical guidance for answering this exact question in this exact role. Say what content to include, what structure works, what the interviewer is really evaluating. Never say "use STAR method" without explaining what the S, T, A, R should contain for this specific question.]
-
-2. [Another actual interview question]
-Answer Framework: [...]
-
-3. [Another actual interview question]
-Answer Framework: [...]
-
-4. [Another actual interview question]
-Answer Framework: [...]
-
-5. [Another actual interview question]
-Answer Framework: [...]
-
-6. [Another actual interview question]
-Answer Framework: [...]
-
-7. [Another actual interview question]
-Answer Framework: [...]
-
-8. [Another actual interview question]
-Answer Framework: [...]
-
-CRITICAL RULES:
-- Items 1 through 8 must ALL be actual interview questions an interviewer would say out loud — never a category heading, section title, or label
-- Every single item starts directly with the question text (no heading before it)
-- Questions must be specific to the role described — not generic interview questions
-- Answer frameworks must be specific to the question and role — not generic advice
-
-SELECT the 8 most likely questions from these categories (pick the most relevant mix for this specific role):
-- Technical skill or tool questions based on requirements listed in the job description
-- Behavioural questions testing the key competencies the role demands
-- Situational or case questions relevant to this role's main challenges
-- One motivation or fit question relevant to this company type or sector
-
-GRAMMAR: Write all questions and frameworks in grammatically correct, natural ${langName}. Every sentence must be complete and polished — no fragments.`
+RULES:
+- Both "en" and "de" arrays must each contain exactly 8 objects
+- The "en" array is entirely in English
+- The "de" array is entirely in German using formal Sie-form
+- Both arrays cover the same 8 questions, just in different languages
+- Questions must be specific to the role — never generic
+- Frameworks must be specific to the question and role — not generic advice
+- All 8 questions are actual interview questions an interviewer would say out loud
+- Pick questions from: technical skills, behavioural, situational/case, motivation/fit
+- Items 1 through 8 must ALL be actual questions (not category headings)`
 
     let userContent
 
@@ -101,12 +81,23 @@ GRAMMAR: Write all questions and frameworks in grammatically correct, natural ${
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 3500,
+      max_tokens: 6000,
       temperature: 0,
       messages: [{ role: 'user', content: userContent }],
     })
 
-    return res.status(200).json({ result: message.content[0].text })
+    const text = message.content[0].text || ''
+    let en = [], de = []
+    try {
+      const clean = text.replace(/^```(?:json)?\s*/m, '').replace(/\s*```$/m, '').trim()
+      const parsed = JSON.parse(clean)
+      en = Array.isArray(parsed.en) ? parsed.en : []
+      de = Array.isArray(parsed.de) ? parsed.de : []
+    } catch (e) {
+      return res.status(500).json({ error: 'Failed to parse questions response. Please try again.' })
+    }
+
+    return res.status(200).json({ en, de })
   } catch (err) {
     console.error('Claude API error:', err)
     if (err.status === 401) return res.status(500).json({ error: 'Invalid API key. Please contact support.' })

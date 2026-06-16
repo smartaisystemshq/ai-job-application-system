@@ -2,10 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLang } from '../context/LanguageContext';
 import { t } from '../translations';
 import FileUploadField from './FileUploadField';
-import { stripMarkdown } from '../utils/downloadUtils';
 import LockedContent from './LockedContent';
 
-const LS = { jd: 'sas_interview_jd', rawResult: 'sas_interview_result', questions: 'sas_interview_questions' };
+const LS = {
+  jd: 'sas_interview_jd',
+  questionsEN: 'sas_interview_questions_en',
+  questionsDE: 'sas_interview_questions_de',
+  jdFilename: 'sas_interview_jd_filename',
+  jdType: 'sas_interview_jd_type',
+  jdPdf: 'sas_interview_jd_pdf',
+};
 
 function parseQuestions(raw) {
   if (!raw) return [];
@@ -15,7 +21,6 @@ function parseQuestions(raw) {
     if (Array.isArray(parsed)) return parsed;
   } catch {}
 
-  // Split on lines that start with a number (1. or 1) or **1. etc.)
   const blocks = raw.split(/\n(?=\*{0,2}\d{1,2}[.)]\s)/).filter(Boolean);
 
   if (blocks.length >= 4) {
@@ -25,10 +30,10 @@ function parseQuestions(raw) {
       if (lines.length === 0) continue;
 
       const questionText = lines[0]
-        .replace(/^\*{1,2}/, '')           // leading **
-        .replace(/\*{1,2}$/, '')           // trailing **
-        .replace(/^\d{1,2}[.)]\s+/, '')    // leading number
-        .replace(/^\*{1,2}/, '')           // any ** after number removal
+        .replace(/^\*{1,2}/, '')
+        .replace(/\*{1,2}$/, '')
+        .replace(/^\d{1,2}[.)]\s+/, '')
+        .replace(/^\*{1,2}/, '')
         .trim();
 
       const rest = lines.slice(1).join('\n')
@@ -113,54 +118,67 @@ function MiniChatbot({ currentDocument, onUpdate }) {
 
 export default function InterviewPrep({ unlocked, onUnlock }) {
   const { lang } = useLang();
-  const [jobDescription, setJobDescription] = useState(() => localStorage.getItem(LS.jd) || '');
-  const [jdFile, setJdFile] = useState(null);
-  const [jdPdfBase64, setJdPdfBase64] = useState('');
 
-  const [rawResult, setRawResult] = useState(() => localStorage.getItem(LS.rawResult) || '');
-  const [questions, setQuestions] = useState(() => {
-    try {
-      const savedQ = localStorage.getItem(LS.questions);
-      if (savedQ) return JSON.parse(savedQ);
-    } catch {}
-    const savedRaw = localStorage.getItem(LS.rawResult);
-    return savedRaw ? parseQuestions(savedRaw) : [];
+  const [jobDescription, setJobDescription] = useState(() => localStorage.getItem(LS.jd) || '');
+  const [jdFile, setJdFile] = useState(() => {
+    const filename = localStorage.getItem(LS.jdFilename);
+    const type = localStorage.getItem(LS.jdType);
+    return (filename && type) ? { name: filename, type } : null;
   });
+  const [jdPdfBase64, setJdPdfBase64] = useState(() => localStorage.getItem(LS.jdPdf) || '');
+
+  const [questionsEN, setQuestionsEN] = useState(() => {
+    try {
+      const s = localStorage.getItem(LS.questionsEN);
+      return s ? JSON.parse(s) : [];
+    } catch { return []; }
+  });
+  const [questionsDE, setQuestionsDE] = useState(() => {
+    try {
+      const s = localStorage.getItem(LS.questionsDE);
+      return s ? JSON.parse(s) : [];
+    } catch { return []; }
+  });
+
   const [loading, setLoading] = useState(false);
   const [newQuestionsLoading, setNewQuestionsLoading] = useState(false);
-  const [isTranslating, setIsTranslating] = useState(false);
   const [error, setError] = useState('');
 
   const resultRef = useRef(null);
-  const didMountRef = useRef(false);
-
-  // Persist parsed questions to localStorage
-  useEffect(() => {
-    if (questions && questions.length > 0) {
-      localStorage.setItem(LS.questions, JSON.stringify(questions));
-    }
-  }, [questions]);
-
-  // Auto-translate when language toggles
-  useEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true;
-      return;
-    }
-    if (!rawResult) return;
-    const targetLang = lang === 'DE' ? 'German' : 'English';
-    translateQuestionsAuto(targetLang);
-  }, [lang]);
 
   useEffect(() => { localStorage.setItem(LS.jd, jobDescription); }, [jobDescription]);
-  useEffect(() => { if (rawResult) localStorage.setItem(LS.rawResult, rawResult); }, [rawResult]);
+
+  const questions = lang === 'DE' ? questionsDE : questionsEN;
+  const questionsText = questions.map((q, i) =>
+    `${i + 1}. ${q.question}\n${q.framework || ''}`
+  ).join('\n\n');
 
   const handleJdFileSelect = (fileInfo, content) => {
     setJdFile(fileInfo);
-    if (fileInfo.type === 'pdf') { setJdPdfBase64(content); setJobDescription(''); }
-    else { setJobDescription(content); setJdPdfBase64(''); }
+    localStorage.setItem(LS.jdFilename, fileInfo.name);
+    localStorage.setItem(LS.jdType, fileInfo.type);
+    if (fileInfo.type === 'pdf') {
+      setJdPdfBase64(content);
+      setJobDescription('');
+      localStorage.setItem(LS.jdPdf, content);
+      localStorage.removeItem(LS.jd);
+    } else {
+      setJobDescription(content);
+      setJdPdfBase64('');
+      localStorage.setItem(LS.jd, content);
+      localStorage.removeItem(LS.jdPdf);
+    }
   };
-  const handleJdFileRemove = () => { setJdFile(null); setJdPdfBase64(''); setJobDescription(''); };
+
+  const handleJdFileRemove = () => {
+    setJdFile(null);
+    setJdPdfBase64('');
+    setJobDescription('');
+    localStorage.removeItem(LS.jdFilename);
+    localStorage.removeItem(LS.jdType);
+    localStorage.removeItem(LS.jdPdf);
+    localStorage.removeItem(LS.jd);
+  };
 
   const canSubmit = jobDescription.trim() || jdPdfBase64;
 
@@ -169,7 +187,9 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
     if (isNew) {
       setNewQuestionsLoading(true);
     } else {
-      setLoading(true); setRawResult(''); setQuestions([]);
+      setLoading(true);
+      setQuestionsEN([]);
+      setQuestionsDE([]);
     }
     setError('');
     try {
@@ -179,13 +199,16 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
         body: JSON.stringify({
           jobDescription: jobDescription.trim() || undefined,
           jdPdf: jdPdfBase64 || undefined,
-          language: lang,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate questions');
-      setRawResult(data.result);
-      setQuestions(parseQuestions(data.result));
+      const en = Array.isArray(data.en) ? data.en : [];
+      const de = Array.isArray(data.de) ? data.de : [];
+      setQuestionsEN(en);
+      setQuestionsDE(de);
+      localStorage.setItem(LS.questionsEN, JSON.stringify(en));
+      localStorage.setItem(LS.questionsDE, JSON.stringify(de));
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
@@ -202,40 +225,24 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
     setJobDescription('');
     setJdFile(null);
     setJdPdfBase64('');
-    setRawResult('');
-    setQuestions([]);
+    setQuestionsEN([]);
+    setQuestionsDE([]);
     setError('');
     Object.values(LS).forEach(k => localStorage.removeItem(k));
-    localStorage.removeItem('sas_interview_jd');
+    localStorage.removeItem('sas_interview_result');
+    localStorage.removeItem('sas_interview_questions');
   };
 
   const handleAdjustUpdate = (newRaw) => {
-    setRawResult(newRaw);
-    setQuestions(parseQuestions(newRaw));
-    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
-  };
-
-  const translateQuestionsAuto = async (targetLang) => {
-    if (!rawResult) return;
-    setIsTranslating(true);
-    try {
-      const res = await fetch('/api/adjust-document', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          documentText: rawResult,
-          instruction: `Translate all interview questions and their answer frameworks entirely to ${targetLang}. Keep the exact same format, structure, numbering, and content — only change the language.`,
-          documentType: 'interview-questions',
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Translation failed');
-      handleAdjustUpdate(data.result);
-    } catch (e) {
-      console.log('Auto-translate failed:', e);
-    } finally {
-      setIsTranslating(false);
+    const parsed = parseQuestions(newRaw);
+    if (lang === 'DE') {
+      setQuestionsDE(parsed);
+      localStorage.setItem(LS.questionsDE, JSON.stringify(parsed));
+    } else {
+      setQuestionsEN(parsed);
+      localStorage.setItem(LS.questionsEN, JSON.stringify(parsed));
     }
+    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   };
 
   return (
@@ -299,7 +306,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
           >
             {loading ? <><span className="spinner"></span> {t[lang].generating}</> : <>✦ {t[lang].interview_generate_btn}</>}
           </button>
-          {(jobDescription || jdFile || rawResult) && (
+          {(jobDescription || jdFile || questionsEN.length > 0 || questionsDE.length > 0) && (
             <div style={{ textAlign: 'center', marginTop: 10 }}>
               <button className="btn btn-ghost" onClick={handleClear} disabled={loading || newQuestionsLoading} style={{ fontSize: 13 }}>
                 {t[lang].clear_all}
@@ -333,18 +340,11 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
                   <span style={{ color: 'var(--accent)' }}>◈</span>
                   {questions.length} {t[lang].interview_result_label}
                 </h2>
-                <CopyButton text={rawResult} />
+                <CopyButton text={questionsText} />
               </div>
 
-              {isTranslating && (
-                <div style={{ fontSize: 12, color: 'rgba(226,237,232,0.5)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span className="spinner" style={{ width: 12, height: 12, borderTopColor: '#1D9E75' }} />
-                  <span>{lang === 'DE' ? 'Übersetze...' : 'Translating...'}</span>
-                </div>
-              )}
-
               {questions.map((q, i) => (
-                <div key={i} className="question-item scroll-reveal" style={{ animationDelay: `${i * 0.04}s`, opacity: isTranslating ? 0.5 : 1, transition: 'opacity 0.3s' }}>
+                <div key={i} className="question-item scroll-reveal" style={{ animationDelay: `${i * 0.04}s` }}>
                   <div className="question-number">{t[lang].interview_question_num} {i + 1}</div>
                   <div className="question-text">{q.question}</div>
                   {q.framework && <div className="question-framework">{q.framework}</div>}
@@ -368,7 +368,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
                 </button>
               </div>
 
-              <MiniChatbot currentDocument={rawResult} onUpdate={handleAdjustUpdate} />
+              <MiniChatbot currentDocument={questionsText} onUpdate={handleAdjustUpdate} />
             </LockedContent>
           </div>
         </div>

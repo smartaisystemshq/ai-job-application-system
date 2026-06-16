@@ -243,7 +243,7 @@ function SharpPage({ lines, photo = null, showPlaceholder = false }) {
       <div style={{
         background: SIDEBAR_DARK,
         width: '25%',
-        padding: '24px 14px',
+        padding: '16px',
         fontFamily: "'Inter', sans-serif",
         flexShrink: 0,
         alignSelf: 'stretch',
@@ -252,23 +252,48 @@ function SharpPage({ lines, photo = null, showPlaceholder = false }) {
         {leftLinesWithDividers.map((line, i) => {
           switch (line.type) {
             case 'sidebar-divider':
-              return <div key={i} style={{ height: 0.5, background: GREEN, margin: '6px 0 5px' }} />
+              return <div key={i} style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '8px 0 6px' }} />
             case 'name':
               return (
                 <div key={i}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 4, lineHeight: 1.2 }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', marginBottom: 4, lineHeight: 1.2 }}>
                     {line.text}
                   </div>
-                  <div style={{ height: 1.5, background: GREEN, marginBottom: 10 }} />
+                  <div style={{ height: 2, background: GREEN, width: '100%', marginBottom: 12 }} />
                 </div>
               )
-            case 'contact':
-              return <div key={i} style={{ fontSize: 8.5, color: '#aaa', marginBottom: 2, lineHeight: 1.4 }}>{line.text}</div>
+            case 'contact': {
+              const items = line.text.split('|').map(s => s.trim()).filter(Boolean)
+              return (
+                <React.Fragment key={i}>
+                  {items.map((item, idx) => (
+                    <div key={idx} style={{
+                      fontSize: 9, color: 'rgba(255,255,255,0.75)',
+                      marginBottom: 4, whiteSpace: 'nowrap',
+                      overflow: 'hidden', textOverflow: 'ellipsis',
+                      lineHeight: 1.4,
+                    }}>
+                      {item}
+                    </div>
+                  ))}
+                </React.Fragment>
+              )
+            }
             case 'sidebar-photo':
               return photo ? (
-                <img key={i} src={photo} alt="CV Photo" style={{ width: 68, height: 87, objectFit: 'cover', objectPosition: 'center top', display: 'block', margin: '8px auto 6px', borderRadius: 1 }} />
+                <img key={i} src={photo} alt="CV Photo" style={{
+                  width: '100%', maxHeight: 110,
+                  objectFit: 'cover', objectPosition: 'center top',
+                  display: 'block', margin: '0 0 12px',
+                  borderRadius: 6,
+                }} />
               ) : showPlaceholder ? (
-                <div key={i} style={{ width: 68, height: 87, background: '#333', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '8px auto 6px', borderRadius: 1 }}>
+                <div key={i} style={{
+                  width: '100%', height: 80, background: '#333',
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                  margin: '0 0 12px', borderRadius: 6,
+                }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="1.5">
                     <circle cx="12" cy="8" r="4" />
                     <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
@@ -277,20 +302,31 @@ function SharpPage({ lines, photo = null, showPlaceholder = false }) {
               ) : null
             case 'header':
               return (
-                <div key={i} style={{ marginTop: 4, marginBottom: 5 }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: '#ffffff', marginBottom: 2, letterSpacing: 0.3 }}>{line.text}</div>
-                  <div style={{ height: 0.8, background: GREEN, marginBottom: 5 }} />
+                <div key={i} style={{ marginTop: 4, marginBottom: 6 }}>
+                  <div style={{
+                    fontSize: 8, fontWeight: 400,
+                    color: 'rgba(255,255,255,0.4)',
+                    marginBottom: 6, letterSpacing: 1.5,
+                    textTransform: 'uppercase',
+                  }}>
+                    {line.text}
+                  </div>
                 </div>
               )
             case 'bullet':
               return (
-                <div key={i} style={{ display: 'flex', gap: 5, marginBottom: 2 }}>
-                  <span style={{ color: '#aaa', fontSize: 9, flexShrink: 0 }}>•</span>
-                  <span style={{ fontSize: 9, color: '#ccc', lineHeight: 1.4 }}>{line.text}</span>
+                <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 2 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 9, flexShrink: 0 }}>·</span>
+                  <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.75)', lineHeight: 1.4 }}>{line.text}</span>
                 </div>
               )
             case 'body':
-              return <div key={i} style={{ fontSize: 9, color: '#ccc', marginBottom: 2, lineHeight: 1.4 }}>{line.text}</div>
+              return (
+                <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 2 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 9, flexShrink: 0 }}>·</span>
+                  <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.75)', lineHeight: 1.4 }}>{line.text}</span>
+                </div>
+              )
             case 'empty':
               return <div key={i} style={{ height: 4 }} />
             default:
@@ -303,30 +339,36 @@ function SharpPage({ lines, photo = null, showPlaceholder = false }) {
       <div style={{
         background: '#fff',
         flex: 1,
-        padding: '24px 20px 24px 16px',
+        padding: '20px 20px 20px 16px',
         fontFamily: "'Inter', sans-serif",
-        fontSize: 11,
-        color: '#2a2a2a',
+        fontSize: 9.5,
+        color: '#333',
         lineHeight: 1.5,
       }}>
         {rightLines.map((line, i) => {
           switch (line.type) {
             case 'header':
               return (
-                <div key={i} style={{ marginTop: 12, marginBottom: 5 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#111', marginBottom: 3 }}>{line.text}</div>
+                <div key={i} style={{ marginTop: 14, marginBottom: 8 }}>
+                  <div style={{
+                    fontSize: 10, fontWeight: 700, color: '#1a1a1a',
+                    textTransform: 'uppercase', letterSpacing: 1,
+                    paddingBottom: 3,
+                  }}>
+                    {line.text}
+                  </div>
                   <div style={{ height: 1, background: GREEN }} />
                 </div>
               )
             case 'bullet':
               return (
                 <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 2.5 }}>
-                  <span style={{ color: '#555', flexShrink: 0, fontSize: 12, lineHeight: '16px' }}>•</span>
-                  <span style={{ fontSize: 11 }}>{line.text}</span>
+                  <span style={{ color: GREEN, flexShrink: 0, fontSize: 9, lineHeight: '15px' }}>•</span>
+                  <span style={{ fontSize: 9.5, color: '#333', lineHeight: 1.5 }}>{line.text}</span>
                 </div>
               )
             case 'body':
-              return <div key={i} style={{ fontSize: 11, marginBottom: 2 }}>{line.text}</div>
+              return <div key={i} style={{ fontSize: 9.5, color: '#333', marginBottom: 2, lineHeight: 1.5 }}>{line.text}</div>
             case 'empty':
               return <div key={i} style={{ height: 4 }} />
             case 'divider':

@@ -391,8 +391,8 @@ function buildSharpPDF(text, sp, photo = null) {
   const lines = parseDocumentLines(text)
   const GREEN = '#1D9E75'
   const DARK = '#1a1a1a'
-  const nameSize = Math.round(bodySize + 5)
-  const contactSize = bodySize - 1.5
+  const nameSize = Math.round(bodySize + 6)
+  const contactSize = bodySize - 1
   const headerSize = bodySize + 0.5
 
   // Fixed tight margins for two-column layout
@@ -428,33 +428,36 @@ function buildSharpPDF(text, sp, photo = null) {
   for (const line of sideLines) {
     // Inject photo after last contact line (before first header)
     if (!sharpPhotoInserted && photo && lastSideType === 'contact' && line.type !== 'contact') {
-      sideStack.push({ image: photo, fit: [68, 87], alignment: 'center', margin: [0, 5, 0, 5] })
+      sideStack.push({ image: photo, width: sideInnerW, margin: [0, 6, 0, 12] })
       sharpPhotoInserted = true
     }
     switch (line.type) {
       case 'name':
-        sideStack.push({ text: line.text, fontSize: nameSize, bold: true, color: '#ffffff', margin: [0, 0, 0, 3] })
-        sideStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: sideInnerW, y2: 0, lineWidth: 1, lineColor: GREEN }], margin: [0, 0, 0, 5] })
+        sideStack.push({ text: line.text, fontSize: nameSize, bold: true, color: '#ffffff', margin: [0, 0, 0, 4] })
+        sideStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: sideInnerW, y2: 0, lineWidth: 2, lineColor: GREEN }], margin: [0, 0, 0, 12] })
         lastSideType = 'name'
         break
-      case 'contact':
-        sideStack.push({ text: line.text, fontSize: line.text.length > 30 ? contactSize - 1 : contactSize, color: '#aaaaaa', margin: [0, 0, 0, 2], noWrap: true })
+      case 'contact': {
+        const items = line.text.split('|').map(s => s.trim()).filter(Boolean)
+        items.forEach(item => {
+          sideStack.push({ text: item, fontSize: contactSize, color: '#bbbbbb', margin: [0, 0, 0, 3], noWrap: true })
+        })
         lastSideType = 'contact'
         break
+      }
       case 'header':
         if (lastSideType && lastSideType !== 'name') {
-          sideStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: sideInnerW, y2: 0, lineWidth: 0.5, lineColor: GREEN }], margin: [0, 5, 0, 4] })
+          sideStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: sideInnerW, y2: 0, lineWidth: 0.5, lineColor: '#444444' }], margin: [0, 8, 0, 6] })
         }
-        sideStack.push({ text: line.text, fontSize: bodySize, bold: true, color: '#ffffff', margin: [0, lastSideType === 'name' ? (hSpB || 6) : 1, 0, 2] })
-        sideStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: sideInnerW, y2: 0, lineWidth: 0.6, lineColor: GREEN }], margin: [0, 0, 0, hSpA || 2] })
+        sideStack.push({ text: line.text.toUpperCase(), fontSize: bodySize - 1.5, bold: false, color: '#888888', characterSpacing: 1, margin: [0, lastSideType === 'name' ? 4 : 0, 0, 6] })
         lastSideType = 'header'
         break
       case 'bullet':
-        sideStack.push({ text: '• ' + line.text, fontSize: bodySize - 0.5, color: '#cccccc', margin: [0, 1, 0, 1] })
+        sideStack.push({ text: '· ' + line.text, fontSize: bodySize - 1, color: '#bbbbbb', margin: [0, 1, 0, 1] })
         lastSideType = 'bullet'
         break
       case 'body':
-        sideStack.push({ text: line.text, fontSize: bodySize - 0.5, color: '#cccccc', margin: [0, 1, 0, 1] })
+        sideStack.push({ text: '· ' + line.text, fontSize: bodySize - 1, color: '#bbbbbb', margin: [0, 1, 0, 1] })
         lastSideType = 'body'
         break
       case 'empty':
@@ -463,9 +466,9 @@ function buildSharpPDF(text, sp, photo = null) {
         break
     }
   }
-  // If photo not yet inserted (no headers in sidebar), add at end
+  // If photo not yet inserted (no headers in sidebar), add at end of contacts
   if (!sharpPhotoInserted && photo) {
-    sideStack.push({ image: photo, fit: [68, 87], alignment: 'center', margin: [0, 5, 0, 5] })
+    sideStack.push({ image: photo, width: sideInnerW, margin: [0, 6, 0, 12] })
   }
   if (sideStack.length === 0) sideStack.push({ text: '' })
 
@@ -481,15 +484,14 @@ function buildSharpPDF(text, sp, photo = null) {
         mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: mainInnerW, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 2] })
         break
       case 'header':
-        // Monochrome: dark bold text with thin green underline
-        mainStack.push({ text: line.text, fontSize: headerSize, bold: true, color: '#111111', margin: [0, hSpB || 6, 0, 1] })
+        mainStack.push({ text: line.text.toUpperCase(), fontSize: headerSize, bold: true, color: '#1a1a1a', characterSpacing: 0.5, margin: [0, hSpB || 6, 0, 1] })
         mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: mainInnerW, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, hSpA || 2] })
         break
       case 'bullet':
-        mainStack.push({ columns: [{ text: '•', width: 10, fontSize: bodySize, color: '#444444' }, { text: line.text, fontSize: bodySize, color: '#2a2a2a', width: '*' }], margin: [4, 1, 0, 1] })
+        mainStack.push({ columns: [{ text: '•', width: 10, fontSize: bodySize - 0.5, color: GREEN }, { text: line.text, fontSize: bodySize, color: '#333333', width: '*' }], margin: [4, 1, 0, 1] })
         break
       case 'body':
-        mainStack.push({ text: line.text, fontSize: bodySize, color: '#2a2a2a', margin: [0, 1, 0, 1] })
+        mainStack.push({ text: line.text, fontSize: bodySize, color: '#333333', margin: [0, 1, 0, 1] })
         break
     }
   }
