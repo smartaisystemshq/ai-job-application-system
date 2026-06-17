@@ -248,6 +248,7 @@ function SharpPage({ lines, photo = null, showPlaceholder = false }) {
         flexShrink: 0,
         alignSelf: 'stretch',
         minHeight: '100%',
+        overflow: 'hidden',
       }}>
         {leftLinesWithDividers.map((line, i) => {
           switch (line.type) {
@@ -266,16 +267,24 @@ function SharpPage({ lines, photo = null, showPlaceholder = false }) {
               const items = line.text.split('|').map(s => s.trim()).filter(Boolean)
               return (
                 <React.Fragment key={i}>
-                  {items.map((item, idx) => (
-                    <div key={idx} style={{
-                      fontSize: 9, color: 'rgba(255,255,255,0.75)',
-                      marginBottom: 4, whiteSpace: 'nowrap',
-                      overflow: 'hidden', textOverflow: 'ellipsis',
-                      lineHeight: 1.4,
-                    }}>
-                      {item}
-                    </div>
-                  ))}
+                  {items.map((item, idx) => {
+                    const isEmail = item.includes('@')
+                    return (
+                      <div key={idx} style={{
+                        fontSize: isEmail ? (item.length > 25 ? 7 : 8.5) : 9,
+                        color: 'rgba(255,255,255,0.75)',
+                        marginBottom: 4,
+                        whiteSpace: isEmail ? 'normal' : 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: isEmail ? 'unset' : 'ellipsis',
+                        lineHeight: 1.4,
+                        wordBreak: isEmail ? 'break-all' : 'normal',
+                        overflowWrap: isEmail ? 'break-word' : 'normal',
+                      }}>
+                        {item}
+                      </div>
+                    )
+                  })}
                 </React.Fragment>
               )
             }

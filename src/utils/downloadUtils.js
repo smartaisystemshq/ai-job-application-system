@@ -273,7 +273,6 @@ function buildModernPDF(text, sp, photo = null) {
 function buildClassicPDF(text, sp, photo = null) {
   const { bodySize, margins, lineHeight, hSpB, hSpA } = sp
   const lines = parseDocumentLines(text)
-  const headerItems = []
   const bodyContent = []
   let headerDone = false
   const nameSize = Math.round(bodySize + 8)
@@ -282,18 +281,12 @@ function buildClassicPDF(text, sp, photo = null) {
   const pw = 515 - (40 - margins[0]) * 2
   const hw = pw / 2
 
+  let nameLine = null
+  const contactLines = []
+
   for (const line of lines) {
-    if (!headerDone && line.type === 'name') {
-      headerItems.push({ text: line.text, fontSize: nameSize, bold: true, color: '#111111', alignment: photo ? 'left' : 'center', margin: [0, 0, 0, 2] })
-      headerItems.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 1.5, lineColor: '#333333' }], margin: [0, 0, 0, 1] })
-      headerItems.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 0.5, lineColor: '#333333' }], margin: [0, 2, 0, 2] })
-      continue
-    }
-    if (!headerDone && line.type === 'contact') {
-      const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
-      headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true, alignment: photo ? 'left' : 'center' })), columnGap: 8, margin: [0, 0, 0, 1] })
-      continue
-    }
+    if (!headerDone && line.type === 'name') { nameLine = line; continue }
+    if (!headerDone && line.type === 'contact') { contactLines.push(line); continue }
     headerDone = true
     switch (line.type) {
       case 'empty':
@@ -324,17 +317,40 @@ function buildClassicPDF(text, sp, photo = null) {
     }
   }
 
+  const allContactItems = contactLines.flatMap(cl => cl.text.split('|').map(i => i.trim()).filter(Boolean))
+  let headerContent = []
+  if (nameLine) {
+    if (photo) {
+      const textColW = pw - 83
+      const textStack = [
+        { text: nameLine.text, fontSize: nameSize, bold: true, color: '#111111', margin: [0, 0, 0, 2] },
+        { canvas: [{ type: 'line', x1: 0, y1: 0, x2: textColW, y2: 0, lineWidth: 1.5, lineColor: '#333333' }], margin: [0, 2, 0, 1] },
+        { canvas: [{ type: 'line', x1: 0, y1: 0, x2: textColW, y2: 0, lineWidth: 0.5, lineColor: '#999999' }], margin: [0, 0, 0, 4] },
+      ]
+      if (allContactItems.length) {
+        textStack.push({ columns: allContactItems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8 })
+      }
+      headerContent = [{ columns: [{ stack: textStack, width: '*' }, { image: photo, fit: [65, 83], alignment: 'right', width: 75, margin: [8, 0, 0, 0] }], margin: [0, 0, 0, 12] }]
+    } else {
+      headerContent.push({ text: nameLine.text, fontSize: nameSize, bold: true, color: '#111111', alignment: 'center', margin: [0, 0, 0, 2] })
+      headerContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 1.5, lineColor: '#333333' }], margin: [0, 0, 0, 1] })
+      headerContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 0.5, lineColor: '#333333' }], margin: [0, 2, 0, 2] })
+      if (allContactItems.length) {
+        headerContent.push({ columns: allContactItems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true, alignment: 'center' })), columnGap: 8, margin: [0, 0, 0, 1] })
+      }
+    }
+  }
+
   return {
     pageSize: 'A4', pageMargins: margins,
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
-    content: [...wrapHeaderWithPhoto(headerItems, photo), ...bodyContent],
+    content: [...headerContent, ...bodyContent],
   }
 }
 
 function buildExecutivePDF(text, sp, photo = null) {
   const { bodySize, margins, lineHeight, hSpB, hSpA } = sp
   const lines = parseDocumentLines(text)
-  const headerItems = []
   const bodyContent = []
   let headerDone = false
   const nameSize = Math.round(bodySize + 8)
@@ -343,17 +359,12 @@ function buildExecutivePDF(text, sp, photo = null) {
   const GREEN = '#1D9E75'
   const pw = 515 - (40 - margins[0]) * 2
 
+  let nameLine = null
+  const contactLines = []
+
   for (const line of lines) {
-    if (!headerDone && line.type === 'name') {
-      headerItems.push({ text: line.text.toUpperCase(), fontSize: nameSize, bold: true, color: '#111111', letterSpacing: 2, margin: [0, 0, 0, 3] })
-      headerItems.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 1.5, lineColor: GREEN }], margin: [0, 0, 0, 4] })
-      continue
-    }
-    if (!headerDone && line.type === 'contact') {
-      const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
-      headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
-      continue
-    }
+    if (!headerDone && line.type === 'name') { nameLine = line; continue }
+    if (!headerDone && line.type === 'contact') { contactLines.push(line); continue }
     headerDone = true
     switch (line.type) {
       case 'empty':
@@ -377,10 +388,32 @@ function buildExecutivePDF(text, sp, photo = null) {
     }
   }
 
+  const allContactItems = contactLines.flatMap(cl => cl.text.split('|').map(i => i.trim()).filter(Boolean))
+  let headerContent = []
+  if (nameLine) {
+    if (photo) {
+      const textColW = pw - 83
+      const textStack = [
+        { text: nameLine.text.toUpperCase(), fontSize: nameSize, bold: true, color: '#111111', characterSpacing: 2, margin: [0, 0, 0, 3] },
+        { canvas: [{ type: 'line', x1: 0, y1: 0, x2: textColW, y2: 0, lineWidth: 1.5, lineColor: GREEN }], margin: [0, 0, 0, 7] },
+      ]
+      if (allContactItems.length) {
+        textStack.push({ columns: allContactItems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#666666', width: 'auto', noWrap: true })), columnGap: 10 })
+      }
+      headerContent = [{ columns: [{ stack: textStack, width: '*' }, { image: photo, fit: [65, 83], alignment: 'right', width: 75, margin: [8, 0, 0, 0] }], margin: [0, 0, 0, 14] }]
+    } else {
+      headerContent.push({ text: nameLine.text.toUpperCase(), fontSize: nameSize, bold: true, color: '#111111', letterSpacing: 2, margin: [0, 0, 0, 3] })
+      headerContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 1.5, lineColor: GREEN }], margin: [0, 0, 0, 4] })
+      if (allContactItems.length) {
+        headerContent.push({ columns: allContactItems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
+      }
+    }
+  }
+
   return {
     pageSize: 'A4', pageMargins: margins,
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
-    content: [...wrapHeaderWithPhoto(headerItems, photo), ...bodyContent],
+    content: [...headerContent, ...bodyContent],
   }
 }
 
@@ -391,17 +424,11 @@ function buildSharpPDF(text, sp, photo = null) {
   const lines = parseDocumentLines(text)
   const GREEN = '#1D9E75'
   const DARK = '#1a1a1a'
-  const nameSize = Math.round(bodySize + 6)
-  const contactSize = bodySize - 1
+  const SIDEBAR_WIDTH = 150
   const headerSize = bodySize + 0.5
+  const sideInnerW = SIDEBAR_WIDTH - 28  // 14pt margin each side
 
-  // Fixed tight margins for two-column layout
-  const pageMargins = [20, 20, 20, 20]
-  const totalW = 555          // 595 - 40
-  const leftW = Math.round(totalW * 0.25)   // 139
-  const rightW = totalW - leftW              // 416
-
-  // Split: sidebar = name, contact, skills, personal strengths; main = everything else
+  // Split lines into sidebar and main
   const sideLines = []
   const mainLines = []
   let inSidebarSection = false
@@ -420,65 +447,72 @@ function buildSharpPDF(text, sp, photo = null) {
     }
   }
 
-  // Left (sidebar) stack
-  const sideInnerW = leftW - 16
-  const sideStack = []
+  // Build sidebar content stack
+  const sidebarContent = []
   let lastSideType = null
-  let sharpPhotoInserted = false
+  let photoInserted = false
+
   for (const line of sideLines) {
-    // Inject photo after last contact line (before first header)
-    if (!sharpPhotoInserted && photo && lastSideType === 'contact' && line.type !== 'contact') {
-      sideStack.push({ image: photo, width: sideInnerW, margin: [0, 6, 0, 12] })
-      sharpPhotoInserted = true
+    if (!photoInserted && photo && lastSideType === 'contact' && line.type !== 'contact') {
+      sidebarContent.push({ text: '', margin: [0, 10, 0, 0] })
+      sidebarContent.push({ image: photo, width: sideInnerW, margin: [14, 0, 14, 8], fit: [sideInnerW, 110] })
+      photoInserted = true
     }
     switch (line.type) {
       case 'name':
-        sideStack.push({ text: line.text, fontSize: nameSize, bold: true, color: '#ffffff', margin: [0, 0, 0, 4] })
-        sideStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: sideInnerW, y2: 0, lineWidth: 2, lineColor: GREEN }], margin: [0, 0, 0, 12] })
+        sidebarContent.push({ text: line.text, fontSize: 13, bold: true, color: '#FFFFFF', margin: [14, 16, 10, 4] })
+        sidebarContent.push({ canvas: [{ type: 'line', x1: 14, y1: 0, x2: SIDEBAR_WIDTH - 14, y2: 0, lineWidth: 1.5, lineColor: GREEN }], margin: [0, 0, 0, 8] })
         lastSideType = 'name'
         break
       case 'contact': {
         const items = line.text.split('|').map(s => s.trim()).filter(Boolean)
         items.forEach(item => {
-          sideStack.push({ text: item, fontSize: contactSize, color: '#bbbbbb', margin: [0, 0, 0, 3], noWrap: true })
+          sidebarContent.push({
+            text: item,
+            fontSize: item.length > 22 ? 6.5 : 7.5,
+            color: '#BBBBBB',
+            margin: [14, 0, 10, 3],
+            noWrap: false,
+            lineHeight: 1.2,
+          })
         })
         lastSideType = 'contact'
         break
       }
       case 'header':
         if (lastSideType && lastSideType !== 'name') {
-          sideStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: sideInnerW, y2: 0, lineWidth: 0.5, lineColor: '#444444' }], margin: [0, 8, 0, 6] })
+          sidebarContent.push({ canvas: [{ type: 'line', x1: 14, y1: 0, x2: SIDEBAR_WIDTH - 14, y2: 0, lineWidth: 0.5, lineColor: '#333333' }], margin: [0, 8, 0, 8] })
         }
-        sideStack.push({ text: line.text.toUpperCase(), fontSize: bodySize - 1.5, bold: false, color: '#888888', characterSpacing: 1, margin: [0, lastSideType === 'name' ? 4 : 0, 0, 6] })
+        sidebarContent.push({ text: line.text.toUpperCase(), fontSize: 7, bold: false, color: '#888888', characterSpacing: 1.5, margin: [14, 0, 10, 4] })
         lastSideType = 'header'
         break
       case 'bullet':
-        sideStack.push({ text: '· ' + line.text, fontSize: bodySize - 1, color: '#bbbbbb', margin: [0, 1, 0, 1] })
+        sidebarContent.push({ text: '· ' + line.text, fontSize: 7.5, color: '#BBBBBB', margin: [14, 0, 10, 2] })
         lastSideType = 'bullet'
         break
       case 'body':
-        sideStack.push({ text: '· ' + line.text, fontSize: bodySize - 1, color: '#bbbbbb', margin: [0, 1, 0, 1] })
+        sidebarContent.push({ text: '· ' + line.text, fontSize: 7.5, color: '#BBBBBB', margin: [14, 0, 10, 2] })
         lastSideType = 'body'
         break
       case 'empty':
-        sideStack.push({ text: ' ', fontSize: bodySize * 0.3, margin: [0, 0, 0, 0] })
+        sidebarContent.push({ text: ' ', fontSize: 3 })
         lastSideType = 'empty'
         break
     }
   }
-  // If photo not yet inserted (no headers in sidebar), add at end of contacts
-  if (!sharpPhotoInserted && photo) {
-    sideStack.push({ image: photo, width: sideInnerW, margin: [0, 6, 0, 12] })
+  if (!photoInserted && photo) {
+    sidebarContent.push({ text: '', margin: [0, 10, 0, 0] })
+    sidebarContent.push({ image: photo, width: sideInnerW, margin: [14, 0, 14, 8], fit: [sideInnerW, 110] })
   }
-  if (sideStack.length === 0) sideStack.push({ text: '' })
+  if (sidebarContent.length === 0) sidebarContent.push({ text: '' })
 
-  // Right (main) stack
-  const mainInnerW = rightW - 18
+  // Build main content stack
+  const mainInnerW = 595 - SIDEBAR_WIDTH - 16 - 16
   const mainStack = []
   for (const line of mainLines) {
     switch (line.type) {
       case 'empty':
-        mainStack.push({ text: ' ', fontSize: bodySize * 0.4, margin: [0, 0, 0, 0] })
+        mainStack.push({ text: ' ', fontSize: bodySize * 0.4 })
         break
       case 'divider':
         mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: mainInnerW, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 2] })
@@ -499,29 +533,27 @@ function buildSharpPDF(text, sp, photo = null) {
 
   return {
     pageSize: 'A4',
-    pageMargins,
+    pageMargins: [SIDEBAR_WIDTH + 16, 16, 16, 16],
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     background: function(_page, pageSize) {
-      return [{
+      return {
         canvas: [{
           type: 'rect',
           x: 0, y: 0,
-          w: pageMargins[0] + leftW,
-          h: pageSize.height,
+          w: SIDEBAR_WIDTH,
+          h: pageSize ? pageSize.height : 842,
           color: DARK,
         }]
+      }
+    },
+    header: {
+      columns: [{
+        stack: sidebarContent,
+        width: SIDEBAR_WIDTH,
+        absolutePosition: { x: 0, y: 0 },
       }]
     },
-    content: [{
-      table: {
-        widths: [leftW, rightW],
-        body: [[
-          { stack: sideStack, fillColor: DARK, margin: [8, 10, 8, 10] },
-          { stack: mainStack, margin: [10, 10, 8, 10] },
-        ]],
-      },
-      layout: 'noBorders',
-    }],
+    content: mainStack,
   }
 }
 
@@ -777,7 +809,7 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
           children.push(new Paragraph({
             children: [new TextRun({ text: nameText, bold: true, size: isDarkBg ? nameHalfPt - 4 : nameHalfPt, font: 'Calibri', color: isDarkBg ? 'ffffff' : '111111' })],
             spacing: { after: template === 'executive' ? 40 : 60 },
-            border: { top: { style: BorderStyle.NONE, size: 0 }, bottom: { style: BorderStyle.NONE, size: 0 }, left: { style: BorderStyle.NONE, size: 0 }, right: { style: BorderStyle.NONE, size: 0 } },
+            border: { top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' } },
           }))
           if (template === 'executive' || template === 'modern') {
             children.push(new Paragraph({
@@ -802,16 +834,26 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
         }
         case 'contact': {
           const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
-          const contactRuns = citems.flatMap((ci, idx) => {
-            const r = [new TextRun({ text: ci, size: ci.length > 30 ? 14 : 16, font: 'Calibri', color: subColor, noProof: true })]
-            if (idx < citems.length - 1) r.push(new TextRun({ text: '  |  ', size: 14, font: 'Calibri', color: subColor }))
-            return r
-          })
-          children.push(new Paragraph({
-            children: contactRuns,
-            spacing: { after: 30 },
-            alignment: template === 'classic' ? 'center' : 'left',
-          })); break
+          if (isDarkBg) {
+            citems.forEach(item => {
+              children.push(new Paragraph({
+                children: [new TextRun({ text: item, size: item.length > 25 ? 13 : 15, color: 'CCCCCC', noProof: true, font: 'Calibri' })],
+                spacing: { after: 40 },
+              }))
+            })
+          } else {
+            const contactRuns = citems.flatMap((ci, idx) => {
+              const r = [new TextRun({ text: ci, size: ci.length > 30 ? 14 : 16, font: 'Calibri', color: subColor, noProof: true })]
+              if (idx < citems.length - 1) r.push(new TextRun({ text: '  |  ', size: 14, font: 'Calibri', color: subColor }))
+              return r
+            })
+            children.push(new Paragraph({
+              children: contactRuns,
+              spacing: { after: 30 },
+              alignment: template === 'classic' ? 'center' : 'left',
+            }))
+          }
+          break
         }
         case 'divider':
           children.push(new Paragraph({
@@ -887,16 +929,19 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
 
     // Inject photo into left column after name/contact paragraphs
     if (photoBytes) {
-      const nameCount = leftLines.filter(l => l.type === 'name').length
-      const contactCount = leftLines.filter(l => l.type === 'contact').length
-      // name generates 2 paragraphs (text + underline), each contact generates 1
-      const insertIdx = nameCount * 2 + contactCount
+      // name generates 2 paragraphs (text + green underline), contact isDarkBg generates 1 para per item
+      let insertIdx = 0
+      for (const l of leftLines) {
+        if (l.type === 'name') { insertIdx += 2 }
+        else if (l.type === 'contact') { insertIdx += l.text.split('|').map(i => i.trim()).filter(Boolean).length }
+        else break
+      }
       const photoImageRun = new ImageRun({ data: photoBytes, transformation: { width: 68, height: 87 }, type: photoType })
       const photoPara = new Paragraph({ children: [photoImageRun], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })
       leftChildren.splice(insertIdx, 0, photoPara)
     }
 
-    const noBorder = { style: BorderStyle.NONE, size: 0 }
+    const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
     const table = new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       rows: [
@@ -942,13 +987,13 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
             new TableCell({
               width: { size: 80, type: WidthType.PERCENTAGE },
               children: headerParas.length ? headerParas : [new Paragraph({ children: [] })],
-              borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+              borders: { top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' } },
               margins: { top: 0, bottom: 0, left: 0, right: 200 },
             }),
             new TableCell({
               width: { size: 20, type: WidthType.PERCENTAGE },
               children: [photoPara],
-              borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+              borders: { top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' } },
               margins: { top: 0, bottom: 0, left: 0, right: 0 },
             }),
           ],
