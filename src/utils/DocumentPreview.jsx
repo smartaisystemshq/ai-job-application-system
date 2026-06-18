@@ -207,45 +207,29 @@ function StandardPage({ lines, template, photo = null, showPlaceholder = false }
 const SHARP_SIDEBAR_HEADERS_RE = /^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES|PERSONAL STRENGTHS|STRENGTHS|PERSÖNLICHE STÄRKEN|STÄRKEN|SOFT SKILLS|KEY STRENGTHS)$/
 
 function SharpPage({ lines, photo = null, showPlaceholder = false }) {
-  const leftLines = []
+  const name = lines.find(l => l.type === 'name')?.text || ''
+
+  const contactItems = []
+  const skills = []
   const rightLines = []
-  let inSidebarSection = false
+  let inSkillsSection = false
 
   for (const line of lines) {
-    if (line.type === 'name' || line.type === 'contact') {
-      leftLines.push(line)
-    } else if (line.type === 'header' && SHARP_SIDEBAR_HEADERS_RE.test(line.text)) {
-      inSidebarSection = true
-      leftLines.push(line)
-    } else if (inSidebarSection && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
-      leftLines.push(line)
-    } else {
-      inSidebarSection = false
-      rightLines.push(line)
+    if (line.type === 'name') continue
+    if (line.type === 'contact') {
+      line.text.split('|').map(s => s.trim()).filter(Boolean).forEach(item => contactItems.push(item))
+      continue
     }
-  }
-
-  // Pre-process leftLines: insert thin dividers before each header (except after name)
-  // Also inject photo marker after last contact line
-  const leftLinesWithDividers = []
-  let lastLeftType = null
-  let photoInjected = false
-  for (let li = 0; li < leftLines.length; li++) {
-    const line = leftLines[li]
-    // Inject photo after the last contact line (before first non-name/contact)
-    if (!photoInjected && (photo || showPlaceholder) && lastLeftType === 'contact' && line.type !== 'contact') {
-      leftLinesWithDividers.push({ type: 'sidebar-photo' })
-      photoInjected = true
+    if (line.type === 'header' && SHARP_SIDEBAR_HEADERS_RE.test(line.text)) {
+      inSkillsSection = true
+      continue
     }
-    if (line.type === 'header' && lastLeftType && lastLeftType !== 'name') {
-      leftLinesWithDividers.push({ type: 'sidebar-divider' })
+    if (inSkillsSection) {
+      if (line.type === 'body' || line.type === 'bullet') { skills.push(line.text); continue }
+      if (line.type === 'empty') continue
+      inSkillsSection = false
     }
-    leftLinesWithDividers.push(line)
-    lastLeftType = line.type
-  }
-  // If photo not yet injected (no headers after contacts), add at end of contacts
-  if (!photoInjected && (photo || showPlaceholder)) {
-    leftLinesWithDividers.push({ type: 'sidebar-photo' })
+    rightLines.push(line)
   }
 
   return (
@@ -257,126 +241,103 @@ function SharpPage({ lines, photo = null, showPlaceholder = false }) {
       boxShadow: '0 20px 70px rgba(0,0,0,0.65)',
       borderRadius: 2,
       overflow: 'hidden',
+      minHeight: 850,
     }}>
-      {/* Dark sidebar — 25% */}
+      {/* LEFT SIDEBAR — fixed 200px */}
       <div style={{
+        width: '200px',
+        minWidth: '200px',
+        maxWidth: '200px',
         background: SIDEBAR_DARK,
-        width: '25%',
-        padding: '16px',
-        fontFamily: "'Inter', sans-serif",
-        flexShrink: 0,
-        alignSelf: 'stretch',
-        minHeight: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         overflow: 'hidden',
+        alignSelf: 'stretch',
       }}>
-        {leftLinesWithDividers.map((line, i) => {
-          switch (line.type) {
-            case 'sidebar-divider':
-              return <div key={i} style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '8px 0 6px' }} />
-            case 'name':
-              return (
-                <div key={i}>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', marginBottom: 4, lineHeight: 1.2 }}>
-                    {line.text}
-                  </div>
-                  <div style={{ height: 2, background: GREEN, width: '100%', marginBottom: 12 }} />
-                </div>
-              )
-            case 'contact': {
-              const items = line.text.split('|').map(s => s.trim()).filter(Boolean)
-              return (
-                <React.Fragment key={i}>
-                  {items.map((item, idx) => {
-                    const isEmail = item.includes('@')
-                    return (
-                      <div key={idx} style={{
-                        fontSize: isEmail ? (item.length > 25 ? 7 : 8.5) : 9,
-                        color: 'rgba(255,255,255,0.75)',
-                        marginBottom: 4,
-                        whiteSpace: isEmail ? 'normal' : 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: isEmail ? 'unset' : 'ellipsis',
-                        lineHeight: 1.4,
-                        wordBreak: isEmail ? 'break-all' : 'normal',
-                        overflowWrap: isEmail ? 'break-word' : 'normal',
-                      }}>
-                        {item}
-                      </div>
-                    )
-                  })}
-                </React.Fragment>
-              )
-            }
-            case 'sidebar-photo':
-              return photo ? (
-                <div key={i} style={{
-                  width: 'calc(100% - 16px)',
-                  height: '110px',
-                  margin: '0 8px 8px',
-                  borderRadius: '6px',
-                  overflow: 'hidden',
-                }}>
-                  <img src={photo} style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    objectPosition: 'center 15%',
-                    display: 'block',
-                  }} />
-                </div>
-              ) : showPlaceholder ? (
-                <div key={i} style={{
-                  width: '100%', height: 80, background: '#333',
-                  display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', justifyContent: 'center',
-                  margin: '0 0 12px', borderRadius: 6,
-                }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="1.5">
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                  </svg>
-                </div>
-              ) : null
-            case 'header':
-              return (
-                <div key={i} style={{ marginTop: 4, marginBottom: 6 }}>
-                  <div style={{
-                    fontSize: 8, fontWeight: 400,
-                    color: 'rgba(255,255,255,0.4)',
-                    marginBottom: 6, letterSpacing: 1.5,
-                    textTransform: 'uppercase',
-                  }}>
-                    {line.text}
-                  </div>
-                </div>
-              )
-            case 'bullet':
-              return (
-                <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 2 }}>
-                  <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 9, flexShrink: 0 }}>·</span>
-                  <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.75)', lineHeight: 1.4 }}>{line.text}</span>
-                </div>
-              )
-            case 'body':
-              return (
-                <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 2 }}>
-                  <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 9, flexShrink: 0 }}>·</span>
-                  <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.75)', lineHeight: 1.4 }}>{line.text}</span>
-                </div>
-              )
-            case 'empty':
-              return <div key={i} style={{ height: 4 }} />
-            default:
-              return null
-          }
-        })}
+        {/* Photo at top */}
+        {photo ? (
+          <div style={{
+            width: 'calc(100% - 28px)',
+            margin: '20px 14px 14px',
+            borderRadius: '6px',
+            overflow: 'hidden',
+            flexShrink: 0,
+          }}>
+            <img src={photo} style={{
+              width: '100%',
+              height: '150px',
+              objectFit: 'cover',
+              objectPosition: 'center 15%',
+              display: 'block',
+              borderRadius: '6px',
+            }} />
+          </div>
+        ) : showPlaceholder ? (
+          <div style={{
+            width: 'calc(100% - 28px)',
+            height: '130px',
+            margin: '20px 14px 14px',
+            borderRadius: '6px',
+            background: '#333',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="1.5">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+            </svg>
+            <span style={{ fontSize: 8, color: '#888', marginTop: 4 }}>Photo</span>
+          </div>
+        ) : null}
+        {/* Name */}
+        <div style={{
+          fontSize: '14px',
+          fontWeight: 700,
+          color: 'white',
+          textAlign: 'center',
+          padding: '0 14px',
+          marginBottom: '4px',
+          lineHeight: 1.3,
+        }}>{name}</div>
+        {/* Green accent line */}
+        <div style={{
+          height: '1.5px',
+          background: GREEN,
+          margin: '4px 14px 10px',
+        }} />
+        {/* Contact items — each on own line, wraps within sidebar */}
+        {contactItems.map((item, i) => (
+          <div key={i} style={{
+            fontSize: '7.5px',
+            color: '#BBBBBB',
+            padding: '0 14px',
+            marginBottom: '3px',
+            lineHeight: 1.4,
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
+          }}>{item}</div>
+        ))}
+        {/* Skills section */}
+        {skills.length > 0 && (
+          <>
+            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.1)', margin: '10px 14px' }} />
+            <div style={{ fontSize: '7px', letterSpacing: '1.5px', color: '#888888', textTransform: 'uppercase', padding: '0 14px', marginBottom: '6px' }}>Skills</div>
+            {skills.map((skill, i) => (
+              <div key={i} style={{ fontSize: '8px', color: '#BBBBBB', padding: '0 14px', marginBottom: '3px', wordBreak: 'break-word', lineHeight: 1.4 }}>· {skill}</div>
+            ))}
+          </>
+        )}
       </div>
 
-      {/* White main content — 75% */}
+      {/* RIGHT CONTENT — flex:1 with minWidth:0 prevents overflow */}
       <div style={{
-        background: '#fff',
         flex: 1,
-        padding: '20px 20px 20px 16px',
+        padding: '20px 18px',
+        overflow: 'hidden',
+        minWidth: 0,
+        background: '#fff',
         fontFamily: "'Inter', sans-serif",
         fontSize: 9.5,
         color: '#333',
@@ -387,11 +348,7 @@ function SharpPage({ lines, photo = null, showPlaceholder = false }) {
             case 'header':
               return (
                 <div key={i} style={{ marginTop: 14, marginBottom: 8 }}>
-                  <div style={{
-                    fontSize: 10, fontWeight: 700, color: '#1a1a1a',
-                    textTransform: 'uppercase', letterSpacing: 1,
-                    paddingBottom: 3,
-                  }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#1a1a1a', textTransform: 'uppercase', letterSpacing: 1, paddingBottom: 3 }}>
                     {line.text}
                   </div>
                   <div style={{ height: 1, background: GREEN }} />

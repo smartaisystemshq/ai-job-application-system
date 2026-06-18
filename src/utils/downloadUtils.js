@@ -428,90 +428,64 @@ function buildSharpPDF(text, sp, photo = null) {
   const lines = parseDocumentLines(text)
   const GREEN = '#1D9E75'
   const DARK = '#1a1a1a'
-  const SIDEBAR_WIDTH = 150
+  const SIDEBAR_W = 150
+  const PAGE_W = 595.28
+  const MAIN_INNER_W = PAGE_W - SIDEBAR_W - 28  // 14pt left + 14pt right margin on main col
   const headerSize = bodySize + 0.5
-  const sideInnerW = SIDEBAR_WIDTH - 28  // 14pt margin each side
+  const sideInnerW = SIDEBAR_W - 28  // 14pt margin each side in sidebar
 
-  // Split lines into sidebar and main
-  const sideLines = []
+  // Extract structured data from lines
+  const name = lines.find(l => l.type === 'name')?.text || ''
+  const contactItems = []
+  const skills = []
   const mainLines = []
-  let inSidebarSection = false
+  let inSkillsSection = false
 
   for (const line of lines) {
-    if (line.type === 'name' || line.type === 'contact') {
-      sideLines.push(line)
-    } else if (line.type === 'header' && SHARP_SIDEBAR_HEADERS_RE.test(line.text)) {
-      inSidebarSection = true
-      sideLines.push(line)
-    } else if (inSidebarSection && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
-      sideLines.push(line)
-    } else {
-      inSidebarSection = false
-      mainLines.push(line)
+    if (line.type === 'name') continue
+    if (line.type === 'contact') {
+      line.text.split('|').map(s => s.trim()).filter(Boolean).forEach(item => contactItems.push(item))
+      continue
     }
+    if (line.type === 'header' && SHARP_SIDEBAR_HEADERS_RE.test(line.text)) {
+      inSkillsSection = true
+      continue
+    }
+    if (inSkillsSection) {
+      if (line.type === 'body' || line.type === 'bullet') { skills.push(line.text); continue }
+      if (line.type === 'empty') continue
+      inSkillsSection = false
+    }
+    mainLines.push(line)
   }
 
-  // Build sidebar content stack
-  const sidebarContent = []
-  let lastSideType = null
-  let photoInserted = false
+  // Build sidebar stack — photo first, then name, green line, contacts, skills
+  const sidebarStack = []
 
-  for (const line of sideLines) {
-    if (!photoInserted && photo && lastSideType === 'contact' && line.type !== 'contact') {
-      sidebarContent.push({ text: '', margin: [0, 10, 0, 0] })
-      sidebarContent.push({ image: photo, width: sideInnerW, margin: [14, 0, 14, 8], fit: [sideInnerW, 110] })
-      photoInserted = true
-    }
-    switch (line.type) {
-      case 'name':
-        sidebarContent.push({ text: line.text, fontSize: 13, bold: true, color: '#FFFFFF', margin: [14, 16, 10, 4] })
-        sidebarContent.push({ canvas: [{ type: 'line', x1: 14, y1: 0, x2: SIDEBAR_WIDTH - 14, y2: 0, lineWidth: 1.5, lineColor: GREEN }], margin: [0, 0, 0, 8] })
-        lastSideType = 'name'
-        break
-      case 'contact': {
-        const items = line.text.split('|').map(s => s.trim()).filter(Boolean)
-        items.forEach(item => {
-          sidebarContent.push({
-            text: item,
-            fontSize: item.length > 22 ? 6.5 : 7.5,
-            color: '#BBBBBB',
-            margin: [14, 0, 10, 3],
-            noWrap: false,
-            lineHeight: 1.2,
-          })
-        })
-        lastSideType = 'contact'
-        break
-      }
-      case 'header':
-        if (lastSideType && lastSideType !== 'name') {
-          sidebarContent.push({ canvas: [{ type: 'line', x1: 14, y1: 0, x2: SIDEBAR_WIDTH - 14, y2: 0, lineWidth: 0.5, lineColor: '#333333' }], margin: [0, 8, 0, 8] })
-        }
-        sidebarContent.push({ text: line.text.toUpperCase(), fontSize: 7, bold: false, color: '#888888', characterSpacing: 1.5, margin: [14, 0, 10, 4] })
-        lastSideType = 'header'
-        break
-      case 'bullet':
-        sidebarContent.push({ text: '· ' + line.text, fontSize: 7.5, color: '#BBBBBB', margin: [14, 0, 10, 2] })
-        lastSideType = 'bullet'
-        break
-      case 'body':
-        sidebarContent.push({ text: '· ' + line.text, fontSize: 7.5, color: '#BBBBBB', margin: [14, 0, 10, 2] })
-        lastSideType = 'body'
-        break
-      case 'empty':
-        sidebarContent.push({ text: ' ', fontSize: 3 })
-        lastSideType = 'empty'
-        break
-    }
+  if (photo) {
+    sidebarStack.push({ image: photo, fit: [sideInnerW, 120], margin: [14, 16, 14, 10] })
+  } else {
+    sidebarStack.push({ text: '', margin: [0, 16, 0, 0] })
   }
-  if (!photoInserted && photo) {
-    sidebarContent.push({ text: '', margin: [0, 10, 0, 0] })
-    sidebarContent.push({ image: photo, width: sideInnerW, margin: [14, 0, 14, 8], fit: [sideInnerW, 110] })
+
+  sidebarStack.push({ text: name, fontSize: 12, bold: true, color: '#FFFFFF', alignment: 'center', margin: [14, 0, 14, 4], lineHeight: 1.3 })
+  sidebarStack.push({ canvas: [{ type: 'line', x1: 14, y1: 0, x2: SIDEBAR_W - 14, y2: 0, lineWidth: 1.5, lineColor: GREEN }], margin: [0, 4, 0, 8] })
+
+  contactItems.forEach(item => {
+    sidebarStack.push({ text: item, fontSize: item.length > 25 ? 6.5 : 7.5, color: '#BBBBBB', margin: [14, 0, 14, 3], lineHeight: 1.3 })
+  })
+
+  if (skills.length > 0) {
+    sidebarStack.push({ canvas: [{ type: 'line', x1: 14, y1: 0, x2: SIDEBAR_W - 14, y2: 0, lineWidth: 0.5, lineColor: '#333333' }], margin: [0, 8, 0, 8] })
+    sidebarStack.push({ text: 'SKILLS', fontSize: 6.5, bold: true, color: '#888888', characterSpacing: 1.5, margin: [14, 0, 14, 4] })
+    skills.forEach(skill => {
+      sidebarStack.push({ text: '· ' + skill, fontSize: 7.5, color: '#BBBBBB', margin: [14, 0, 14, 2], lineHeight: 1.3 })
+    })
   }
-  if (sidebarContent.length === 0) sidebarContent.push({ text: '' })
+
+  if (sidebarStack.length === 0) sidebarStack.push({ text: '' })
 
   // Build main content stack
-  const mainInnerW = 595 - SIDEBAR_WIDTH - 16 - 16
   const mainStack = []
   for (const line of mainLines) {
     switch (line.type) {
@@ -519,11 +493,11 @@ function buildSharpPDF(text, sp, photo = null) {
         mainStack.push({ text: ' ', fontSize: bodySize * 0.4 })
         break
       case 'divider':
-        mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: mainInnerW, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 2] })
+        mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: MAIN_INNER_W, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 2] })
         break
       case 'header':
         mainStack.push({ text: line.text.toUpperCase(), fontSize: headerSize, bold: true, color: '#1a1a1a', characterSpacing: 0.5, margin: [0, hSpB || 6, 0, 1] })
-        mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: mainInnerW, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, hSpA || 2] })
+        mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: MAIN_INNER_W, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, hSpA || 2] })
         break
       case 'bullet':
         mainStack.push({ columns: [{ text: '•', width: 10, fontSize: bodySize - 0.5, color: GREEN }, { text: line.text, fontSize: bodySize, color: '#333333', width: '*' }], margin: [4, 1, 0, 1] })
@@ -537,15 +511,15 @@ function buildSharpPDF(text, sp, photo = null) {
 
   const docDef = {
     pageSize: 'A4',
-    pageMargins: [SIDEBAR_WIDTH + 16, 16, 16, 16],
+    pageMargins: [0, 0, 0, 0],
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
-    background: function(_page, pageSize) {
+    background: function() {
       return {
         canvas: [{
           type: 'rect',
           x: 0, y: 0,
-          w: SIDEBAR_WIDTH,
-          h: pageSize ? pageSize.height : 842,
+          w: SIDEBAR_W,
+          h: 841.89,
           color: DARK,
         }]
       }
@@ -554,16 +528,17 @@ function buildSharpPDF(text, sp, photo = null) {
       {
         columns: [
           {
-            stack: sidebarContent,
-            width: SIDEBAR_WIDTH,
-            absolutePosition: { x: 0, y: 0 },
+            width: SIDEBAR_W,
+            stack: sidebarStack,
           },
           {
-            stack: mainStack.length > 0 ? mainStack : [{ text: '' }],
             width: '*',
-          }
-        ]
-      }
+            stack: mainStack,
+            margin: [14, 16, 14, 16],
+          },
+        ],
+        columnGap: 0,
+      },
     ],
   }
   return autoFitToOnePage(docDef, text)
