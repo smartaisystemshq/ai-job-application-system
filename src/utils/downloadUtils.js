@@ -212,11 +212,12 @@ function buildMinimalPDF(text, sp, photo = null) {
     }
   }
 
-  return {
+  const docDef = {
     pageSize: 'A4', pageMargins: margins,
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content: [...wrapHeaderWithPhoto(headerItems, photo), ...bodyContent],
   }
+  return autoFitToOnePage(docDef, text)
 }
 
 function buildModernPDF(text, sp, photo = null) {
@@ -263,11 +264,12 @@ function buildModernPDF(text, sp, photo = null) {
     }
   }
 
-  return {
+  const docDef = {
     pageSize: 'A4', pageMargins: margins,
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content: [topBar, ...wrapHeaderWithPhoto(headerItems, photo), ...bodyContent],
   }
+  return autoFitToOnePage(docDef, text)
 }
 
 function buildClassicPDF(text, sp, photo = null) {
@@ -341,11 +343,12 @@ function buildClassicPDF(text, sp, photo = null) {
     }
   }
 
-  return {
+  const docDef = {
     pageSize: 'A4', pageMargins: margins,
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content: [...headerContent, ...bodyContent],
   }
+  return autoFitToOnePage(docDef, text)
 }
 
 function buildExecutivePDF(text, sp, photo = null) {
@@ -410,11 +413,12 @@ function buildExecutivePDF(text, sp, photo = null) {
     }
   }
 
-  return {
+  const docDef = {
     pageSize: 'A4', pageMargins: margins,
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content: [...headerContent, ...bodyContent],
   }
+  return autoFitToOnePage(docDef, text)
 }
 
 const SHARP_SIDEBAR_HEADERS_RE = /^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES|PERSONAL STRENGTHS|STRENGTHS|PERSÖNLICHE STÄRKEN|STÄRKEN|SOFT SKILLS|KEY STRENGTHS)$/
@@ -531,7 +535,7 @@ function buildSharpPDF(text, sp, photo = null) {
   }
   if (mainStack.length === 0) mainStack.push({ text: '' })
 
-  return {
+  const docDef = {
     pageSize: 'A4',
     pageMargins: [SIDEBAR_WIDTH + 16, 16, 16, 16],
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
@@ -546,15 +550,68 @@ function buildSharpPDF(text, sp, photo = null) {
         }]
       }
     },
-    header: {
-      columns: [{
-        stack: sidebarContent,
-        width: SIDEBAR_WIDTH,
-        absolutePosition: { x: 0, y: 0 },
-      }]
-    },
-    content: mainStack,
+    content: [
+      {
+        columns: [
+          {
+            stack: sidebarContent,
+            width: SIDEBAR_WIDTH,
+            absolutePosition: { x: 0, y: 0 },
+          },
+          {
+            stack: mainStack.length > 0 ? mainStack : [{ text: '' }],
+            width: '*',
+          }
+        ]
+      }
+    ],
   }
+  return autoFitToOnePage(docDef, text)
+}
+
+// ── Auto-fit to one A4 page ──────────────────────────────────────────────────
+
+function estimatedPageCount(text, fontSize) {
+  const totalChars = text.length
+  const charsPerPage = fontSize > 9.5 ? 3000 : fontSize > 8.5 ? 3600 : 4200
+  return Math.ceil(totalChars / charsPerPage)
+}
+
+function applyFontScale(docDef, baseFontSize) {
+  const savedBackground = typeof docDef.background === 'function' ? docDef.background : undefined
+  const toClone = { ...docDef }
+  if (savedBackground) delete toClone.background
+  const clone = JSON.parse(JSON.stringify(toClone))
+  if (savedBackground) clone.background = savedBackground
+
+  function scaleNode(node) {
+    if (!node || typeof node !== 'object') return
+    if (node.fontSize && node.fontSize >= 8.5 && node.fontSize <= 11) {
+      node.fontSize = baseFontSize
+    }
+    if (node.lineHeight) node.lineHeight = 1.3
+    if (Array.isArray(node.margin)) {
+      node.margin = node.margin.map((m, i) =>
+        (i === 1 || i === 3) ? Math.max(1, Math.floor(m * 0.8)) : m
+      )
+    }
+    Object.values(node).forEach(v => {
+      if (Array.isArray(v)) v.forEach(scaleNode)
+      else if (v && typeof v === 'object') scaleNode(v)
+    })
+  }
+  scaleNode(clone)
+  return clone
+}
+
+function autoFitToOnePage(docDefinition, text) {
+  const FONT_STEPS = [10.5, 10, 9.5, 9, 8.5, 8, 7.5]
+  for (const fontSize of FONT_STEPS) {
+    if (estimatedPageCount(text, fontSize) <= 1) {
+      return applyFontScale(docDefinition, fontSize)
+    }
+  }
+  return applyFontScale(docDefinition, 7.5)
 }
 
 function buildPDFDocDef(text, sp, template, photo = null) {

@@ -164,7 +164,26 @@ function StandardPage({ lines, template, photo = null, showPlaceholder = false }
             {headerLines.map((line, i) => renderLine(line, i))}
           </div>
           {photo ? (
-            <img src={photo} alt="CV Photo" style={{ width: 90, height: 115, objectFit: 'cover', objectPosition: 'center top', imageRendering: 'high-quality', flexShrink: 0, borderRadius: 1 }} />
+            <div style={{
+              width: '90px',
+              height: '115px',
+              flexShrink: 0,
+              borderRadius: '6px',
+              overflow: 'hidden',
+              border: '1px solid rgba(0,0,0,0.1)',
+            }}>
+              <img
+                src={photo}
+                alt="CV photo"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center 10%',
+                  display: 'block',
+                }}
+              />
+            </div>
           ) : (
             <div style={{ width: 90, height: 115, flexShrink: 0, background: '#e8e8e8', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px solid #ddd', borderRadius: 1 }}>
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="1.5">
@@ -290,12 +309,21 @@ function SharpPage({ lines, photo = null, showPlaceholder = false }) {
             }
             case 'sidebar-photo':
               return photo ? (
-                <img key={i} src={photo} alt="CV Photo" style={{
-                  width: '100%', maxHeight: 110,
-                  objectFit: 'cover', objectPosition: 'center top',
-                  display: 'block', margin: '0 0 12px',
-                  borderRadius: 6,
-                }} />
+                <div key={i} style={{
+                  width: 'calc(100% - 16px)',
+                  height: '110px',
+                  margin: '0 8px 8px',
+                  borderRadius: '6px',
+                  overflow: 'hidden',
+                }}>
+                  <img src={photo} style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center 15%',
+                    display: 'block',
+                  }} />
+                </div>
               ) : showPlaceholder ? (
                 <div key={i} style={{
                   width: '100%', height: 80, background: '#333',
