@@ -6,6 +6,8 @@ import { t } from '../translations';
 export default function Paywall({ onUnlock, onClose }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
+  const [attemptsRemaining, setAttemptsRemaining] = useState(null);
+  const [isBlocked, setIsBlocked] = useState(false);
   const { lang } = useLang();
 
   const FEATURES = [
@@ -21,12 +23,20 @@ export default function Paywall({ onUnlock, onClose }) {
   const handleUnlock = async () => {
     if (!code.trim()) return;
     setError('');
-    const valid = await unlockApp(code.trim().toUpperCase());
-    if (valid) {
+    const result = await unlockApp(code.trim().toUpperCase());
+    if (result.valid) {
       onUnlock?.();
       onClose?.();
+    } else if (result.blocked) {
+      setIsBlocked(true);
     } else {
-      setError(t[lang].paywall_invalid);
+      const n = result.attemptsRemaining;
+      setAttemptsRemaining(n ?? null);
+      setError(
+        n != null
+          ? t[lang].paywall_attempts_left.replace('{n}', n)
+          : t[lang].paywall_invalid
+      );
     }
   };
 
@@ -162,50 +172,56 @@ export default function Paywall({ onUnlock, onClose }) {
 
           {/* Code section */}
           <div>
-            <p style={{ fontSize: 12, color: 'rgba(226,237,232,0.45)', marginBottom: 8, marginTop: 0 }}>{t[lang].paywall_code_label}</p>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                placeholder={t[lang].paywall_code_placeholder}
-                value={code}
-                onChange={e => setCode(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleUnlock(); }}
-                style={{
-                  flex: 1,
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 8,
-                  padding: '10px 14px',
-                  fontSize: 13,
-                  color: '#e2ede8',
-                  outline: 'none',
-                  transition: 'border-color 0.15s',
-                }}
-                onFocus={e => { e.target.style.borderColor = '#1D9E75'; }}
-                onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; }}
-              />
-              <button
-                onClick={handleUnlock}
-                disabled={!code.trim()}
-                style={{
-                  padding: '10px 18px',
-                  background: 'rgba(29,158,117,0.15)',
-                  border: '1px solid rgba(29,158,117,0.3)',
-                  borderRadius: 8,
-                  color: '#1D9E75',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: !code.trim() ? 'default' : 'pointer',
-                  opacity: !code.trim() ? 0.5 : 1,
-                  transition: 'background 0.15s',
-                  flexShrink: 0,
-                }}
-                onMouseEnter={e => { if (code.trim()) e.currentTarget.style.background = 'rgba(29,158,117,0.25)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(29,158,117,0.15)'; }}
-              >
-                {t[lang].paywall_code_btn}
-              </button>
-            </div>
-            {error && <p style={{ fontSize: 13, color: '#f87171', marginTop: 8 }}>{error}</p>}
+            {isBlocked ? (
+              <p style={{ fontSize: 13, color: '#f87171', marginTop: 0 }}>{t[lang].paywall_blocked}</p>
+            ) : (
+              <>
+                <p style={{ fontSize: 12, color: 'rgba(226,237,232,0.45)', marginBottom: 8, marginTop: 0 }}>{t[lang].paywall_code_label}</p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    placeholder={t[lang].paywall_code_placeholder}
+                    value={code}
+                    onChange={e => setCode(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleUnlock(); }}
+                    style={{
+                      flex: 1,
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 8,
+                      padding: '10px 14px',
+                      fontSize: 13,
+                      color: '#e2ede8',
+                      outline: 'none',
+                      transition: 'border-color 0.15s',
+                    }}
+                    onFocus={e => { e.target.style.borderColor = '#1D9E75'; }}
+                    onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                  />
+                  <button
+                    onClick={handleUnlock}
+                    disabled={!code.trim()}
+                    style={{
+                      padding: '10px 18px',
+                      background: 'rgba(29,158,117,0.15)',
+                      border: '1px solid rgba(29,158,117,0.3)',
+                      borderRadius: 8,
+                      color: '#1D9E75',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: !code.trim() ? 'default' : 'pointer',
+                      opacity: !code.trim() ? 0.5 : 1,
+                      transition: 'background 0.15s',
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={e => { if (code.trim()) e.currentTarget.style.background = 'rgba(29,158,117,0.25)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(29,158,117,0.15)'; }}
+                  >
+                    {t[lang].paywall_code_btn}
+                  </button>
+                </div>
+                {error && <p style={{ fontSize: 13, color: '#f87171', marginTop: 8 }}>{error}</p>}
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -145,6 +145,8 @@ export const t = {
     paywall_code_btn: 'Unlock',
     paywall_code_label: 'Already have a code? Enter it here',
     paywall_invalid: 'Invalid code. Please try again.',
+    paywall_blocked: 'Too many failed attempts. Your access has been blocked for 24 hours.',
+    paywall_attempts_left: '{n} attempt(s) remaining.',
     paywall_bullet1: 'Unlimited CV Optimizations — tailored to every job',
     paywall_bullet2: 'AI Cover Letter in under 2 minutes',
     paywall_bullet3: 'Interview Question Generator — role-specific',
@@ -430,6 +432,7 @@ export const t = {
 <p><strong>c) Access code</strong><br>Your access code is stored exclusively in your local browser to maintain your access permanently. It is not stored on our servers.</p>
 <p><strong>d) Payment data</strong><br>Payments are processed exclusively via Gumroad. We have no access to your payment data. Gumroad's privacy policy applies: <a href="https://gumroad.com/privacy" target="_blank" rel="noopener noreferrer">https://gumroad.com/privacy</a></p>
 <p><strong>e) Email contact</strong><br>If you contact us by email, your details are stored for the purpose of handling your enquiry. We do not share this data with third parties.</p>
+<p><strong>f) Security logging</strong><br>To protect against unauthorized access, failed code entry attempts are temporarily recorded in server memory (IP address and timestamp). This data is not stored permanently and is automatically deleted when the server restarts or after 24 hours at the latest.</p>
 <h3>4. Third-party provider — Anthropic (Claude API)</h3>
 <p>For AI processing of your documents, we use the API of Anthropic, Inc. (USA). The transmitted data is processed by Anthropic in accordance with their privacy policy: <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer">https://www.anthropic.com/privacy</a></p>
 <h3>5. No cookies</h3>
@@ -617,6 +620,8 @@ export const t = {
     paywall_code_btn: 'Freischalten',
     paywall_code_label: 'Hast du bereits einen Code? Hier eingeben',
     paywall_invalid: 'Ungültiger Code. Bitte erneut versuchen.',
+    paywall_blocked: 'Zu viele fehlgeschlagene Versuche. Dein Zugang wurde für 24 Stunden gesperrt.',
+    paywall_attempts_left: 'Noch {n} Versuch(e).',
     paywall_bullet1: 'Unbegrenzte CV-Optimierungen — für jede Stelle angepasst',
     paywall_bullet2: 'KI-Anschreiben in unter 2 Minuten',
     paywall_bullet3: 'Interviewfragen-Generator — stellenspezifisch',
@@ -902,6 +907,7 @@ export const t = {
 <p><strong>c) Zugangscode</strong><br>Ihr Zugangscode wird ausschließlich lokal in Ihrem Browser gespeichert, um Ihren Zugang dauerhaft zu erhalten. Er wird nicht auf unseren Servern gespeichert.</p>
 <p><strong>d) Zahlungsdaten</strong><br>Zahlungen werden ausschließlich über Gumroad abgewickelt. Wir haben keinen Zugriff auf Ihre Zahlungsdaten. Es gelten die Datenschutzbestimmungen von Gumroad: <a href="https://gumroad.com/privacy" target="_blank" rel="noopener noreferrer">https://gumroad.com/privacy</a></p>
 <p><strong>e) E-Mail-Kontakt</strong><br>Wenn Sie uns per E-Mail kontaktieren, werden Ihre Angaben zur Bearbeitung der Anfrage gespeichert. Wir geben diese Daten nicht an Dritte weiter.</p>
+<p><strong>f) Sicherheitsprotokollierung</strong><br>Zum Schutz vor unbefugtem Zugriff werden fehlgeschlagene Code-Eingabeversuche temporär im Arbeitsspeicher des Servers erfasst (IP-Adresse und Zeitstempel). Diese Daten werden nicht dauerhaft gespeichert und werden automatisch gelöscht, wenn der Server neu gestartet wird oder spätestens nach 24 Stunden.</p>
 <h3>4. Drittanbieter — Anthropic (Claude API)</h3>
 <p>Zur KI-Verarbeitung Ihrer Dokumente verwenden wir die API von Anthropic, Inc. (USA). Die übermittelten Daten werden von Anthropic gemäß deren Datenschutzrichtlinien verarbeitet: <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer">https://www.anthropic.com/privacy</a></p>
 <h3>5. Keine Cookies</h3>
