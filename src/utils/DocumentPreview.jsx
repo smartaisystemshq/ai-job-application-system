@@ -225,19 +225,19 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
       {/* GREEN HEADER */}
       <div style={{
         background: G,
-        padding: '14px 20px 12px',
+        padding: '20px 24px 18px',
         color: 'white',
         flexShrink: 0,
       }}>
         <div style={{
-          fontSize: '20px',
+          fontSize: '24px',
           fontWeight: 700,
           letterSpacing: '0.5px',
-          marginBottom: '4px',
+          marginBottom: '5px',
           textTransform: 'uppercase',
         }}>{name}</div>
         <div style={{
-          fontSize: '8px',
+          fontSize: '10px',
           opacity: 0.88,
           letterSpacing: '0.2px',
           whiteSpace: 'nowrap',
@@ -254,19 +254,20 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
           width: '35%',
           minWidth: '35%',
           maxWidth: '35%',
-          padding: '14px 14px 14px 20px',
+          padding: '20px 16px 20px 24px',
           borderRight: `2px solid ${G}`,
           display: 'flex',
           flexDirection: 'column',
+          minHeight: '260mm',
         }}>
           {/* Photo */}
           {(photo || showPlaceholder) && (
             <div style={{
-              width: '80px',
-              height: '100px',
+              width: '100px',
+              height: '125px',
               borderRadius: '4px',
               overflow: 'hidden',
-              marginBottom: '12px',
+              marginBottom: '16px',
               border: '1px solid rgba(0,0,0,0.08)',
               flexShrink: 0,
             }}>
@@ -274,7 +275,7 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
                 <img src={photo} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 15%', display: 'block' }} />
               ) : (
                 <div style={{ width: '100%', height: '100%', background: '#e8e8e8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="1.5">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="1.5">
                     <circle cx="12" cy="8" r="4" />
                     <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
                   </svg>
@@ -285,11 +286,11 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
 
           {/* Skills as green pills */}
           {skills.length > 0 && (
-            <div style={{ marginBottom: '10px' }}>
-              <div style={{ fontSize: '8px', fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '5px' }}>Skills</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px' }}>
+            <div style={{ marginBottom: '14px' }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '6px' }}>Skills</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                 {skills.map((skill, i) => (
-                  <span key={i} style={{ background: '#e8f5f0', color: G, fontSize: '7px', padding: '2px 6px', borderRadius: '3px', display: 'inline-block' }}>{skill}</span>
+                  <span key={i} style={{ background: '#e8f5f0', color: G, fontSize: '8.5px', padding: '3px 8px', borderRadius: '3px', display: 'inline-block' }}>{skill}</span>
                 ))}
               </div>
             </div>
@@ -297,28 +298,28 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
 
           {/* Other sidebar sections (Languages, etc.) */}
           {sections.filter(s => s.sidebar).map((section, i) => (
-            <div key={i} style={{ marginBottom: '10px' }}>
-              <div style={{ fontSize: '8px', fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{section.title}</div>
-              <div style={{ fontSize: '8px', color: '#555', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{section.content}</div>
+            <div key={i} style={{ marginBottom: '14px' }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '6px' }}>{section.title}</div>
+              <div style={{ fontSize: '9px', color: '#555', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{section.content}</div>
             </div>
           ))}
         </div>
 
         {/* RIGHT CONTENT */}
-        <div style={{ flex: 1, padding: '14px 20px 14px 16px', minWidth: 0 }}>
+        <div style={{ flex: 1, padding: '20px 24px 20px 18px', minWidth: 0 }}>
           {sections.filter(s => !s.sidebar).map((section, i) => (
-            <div key={i} style={{ marginBottom: '10px' }}>
+            <div key={i} style={{ marginBottom: '14px' }}>
               <div style={{
-                fontSize: '8px',
+                fontSize: '10px',
                 fontWeight: 700,
                 color: G,
                 textTransform: 'uppercase',
                 letterSpacing: '0.8px',
                 borderBottom: `1px solid ${G}`,
-                paddingBottom: '2px',
-                marginBottom: '5px',
+                paddingBottom: '3px',
+                marginBottom: '6px',
               }}>{section.title}</div>
-              <div style={{ fontSize: '8.5px', color: '#444', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{section.content}</div>
+              <div style={{ fontSize: '10px', color: '#444', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{section.content}</div>
             </div>
           ))}
         </div>

@@ -473,39 +473,28 @@ function buildSharpPDF(text, sp, photo = null) {
   // Sidebar stack
   const sidebarStack = []
   if (photo) {
-    sidebarStack.push({ image: photo, fit: [80, 100], margin: [0, 0, 0, 10] })
+    sidebarStack.push({ image: photo, width: 100, fit: [100, 125], margin: [0, 0, 0, 16] })
   }
   if (skills.length > 0) {
-    sidebarStack.push({ text: 'SKILLS', fontSize: 7, bold: true, color: GREEN, characterSpacing: 0.8, margin: [0, 0, 0, 4] })
+    sidebarStack.push({ text: 'SKILLS', fontSize: 8, bold: true, color: GREEN, characterSpacing: 0.8, margin: [0, 0, 0, 6] })
     skills.forEach(skill => {
-      sidebarStack.push({ text: '· ' + skill, fontSize: 7.5, color: '#444444', margin: [0, 0, 0, 2], lineHeight: 1.3 })
+      sidebarStack.push({ text: '· ' + skill, fontSize: 8, color: '#444444', margin: [0, 0, 0, 3], lineHeight: 1.65 })
     })
   }
   sections.filter(s => s.sidebar).forEach(section => {
-    sidebarStack.push({ text: section.title.toUpperCase(), fontSize: 7, bold: true, color: GREEN, characterSpacing: 0.8, margin: [0, 8, 0, 3] })
-    sidebarStack.push({ text: section.content, fontSize: 7.5, color: '#444444', lineHeight: 1.4 })
+    sidebarStack.push({ text: section.title.toUpperCase(), fontSize: 8, bold: true, color: GREEN, characterSpacing: 0.8, margin: [0, 14, 0, 6] })
+    sidebarStack.push({ text: section.content, fontSize: 8.5, color: '#444444', lineHeight: 1.65 })
   })
   if (sidebarStack.length === 0) sidebarStack.push({ text: '' })
 
   // Main content stack
   const mainStack = []
   sections.filter(s => !s.sidebar).forEach((section, i) => {
-    mainStack.push({ text: section.title.toUpperCase(), fontSize: 8, bold: true, color: GREEN, characterSpacing: 0.8, margin: [0, i === 0 ? 0 : 8, 0, 2] })
-    mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 350, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, 4] })
-    mainStack.push({ text: section.content, fontSize: 8.5, color: '#333333', lineHeight: 1.45 })
+    mainStack.push({ text: section.title.toUpperCase(), fontSize: 9, bold: true, color: GREEN, characterSpacing: 0.8, margin: [0, i === 0 ? 0 : 14, 0, 4] })
+    mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 320, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, 6] })
+    mainStack.push({ text: section.content, fontSize: 9.5, color: '#333333', lineHeight: 1.65 })
   })
   if (mainStack.length === 0) mainStack.push({ text: '' })
-
-  // Custom body layout: green 2pt vertical separator, no other borders
-  const sharpBodyLayout = {
-    hLineWidth: () => 0,
-    vLineWidth: (i) => i === 1 ? 2 : 0,
-    vLineColor: () => GREEN,
-    paddingLeft: (i) => i === 0 ? 20 : 14,
-    paddingRight: (i, node) => i === node.table.widths.length - 1 ? 20 : 10,
-    paddingTop: () => 14,
-    paddingBottom: () => 14,
-  }
 
   return {
     pageSize: 'A4',
@@ -517,8 +506,8 @@ function buildSharpPDF(text, sp, photo = null) {
           widths: ['*'],
           body: [[{
             stack: [
-              { text: (name || '').toUpperCase(), fontSize: 18, bold: true, color: '#FFFFFF', characterSpacing: 0.5, margin: [20, 14, 20, 4] },
-              { text: contactLine || '', fontSize: 7.5, color: '#FFFFFF', margin: [20, 0, 20, 12], lineHeight: 1.3 },
+              { text: (name || '').toUpperCase(), fontSize: 22, bold: true, color: '#FFFFFF', characterSpacing: 0.5, margin: [24, 18, 24, 6] },
+              { text: contactLine || '', fontSize: 9, color: '#FFFFFF', margin: [24, 0, 24, 16], lineHeight: 1.3 },
             ],
             fillColor: GREEN,
             border: [false, false, false, false],
@@ -526,19 +515,28 @@ function buildSharpPDF(text, sp, photo = null) {
         },
         layout: 'noBorders',
       },
-      // Two-column body with green vertical separator via custom layout
+      // Two-column body — canvas column provides green line extending to 780pt
       {
-        table: {
-          widths: [210, '*'],
-          body: [[
-            { stack: sidebarStack },
-            { stack: mainStack },
-          ]],
-        },
-        layout: sharpBodyLayout,
+        columns: [
+          {
+            width: 210,
+            stack: sidebarStack,
+            margin: [24, 18, 10, 18],
+          },
+          {
+            width: 2,
+            canvas: [{ type: 'rect', x: 0, y: 0, w: 2, h: 780, color: GREEN }],
+          },
+          {
+            width: '*',
+            stack: mainStack,
+            margin: [18, 18, 24, 18],
+          },
+        ],
+        columnGap: 0,
       },
     ],
-    defaultStyle: { font: 'Roboto', fontSize: 8.5, lineHeight: 1.4 },
+    defaultStyle: { font: 'Roboto', fontSize: 9.5, lineHeight: 1.65 },
   }
 }
 
@@ -946,13 +944,13 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
         columnSpan: 2,
         children: [
           new Paragraph({
-            children: [new TextRun({ text: (sName || '').toUpperCase(), bold: true, size: 36, color: 'FFFFFF', font: 'Calibri' })],
-            spacing: { before: 160, after: 80 },
+            children: [new TextRun({ text: (sName || '').toUpperCase(), bold: true, size: 40, color: 'FFFFFF', font: 'Calibri' })],
+            spacing: { before: 200, after: 100 },
             indent: { left: 280 },
           }),
           new Paragraph({
-            children: [new TextRun({ text: sContact || '', size: 15, color: 'E8F5F0', font: 'Calibri' })],
-            spacing: { before: 0, after: 160 },
+            children: [new TextRun({ text: sContact || '', size: 18, color: 'E8F5F0', font: 'Calibri' })],
+            spacing: { before: 0, after: 200 },
             indent: { left: 280 },
           }),
         ],
@@ -965,31 +963,31 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
     const sidebarChildren = []
     if (photoBytes) {
       sidebarChildren.push(new Paragraph({
-        children: [new ImageRun({ data: photoBytes, transformation: { width: 80, height: 100 }, type: photoType })],
-        spacing: { before: 0, after: 120 },
+        children: [new ImageRun({ data: photoBytes, transformation: { width: 113, height: 142 }, type: photoType })],
+        spacing: { before: 0, after: 160 },
       }))
     }
     if (sSkills.length > 0) {
       sidebarChildren.push(new Paragraph({
-        children: [new TextRun({ text: 'SKILLS', bold: true, size: 14, color: GREEN_WORD, font: 'Calibri' })],
-        spacing: { before: 0, after: 60 },
+        children: [new TextRun({ text: 'SKILLS', bold: true, size: 18, color: GREEN_WORD, font: 'Calibri' })],
+        spacing: { before: 0, after: 80 },
       }))
       sSkills.forEach(skill => {
         sidebarChildren.push(new Paragraph({
-          children: [new TextRun({ text: '· ' + skill, size: 15, color: '444444', font: 'Calibri' })],
-          spacing: { before: 0, after: 40 },
+          children: [new TextRun({ text: '· ' + skill, size: 20, color: '444444', font: 'Calibri' })],
+          spacing: { before: 0, after: 100, line: 276 },
         }))
       })
     }
     sSections.filter(s => s.sidebar).forEach(section => {
       sidebarChildren.push(new Paragraph({
-        children: [new TextRun({ text: section.title.toUpperCase(), bold: true, size: 14, color: GREEN_WORD, font: 'Calibri' })],
-        spacing: { before: 120, after: 60 },
+        children: [new TextRun({ text: section.title.toUpperCase(), bold: true, size: 18, color: GREEN_WORD, font: 'Calibri' })],
+        spacing: { before: 160, after: 80 },
       }))
       section.content.split('\n').forEach(ln => {
         sidebarChildren.push(new Paragraph({
-          children: [new TextRun({ text: ln, size: 15, color: '444444', font: 'Calibri' })],
-          spacing: { before: 0, after: 30 },
+          children: [new TextRun({ text: ln, size: 20, color: '444444', font: 'Calibri' })],
+          spacing: { before: 0, after: 100, line: 276 },
         }))
       })
     })
@@ -999,14 +997,14 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
     const mainChildren = []
     sSections.filter(s => !s.sidebar).forEach((section, i) => {
       mainChildren.push(new Paragraph({
-        children: [new TextRun({ text: section.title.toUpperCase(), bold: true, size: 15, color: GREEN_WORD, font: 'Calibri' })],
-        spacing: { before: i === 0 ? 0 : 160, after: 60 },
+        children: [new TextRun({ text: section.title.toUpperCase(), bold: true, size: 18, color: GREEN_WORD, font: 'Calibri' })],
+        spacing: { before: i === 0 ? 0 : 240, after: 80 },
         border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: GREEN_WORD } },
       }))
       section.content.split('\n').forEach(ln => {
         mainChildren.push(new Paragraph({
-          children: [new TextRun({ text: ln, size: 16, color: '333333', font: 'Calibri' })],
-          spacing: { before: 0, after: 40 },
+          children: [new TextRun({ text: ln, size: 20, color: '333333', font: 'Calibri' })],
+          spacing: { before: 0, after: 100, line: 276 },
         }))
       })
     })
@@ -1017,13 +1015,13 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
         new TableCell({
           width: { size: 36, type: WidthType.PERCENTAGE },
           children: sidebarChildren,
-          margins: { top: 200, bottom: 200, left: 280, right: 140 },
+          margins: { top: 280, bottom: 280, left: 280, right: 280 },
           borders: { top: noBorder, bottom: noBorder, left: noBorder, right: { style: BorderStyle.SINGLE, size: 16, color: GREEN_WORD } },
         }),
         new TableCell({
           width: { size: 64, type: WidthType.PERCENTAGE },
           children: mainChildren,
-          margins: { top: 200, bottom: 200, left: 200, right: 280 },
+          margins: { top: 280, bottom: 280, left: 280, right: 280 },
           borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
         }),
       ],
