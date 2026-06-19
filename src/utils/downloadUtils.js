@@ -471,30 +471,38 @@ function buildSharpPDF(text, sp, photo = null) {
   const GREEN = '#1D9E75'
 
   // Sidebar stack
-  const sidebarStack = []
+  const sidebarChildren = []
   if (photo) {
-    sidebarStack.push({ image: photo, width: 100, fit: [100, 125], margin: [0, 0, 0, 16] })
+    sidebarChildren.push({ image: photo, width: 100, fit: [100, 125], margin: [0, 0, 0, 14] })
   }
   if (skills.length > 0) {
-    sidebarStack.push({ text: 'SKILLS', fontSize: 8, bold: true, color: GREEN, characterSpacing: 0.8, margin: [0, 0, 0, 6] })
+    sidebarChildren.push({ text: 'SKILLS', fontSize: 8, bold: true, color: GREEN, margin: [0, 0, 0, 5] })
     skills.forEach(skill => {
-      sidebarStack.push({ text: '· ' + skill, fontSize: 8, color: '#444444', margin: [0, 0, 0, 3], lineHeight: 1.65 })
+      sidebarChildren.push({ text: '· ' + skill, fontSize: 8.5, color: '#444444', margin: [0, 0, 0, 3], lineHeight: 1.4 })
     })
   }
   sections.filter(s => s.sidebar).forEach(section => {
-    sidebarStack.push({ text: section.title.toUpperCase(), fontSize: 8, bold: true, color: GREEN, characterSpacing: 0.8, margin: [0, 14, 0, 6] })
-    sidebarStack.push({ text: section.content, fontSize: 8.5, color: '#444444', lineHeight: 1.65 })
+    sidebarChildren.push({ text: section.title.toUpperCase(), fontSize: 8, bold: true, color: GREEN, margin: [0, 12, 0, 4] })
+    sidebarChildren.push({ text: section.content, fontSize: 8.5, color: '#444444', lineHeight: 1.5 })
   })
-  if (sidebarStack.length === 0) sidebarStack.push({ text: '' })
+  if (sidebarChildren.length === 0) sidebarChildren.push({ text: '' })
 
   // Main content stack
-  const mainStack = []
+  const mainChildren = []
   sections.filter(s => !s.sidebar).forEach((section, i) => {
-    mainStack.push({ text: section.title.toUpperCase(), fontSize: 9, bold: true, color: GREEN, characterSpacing: 0.8, margin: [0, i === 0 ? 0 : 14, 0, 4] })
-    mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 320, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, 6] })
-    mainStack.push({ text: section.content, fontSize: 9.5, color: '#333333', lineHeight: 1.65 })
+    mainChildren.push({
+      text: section.title.toUpperCase(),
+      fontSize: 9,
+      bold: true,
+      color: GREEN,
+      margin: [0, i === 0 ? 0 : 12, 0, 3],
+      decoration: 'underline',
+      decorationColor: GREEN,
+      decorationStyle: 'solid',
+    })
+    mainChildren.push({ text: section.content, fontSize: 9.5, color: '#333333', lineHeight: 1.6, margin: [0, 2, 0, 0] })
   })
-  if (mainStack.length === 0) mainStack.push({ text: '' })
+  if (mainChildren.length === 0) mainChildren.push({ text: '' })
 
   return {
     pageSize: 'A4',
@@ -503,40 +511,58 @@ function buildSharpPDF(text, sp, photo = null) {
       // Green header — full-width table cell with green fill
       {
         table: {
-          widths: ['*'],
+          widths: ['100%'],
           body: [[{
             stack: [
-              { text: (name || '').toUpperCase(), fontSize: 22, bold: true, color: '#FFFFFF', characterSpacing: 0.5, margin: [24, 18, 24, 6] },
-              { text: contactLine || '', fontSize: 9, color: '#FFFFFF', margin: [24, 0, 24, 16], lineHeight: 1.3 },
+              { text: (name || '').toUpperCase(), fontSize: 22, bold: true, color: '#FFFFFF', characterSpacing: 0.5, margin: [24, 18, 24, 5] },
+              { text: contactLine || '', fontSize: 8.5, color: '#FFFFFF', margin: [24, 0, 24, 16], lineHeight: 1.4 },
             ],
             fillColor: GREEN,
             border: [false, false, false, false],
           }]],
         },
-        layout: 'noBorders',
+        layout: {
+          defaultBorder: false,
+          paddingLeft: () => 0,
+          paddingRight: () => 0,
+          paddingTop: () => 0,
+          paddingBottom: () => 0,
+        },
       },
-      // Two-column body — canvas column provides green line extending to 780pt
+      // Two-column body — vLineWidth draws the green border from row top to bottom
       {
-        columns: [
-          {
-            width: 210,
-            stack: sidebarStack,
-            margin: [24, 18, 10, 18],
-          },
-          {
-            width: 2,
-            canvas: [{ type: 'rect', x: 0, y: 0, w: 2, h: 780, color: GREEN }],
-          },
-          {
-            width: '*',
-            stack: mainStack,
-            margin: [18, 18, 24, 18],
-          },
-        ],
-        columnGap: 0,
+        table: {
+          widths: ['36%', '*'],
+          heights: [700],
+          body: [[
+            {
+              stack: sidebarChildren,
+              border: [false, false, true, false],
+              borderColor: ['white', 'white', GREEN, 'white'],
+              margin: [24, 16, 14, 16],
+              fillColor: '#FFFFFF',
+            },
+            {
+              stack: mainChildren,
+              border: [false, false, false, false],
+              margin: [16, 16, 24, 16],
+              fillColor: '#FFFFFF',
+            },
+          ]],
+        },
+        layout: {
+          defaultBorder: false,
+          hLineWidth: () => 0,
+          vLineWidth: (i) => i === 1 ? 2 : 0,
+          vLineColor: () => GREEN,
+          paddingLeft: () => 0,
+          paddingRight: () => 0,
+          paddingTop: () => 0,
+          paddingBottom: () => 0,
+        },
       },
     ],
-    defaultStyle: { font: 'Roboto', fontSize: 9.5, lineHeight: 1.65 },
+    defaultStyle: { font: 'Roboto', fontSize: 9.5, lineHeight: 1.5 },
   }
 }
 
