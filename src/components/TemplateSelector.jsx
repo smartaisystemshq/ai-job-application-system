@@ -101,29 +101,32 @@ function TemplatePreviewExecutive() {
 
 function TemplatePreviewSharp() {
   const G = '#1D9E75'
-  const DARK = '#1a1a1a'
   return (
-    <div style={{ height: 88, overflow: 'hidden', borderRadius: 6, display: 'flex' }}>
-      <div style={{ background: DARK, width: '25%', padding: '10px 8px', flexShrink: 0 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: '#fff', marginBottom: 2 }}>JOHN SMITH</div>
-        <div style={{ height: 1, background: G, marginBottom: 4 }} />
-        <div style={{ fontSize: 6.5, color: '#aaa', marginBottom: 4 }}>john@email.com</div>
-        <div style={{ fontSize: 7.5, fontWeight: 700, color: '#fff', marginBottom: 1 }}>SKILLS</div>
-        <div style={{ height: 0.5, background: G, marginBottom: 3 }} />
-        {['Python, TypeScript', 'AWS, Docker', 'React'].map((s, i) => (
-          <div key={i} style={{ fontSize: 6.5, color: '#ccc', marginBottom: 2 }}>• {s}</div>
-        ))}
+    <div style={{ height: 88, overflow: 'hidden', borderRadius: 6, background: '#fff', display: 'flex', flexDirection: 'column' }}>
+      {/* Green header */}
+      <div style={{ background: G, padding: '5px 8px 4px', flexShrink: 0 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#fff', letterSpacing: 0.3, textTransform: 'uppercase' }}>John Smith</div>
+        <div style={{ fontSize: 5.5, color: 'rgba(255,255,255,0.85)' }}>john@email.com · London · +44 7000 000</div>
       </div>
-      <div style={{ background: '#fff', flex: 1, padding: '10px 8px' }}>
-        <div style={{ fontSize: 9.5, fontWeight: 700, color: '#111', marginBottom: 1 }}>WORK EXPERIENCE</div>
-        <div style={{ height: 0.8, background: G, marginBottom: 4 }} />
-        <div style={{ fontSize: 7, color: '#333', marginBottom: 3 }}>Senior Engineer | FinTech | 2021–2023</div>
-        {['Built fraud detection saving £800K/yr', 'Led 5 engineers'].map((t, i) => (
-          <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 2.5 }}>
-            <span style={{ color: '#555', fontSize: 7, flexShrink: 0 }}>•</span>
-            <span style={{ fontSize: 7, color: '#333' }}>{t}</span>
+      {/* Two-column body */}
+      <div style={{ display: 'flex', flex: 1 }}>
+        {/* Left sidebar */}
+        <div style={{ width: '35%', padding: '6px 5px 6px 8px', borderRight: `1.5px solid ${G}`, background: '#fff' }}>
+          <div style={{ fontSize: 5.5, fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>Skills</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            {['React', 'TypeScript', 'AWS'].map((s, i) => (
+              <span key={i} style={{ background: '#e8f5f0', color: G, fontSize: 4.5, padding: '1px 3px', borderRadius: 2 }}>{s}</span>
+            ))}
           </div>
-        ))}
+        </div>
+        {/* Right content */}
+        <div style={{ flex: 1, padding: '6px 8px' }}>
+          <div style={{ fontSize: 6, fontWeight: 700, color: G, borderBottom: `0.8px solid ${G}`, paddingBottom: 1, marginBottom: 3 }}>WORK EXPERIENCE</div>
+          <div style={{ fontSize: 5, color: '#333', marginBottom: 2 }}>Senior Engineer | FinTech | 2021–2023</div>
+          {['Built fraud detection saving £800K/yr', 'Led 5 engineers across 3 teams'].map((txt, i) => (
+            <div key={i} style={{ fontSize: 5, color: '#444', marginBottom: 1.5 }}>• {txt}</div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -134,7 +137,7 @@ export const TEMPLATES = [
   { id: 'modern',    name: 'Modern',    description: 'Green accents · bold dividers · contemporary',       Preview: TemplatePreviewModern  },
   { id: 'classic',   name: 'Classic',   description: 'Centred name · serif feel · universally accepted',  Preview: TemplatePreviewClassic },
   { id: 'executive', name: 'Executive', description: 'Uppercase name · premium spacing · senior roles',   Preview: TemplatePreviewExecutive },
-  { id: 'sharp',     name: 'Sharp',     description: 'Dark sidebar · monochrome headers · corporate',     Preview: TemplatePreviewSharp   },
+  { id: 'sharp',     name: 'Sharp',     description: 'Green header · two-column · sidebar skills',         Preview: TemplatePreviewSharp   },
 ]
 
 export function TemplateSelector({ selectedTemplate, onSelect, className = '' }) {

@@ -421,34 +421,33 @@ function buildExecutivePDF(text, sp, photo = null) {
   return autoFitToOnePage(docDef, text)
 }
 
-const SHARP_SIDEBAR_HEADERS_RE = /^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES|PERSONAL STRENGTHS|STRENGTHS|PERSÖNLICHE STÄRKEN|STÄRKEN|SOFT SKILLS|KEY STRENGTHS)$/
+// ── Structured data extractor for Sharp/Option A template ────────────────────
 
-function buildSharpPDF(text, sp, photo = null) {
-  const { bodySize, lineHeight, hSpB, hSpA } = sp
-  const lines = parseDocumentLines(text)
-  const GREEN = '#1D9E75'
-  const DARK = '#1a1a1a'
-  const SIDEBAR_W = 150
-  const PAGE_W = 595.28
-  const MAIN_INNER_W = PAGE_W - SIDEBAR_W - 28  // 14pt left + 14pt right margin on main col
-  const headerSize = bodySize + 0.5
-  const sideInnerW = SIDEBAR_W - 28  // 14pt margin each side in sidebar
-
-  // Extract structured data from lines
+export function buildSharpStructure(lines) {
   const name = lines.find(l => l.type === 'name')?.text || ''
+
   const contactItems = []
+  for (const line of lines) {
+    if (line.type !== 'contact') continue
+    line.text.split('|').map(s => s.trim()).filter(Boolean).forEach(item => contactItems.push(item))
+  }
+  const contactLine = contactItems.join(' · ')
+
+  const SKILLS_RE = /^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES|SOFT SKILLS|KEY STRENGTHS|FÄHIGKEITEN|KENNTNISSE)$/
+  const SIDEBAR_RE = /^(LANGUAGES|SPRACHEN|INTERESTS|INTERESSEN|HOBBIES|CERTIFICATES|CERTIFICATIONS|ZERTIFIKATE|PERSONAL STRENGTHS|PERSÖNLICHE STÄRKEN|STÄRKEN|AWARDS|VOLUNTEERING|REFERENCES|REFERENZEN)$/
+
   const skills = []
-  const mainLines = []
+  const sections = []
+  let currentSection = null
   let inSkillsSection = false
 
   for (const line of lines) {
-    if (line.type === 'name') continue
-    if (line.type === 'contact') {
-      line.text.split('|').map(s => s.trim()).filter(Boolean).forEach(item => contactItems.push(item))
-      continue
-    }
-    if (line.type === 'header' && SHARP_SIDEBAR_HEADERS_RE.test(line.text)) {
-      inSkillsSection = true
+    if (line.type === 'name' || line.type === 'contact') continue
+    if (line.type === 'header') {
+      if (SKILLS_RE.test(line.text)) { inSkillsSection = true; currentSection = null; continue }
+      inSkillsSection = false
+      currentSection = { title: line.text, content: '', sidebar: SIDEBAR_RE.test(line.text) }
+      sections.push(currentSection)
       continue
     }
     if (inSkillsSection) {
@@ -456,92 +455,91 @@ function buildSharpPDF(text, sp, photo = null) {
       if (line.type === 'empty') continue
       inSkillsSection = false
     }
-    mainLines.push(line)
-  }
-
-  // Build sidebar stack — photo first, then name, green line, contacts, skills
-  const sidebarStack = []
-
-  if (photo) {
-    sidebarStack.push({ image: photo, fit: [sideInnerW, 120], margin: [14, 16, 14, 10] })
-  } else {
-    sidebarStack.push({ text: '', margin: [0, 16, 0, 0] })
-  }
-
-  sidebarStack.push({ text: name, fontSize: 12, bold: true, color: '#FFFFFF', alignment: 'center', margin: [14, 0, 14, 4], lineHeight: 1.3 })
-  sidebarStack.push({ canvas: [{ type: 'line', x1: 14, y1: 0, x2: SIDEBAR_W - 14, y2: 0, lineWidth: 1.5, lineColor: GREEN }], margin: [0, 4, 0, 8] })
-
-  contactItems.forEach(item => {
-    sidebarStack.push({ text: item, fontSize: item.length > 25 ? 6.5 : 7.5, color: '#BBBBBB', margin: [14, 0, 14, 3], lineHeight: 1.3 })
-  })
-
-  if (skills.length > 0) {
-    sidebarStack.push({ canvas: [{ type: 'line', x1: 14, y1: 0, x2: SIDEBAR_W - 14, y2: 0, lineWidth: 0.5, lineColor: '#333333' }], margin: [0, 8, 0, 8] })
-    sidebarStack.push({ text: 'SKILLS', fontSize: 6.5, bold: true, color: '#888888', characterSpacing: 1.5, margin: [14, 0, 14, 4] })
-    skills.forEach(skill => {
-      sidebarStack.push({ text: '· ' + skill, fontSize: 7.5, color: '#BBBBBB', margin: [14, 0, 14, 2], lineHeight: 1.3 })
-    })
-  }
-
-  if (sidebarStack.length === 0) sidebarStack.push({ text: '' })
-
-  // Build main content stack
-  const mainStack = []
-  for (const line of mainLines) {
-    switch (line.type) {
-      case 'empty':
-        mainStack.push({ text: ' ', fontSize: bodySize * 0.4 })
-        break
-      case 'divider':
-        mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 1, x2: MAIN_INNER_W, y2: 1, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 2, 0, 2] })
-        break
-      case 'header':
-        mainStack.push({ text: line.text.toUpperCase(), fontSize: headerSize, bold: true, color: '#1a1a1a', characterSpacing: 0.5, margin: [0, hSpB || 6, 0, 1] })
-        mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: MAIN_INNER_W, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, hSpA || 2] })
-        break
-      case 'bullet':
-        mainStack.push({ columns: [{ text: '•', width: 10, fontSize: bodySize - 0.5, color: GREEN }, { text: line.text, fontSize: bodySize, color: '#333333', width: '*' }], margin: [4, 1, 0, 1] })
-        break
-      case 'body':
-        mainStack.push({ text: line.text, fontSize: bodySize, color: '#333333', margin: [0, 1, 0, 1] })
-        break
+    if (currentSection && line.type !== 'empty') {
+      const prefix = line.type === 'bullet' ? '• ' : ''
+      if (currentSection.content) currentSection.content += '\n'
+      currentSection.content += prefix + line.text
     }
   }
+
+  return { name, contactLine, sections, skills }
+}
+
+function buildSharpPDF(text, sp, photo = null) {
+  const lines = parseDocumentLines(text)
+  const { name, contactLine, sections, skills } = buildSharpStructure(lines)
+  const GREEN = '#1D9E75'
+
+  // Sidebar stack
+  const sidebarStack = []
+  if (photo) {
+    sidebarStack.push({ image: photo, fit: [80, 100], margin: [0, 0, 0, 10] })
+  }
+  if (skills.length > 0) {
+    sidebarStack.push({ text: 'SKILLS', fontSize: 7, bold: true, color: GREEN, characterSpacing: 0.8, margin: [0, 0, 0, 4] })
+    skills.forEach(skill => {
+      sidebarStack.push({ text: '· ' + skill, fontSize: 7.5, color: '#444444', margin: [0, 0, 0, 2], lineHeight: 1.3 })
+    })
+  }
+  sections.filter(s => s.sidebar).forEach(section => {
+    sidebarStack.push({ text: section.title.toUpperCase(), fontSize: 7, bold: true, color: GREEN, characterSpacing: 0.8, margin: [0, 8, 0, 3] })
+    sidebarStack.push({ text: section.content, fontSize: 7.5, color: '#444444', lineHeight: 1.4 })
+  })
+  if (sidebarStack.length === 0) sidebarStack.push({ text: '' })
+
+  // Main content stack
+  const mainStack = []
+  sections.filter(s => !s.sidebar).forEach((section, i) => {
+    mainStack.push({ text: section.title.toUpperCase(), fontSize: 8, bold: true, color: GREEN, characterSpacing: 0.8, margin: [0, i === 0 ? 0 : 8, 0, 2] })
+    mainStack.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 350, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, 4] })
+    mainStack.push({ text: section.content, fontSize: 8.5, color: '#333333', lineHeight: 1.45 })
+  })
   if (mainStack.length === 0) mainStack.push({ text: '' })
 
-  const docDef = {
+  // Custom body layout: green 2pt vertical separator, no other borders
+  const sharpBodyLayout = {
+    hLineWidth: () => 0,
+    vLineWidth: (i) => i === 1 ? 2 : 0,
+    vLineColor: () => GREEN,
+    paddingLeft: (i) => i === 0 ? 20 : 14,
+    paddingRight: (i, node) => i === node.table.widths.length - 1 ? 20 : 10,
+    paddingTop: () => 14,
+    paddingBottom: () => 14,
+  }
+
+  return {
     pageSize: 'A4',
     pageMargins: [0, 0, 0, 0],
-    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
-    background: function() {
-      return {
-        canvas: [{
-          type: 'rect',
-          x: 0, y: 0,
-          w: SIDEBAR_W,
-          h: 841.89,
-          color: DARK,
-        }]
-      }
-    },
     content: [
+      // Green header — full-width table cell with green fill
       {
-        columns: [
-          {
-            width: SIDEBAR_W,
-            stack: sidebarStack,
-          },
-          {
-            width: '*',
-            stack: mainStack,
-            margin: [14, 16, 14, 16],
-          },
-        ],
-        columnGap: 0,
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: [
+              { text: (name || '').toUpperCase(), fontSize: 18, bold: true, color: '#FFFFFF', characterSpacing: 0.5, margin: [20, 14, 20, 4] },
+              { text: contactLine || '', fontSize: 7.5, color: '#FFFFFF', margin: [20, 0, 20, 12], lineHeight: 1.3 },
+            ],
+            fillColor: GREEN,
+            border: [false, false, false, false],
+          }]],
+        },
+        layout: 'noBorders',
+      },
+      // Two-column body with green vertical separator via custom layout
+      {
+        table: {
+          widths: [210, '*'],
+          body: [[
+            { stack: sidebarStack },
+            { stack: mainStack },
+          ]],
+        },
+        layout: sharpBodyLayout,
       },
     ],
+    defaultStyle: { font: 'Roboto', fontSize: 8.5, lineHeight: 1.4 },
   }
-  return autoFitToOnePage(docDef, text)
 }
 
 // ── Auto-fit to one A4 page ──────────────────────────────────────────────────
@@ -938,66 +936,105 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
   let sections
 
   if (template === 'sharp') {
-    const leftLines = []
-    const rightLines = []
-    let inSidebarSection = false
-
-    for (const line of lines) {
-      if (line.type === 'name' || line.type === 'contact') {
-        leftLines.push(line)
-      } else if (line.type === 'header' && SHARP_SIDEBAR_HEADERS_RE.test(line.text)) {
-        inSidebarSection = true
-        leftLines.push(line)
-      } else if (inSidebarSection && (line.type === 'body' || line.type === 'bullet' || line.type === 'empty')) {
-        leftLines.push(line)
-      } else {
-        inSidebarSection = false
-        rightLines.push(line)
-      }
-    }
-
-    const leftChildren = buildParagraphs(leftLines, true)
-    const rightChildren = buildParagraphs(rightLines, false)
-
-    // Inject photo into left column after name/contact paragraphs
-    if (photoBytes) {
-      // name generates 2 paragraphs (text + green underline), contact isDarkBg generates 1 para per item
-      let insertIdx = 0
-      for (const l of leftLines) {
-        if (l.type === 'name') { insertIdx += 2 }
-        else if (l.type === 'contact') { insertIdx += l.text.split('|').map(i => i.trim()).filter(Boolean).length }
-        else break
-      }
-      const photoImageRun = new ImageRun({ data: photoBytes, transformation: { width: 68, height: 87 }, type: photoType })
-      const photoPara = new Paragraph({ children: [photoImageRun], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })
-      leftChildren.splice(insertIdx, 0, photoPara)
-    }
-
+    const { name: sName, contactLine: sContact, sections: sSections, skills: sSkills } = buildSharpStructure(lines)
+    const GREEN_WORD = '1D9E75'
     const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
-    const table = new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      rows: [
-        new TableRow({
-          children: [
-            new TableCell({
-              width: { size: 33, type: WidthType.PERCENTAGE },
-              children: leftChildren,
-              shading: { fill: '1a1a1a', type: ShadingType.CLEAR },
-              margins: { top: 200, bottom: 200, left: 200, right: 200 },
-              borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
-            }),
-            new TableCell({
-              width: { size: 67, type: WidthType.PERCENTAGE },
-              children: rightChildren,
-              margins: { top: 200, bottom: 200, left: 300, right: 200 },
-              borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
-            }),
-          ],
+
+    // Green header row spanning both columns
+    const headerRow = new TableRow({
+      children: [new TableCell({
+        columnSpan: 2,
+        children: [
+          new Paragraph({
+            children: [new TextRun({ text: (sName || '').toUpperCase(), bold: true, size: 36, color: 'FFFFFF', font: 'Calibri' })],
+            spacing: { before: 160, after: 80 },
+            indent: { left: 280 },
+          }),
+          new Paragraph({
+            children: [new TextRun({ text: sContact || '', size: 15, color: 'E8F5F0', font: 'Calibri' })],
+            spacing: { before: 0, after: 160 },
+            indent: { left: 280 },
+          }),
+        ],
+        shading: { fill: GREEN_WORD, type: ShadingType.CLEAR, color: GREEN_WORD },
+        borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+      })],
+    })
+
+    // Sidebar children
+    const sidebarChildren = []
+    if (photoBytes) {
+      sidebarChildren.push(new Paragraph({
+        children: [new ImageRun({ data: photoBytes, transformation: { width: 80, height: 100 }, type: photoType })],
+        spacing: { before: 0, after: 120 },
+      }))
+    }
+    if (sSkills.length > 0) {
+      sidebarChildren.push(new Paragraph({
+        children: [new TextRun({ text: 'SKILLS', bold: true, size: 14, color: GREEN_WORD, font: 'Calibri' })],
+        spacing: { before: 0, after: 60 },
+      }))
+      sSkills.forEach(skill => {
+        sidebarChildren.push(new Paragraph({
+          children: [new TextRun({ text: '· ' + skill, size: 15, color: '444444', font: 'Calibri' })],
+          spacing: { before: 0, after: 40 },
+        }))
+      })
+    }
+    sSections.filter(s => s.sidebar).forEach(section => {
+      sidebarChildren.push(new Paragraph({
+        children: [new TextRun({ text: section.title.toUpperCase(), bold: true, size: 14, color: GREEN_WORD, font: 'Calibri' })],
+        spacing: { before: 120, after: 60 },
+      }))
+      section.content.split('\n').forEach(ln => {
+        sidebarChildren.push(new Paragraph({
+          children: [new TextRun({ text: ln, size: 15, color: '444444', font: 'Calibri' })],
+          spacing: { before: 0, after: 30 },
+        }))
+      })
+    })
+    if (sidebarChildren.length === 0) sidebarChildren.push(new Paragraph({ children: [] }))
+
+    // Main content children
+    const mainChildren = []
+    sSections.filter(s => !s.sidebar).forEach((section, i) => {
+      mainChildren.push(new Paragraph({
+        children: [new TextRun({ text: section.title.toUpperCase(), bold: true, size: 15, color: GREEN_WORD, font: 'Calibri' })],
+        spacing: { before: i === 0 ? 0 : 160, after: 60 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: GREEN_WORD } },
+      }))
+      section.content.split('\n').forEach(ln => {
+        mainChildren.push(new Paragraph({
+          children: [new TextRun({ text: ln, size: 16, color: '333333', font: 'Calibri' })],
+          spacing: { before: 0, after: 40 },
+        }))
+      })
+    })
+    if (mainChildren.length === 0) mainChildren.push(new Paragraph({ children: [] }))
+
+    const bodyRow = new TableRow({
+      children: [
+        new TableCell({
+          width: { size: 36, type: WidthType.PERCENTAGE },
+          children: sidebarChildren,
+          margins: { top: 200, bottom: 200, left: 280, right: 140 },
+          borders: { top: noBorder, bottom: noBorder, left: noBorder, right: { style: BorderStyle.SINGLE, size: 16, color: GREEN_WORD } },
+        }),
+        new TableCell({
+          width: { size: 64, type: WidthType.PERCENTAGE },
+          children: mainChildren,
+          margins: { top: 200, bottom: 200, left: 200, right: 280 },
+          borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
         }),
       ],
     })
 
-    sections = [{ properties: { page: { margin: { top: 600, right: 600, bottom: 600, left: 600 } } }, children: [table] }]
+    const table = new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [headerRow, bodyRow],
+    })
+
+    sections = [{ properties: { page: { margin: { top: 0, right: 0, bottom: 0, left: 0 } } }, children: [table] }]
   } else {
     let children
     if (photoBytes) {

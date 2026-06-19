@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { parseDocumentLines } from './downloadUtils'
+import { parseDocumentLines, buildSharpStructure } from './downloadUtils'
 
 const GREEN = '#1D9E75'
 const SIDEBAR_DARK = '#1a1a1a'
@@ -204,173 +204,125 @@ function StandardPage({ lines, template, photo = null, showPlaceholder = false }
 
 // ── Two-column sharp page ─────────────────────────────────────────────────────
 
-const SHARP_SIDEBAR_HEADERS_RE = /^(SKILLS|CORE COMPETENCIES|TECHNICAL SKILLS|KEY SKILLS|TECHNOLOGIES|PERSONAL STRENGTHS|STRENGTHS|PERSÖNLICHE STÄRKEN|STÄRKEN|SOFT SKILLS|KEY STRENGTHS)$/
-
-function SharpPage({ lines, photo = null, showPlaceholder = false }) {
-  const name = lines.find(l => l.type === 'name')?.text || ''
-
-  const contactItems = []
-  const skills = []
-  const rightLines = []
-  let inSkillsSection = false
-
-  for (const line of lines) {
-    if (line.type === 'name') continue
-    if (line.type === 'contact') {
-      line.text.split('|').map(s => s.trim()).filter(Boolean).forEach(item => contactItems.push(item))
-      continue
-    }
-    if (line.type === 'header' && SHARP_SIDEBAR_HEADERS_RE.test(line.text)) {
-      inSkillsSection = true
-      continue
-    }
-    if (inSkillsSection) {
-      if (line.type === 'body' || line.type === 'bullet') { skills.push(line.text); continue }
-      if (line.type === 'empty') continue
-      inSkillsSection = false
-    }
-    rightLines.push(line)
-  }
+function SharpPage({ data, photo = null, showPlaceholder = false }) {
+  const { name, contactLine, sections, skills } = data
+  const G = GREEN
 
   return (
     <div style={{
-      display: 'flex',
-      alignItems: 'stretch',
       maxWidth: 680,
       margin: '0 auto',
+      background: 'white',
+      fontFamily: 'Arial, Helvetica, sans-serif',
+      color: '#333',
+      display: 'flex',
+      flexDirection: 'column',
       boxShadow: '0 20px 70px rgba(0,0,0,0.65)',
       borderRadius: 2,
       overflow: 'hidden',
       minHeight: 850,
     }}>
-      {/* LEFT SIDEBAR — fixed 200px */}
+      {/* GREEN HEADER */}
       <div style={{
-        width: '200px',
-        minWidth: '200px',
-        maxWidth: '200px',
-        background: SIDEBAR_DARK,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        alignSelf: 'stretch',
+        background: G,
+        padding: '14px 20px 12px',
+        color: 'white',
+        flexShrink: 0,
       }}>
-        {/* Photo at top */}
-        {photo ? (
-          <div style={{
-            width: 'calc(100% - 28px)',
-            margin: '20px 14px 14px',
-            borderRadius: '6px',
-            overflow: 'hidden',
-            flexShrink: 0,
-          }}>
-            <img src={photo} style={{
-              width: '100%',
-              height: '150px',
-              objectFit: 'cover',
-              objectPosition: 'center 15%',
-              display: 'block',
-              borderRadius: '6px',
-            }} />
-          </div>
-        ) : showPlaceholder ? (
-          <div style={{
-            width: 'calc(100% - 28px)',
-            height: '130px',
-            margin: '20px 14px 14px',
-            borderRadius: '6px',
-            background: '#333',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="1.5">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-            </svg>
-            <span style={{ fontSize: 8, color: '#888', marginTop: 4 }}>Photo</span>
-          </div>
-        ) : null}
-        {/* Name */}
         <div style={{
-          fontSize: '14px',
+          fontSize: '20px',
           fontWeight: 700,
-          color: 'white',
-          textAlign: 'center',
-          padding: '0 14px',
+          letterSpacing: '0.5px',
           marginBottom: '4px',
-          lineHeight: 1.3,
+          textTransform: 'uppercase',
         }}>{name}</div>
-        {/* Green accent line */}
         <div style={{
-          height: '1.5px',
-          background: GREEN,
-          margin: '4px 14px 10px',
-        }} />
-        {/* Contact items — each on own line, wraps within sidebar */}
-        {contactItems.map((item, i) => (
-          <div key={i} style={{
-            fontSize: '7.5px',
-            color: '#BBBBBB',
-            padding: '0 14px',
-            marginBottom: '3px',
-            lineHeight: 1.4,
-            wordBreak: 'break-word',
-            overflowWrap: 'break-word',
-          }}>{item}</div>
-        ))}
-        {/* Skills section */}
-        {skills.length > 0 && (
-          <>
-            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.1)', margin: '10px 14px' }} />
-            <div style={{ fontSize: '7px', letterSpacing: '1.5px', color: '#888888', textTransform: 'uppercase', padding: '0 14px', marginBottom: '6px' }}>Skills</div>
-            {skills.map((skill, i) => (
-              <div key={i} style={{ fontSize: '8px', color: '#BBBBBB', padding: '0 14px', marginBottom: '3px', wordBreak: 'break-word', lineHeight: 1.4 }}>· {skill}</div>
-            ))}
-          </>
-        )}
+          fontSize: '8px',
+          opacity: 0.88,
+          letterSpacing: '0.2px',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}>{contactLine}</div>
       </div>
 
-      {/* RIGHT CONTENT — flex:1 with minWidth:0 prevents overflow */}
-      <div style={{
-        flex: 1,
-        padding: '20px 18px',
-        overflow: 'hidden',
-        minWidth: 0,
-        background: '#fff',
-        fontFamily: "'Inter', sans-serif",
-        fontSize: 9.5,
-        color: '#333',
-        lineHeight: 1.5,
-      }}>
-        {rightLines.map((line, i) => {
-          switch (line.type) {
-            case 'header':
-              return (
-                <div key={i} style={{ marginTop: 14, marginBottom: 8 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#1a1a1a', textTransform: 'uppercase', letterSpacing: 1, paddingBottom: 3 }}>
-                    {line.text}
-                  </div>
-                  <div style={{ height: 1, background: GREEN }} />
+      {/* BODY */}
+      <div style={{ display: 'flex', flex: 1, alignItems: 'stretch' }}>
+
+        {/* LEFT SIDEBAR — 35% width */}
+        <div style={{
+          width: '35%',
+          minWidth: '35%',
+          maxWidth: '35%',
+          padding: '14px 14px 14px 20px',
+          borderRight: `2px solid ${G}`,
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          {/* Photo */}
+          {(photo || showPlaceholder) && (
+            <div style={{
+              width: '80px',
+              height: '100px',
+              borderRadius: '4px',
+              overflow: 'hidden',
+              marginBottom: '12px',
+              border: '1px solid rgba(0,0,0,0.08)',
+              flexShrink: 0,
+            }}>
+              {photo ? (
+                <img src={photo} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 15%', display: 'block' }} />
+              ) : (
+                <div style={{ width: '100%', height: '100%', background: '#e8e8e8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="1.5">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                  </svg>
                 </div>
-              )
-            case 'bullet':
-              return (
-                <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 2.5 }}>
-                  <span style={{ color: GREEN, flexShrink: 0, fontSize: 9, lineHeight: '15px' }}>•</span>
-                  <span style={{ fontSize: 9.5, color: '#333', lineHeight: 1.5 }}>{line.text}</span>
-                </div>
-              )
-            case 'body':
-              return <div key={i} style={{ fontSize: 9.5, color: '#333', marginBottom: 2, lineHeight: 1.5 }}>{line.text}</div>
-            case 'empty':
-              return <div key={i} style={{ height: 4 }} />
-            case 'divider':
-              return <div key={i} style={{ height: 1, background: '#ddd', margin: '5px 0' }} />
-            default:
-              return null
-          }
-        })}
+              )}
+            </div>
+          )}
+
+          {/* Skills as green pills */}
+          {skills.length > 0 && (
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '8px', fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '5px' }}>Skills</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px' }}>
+                {skills.map((skill, i) => (
+                  <span key={i} style={{ background: '#e8f5f0', color: G, fontSize: '7px', padding: '2px 6px', borderRadius: '3px', display: 'inline-block' }}>{skill}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Other sidebar sections (Languages, etc.) */}
+          {sections.filter(s => s.sidebar).map((section, i) => (
+            <div key={i} style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '8px', fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{section.title}</div>
+              <div style={{ fontSize: '8px', color: '#555', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{section.content}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* RIGHT CONTENT */}
+        <div style={{ flex: 1, padding: '14px 20px 14px 16px', minWidth: 0 }}>
+          {sections.filter(s => !s.sidebar).map((section, i) => (
+            <div key={i} style={{ marginBottom: '10px' }}>
+              <div style={{
+                fontSize: '8px',
+                fontWeight: 700,
+                color: G,
+                textTransform: 'uppercase',
+                letterSpacing: '0.8px',
+                borderBottom: `1px solid ${G}`,
+                paddingBottom: '2px',
+                marginBottom: '5px',
+              }}>{section.title}</div>
+              <div style={{ fontSize: '8.5px', color: '#444', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{section.content}</div>
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   )
@@ -503,7 +455,7 @@ export default function DocumentPreview({ text, template = 'minimal', maxHeight 
       {type === 'letter'
         ? <LetterPage text={text} template={template} />
         : template === 'sharp'
-          ? <SharpPage lines={lines} photo={photo} showPlaceholder={showPlaceholder} />
+          ? <SharpPage data={buildSharpStructure(lines)} photo={photo} showPlaceholder={showPlaceholder} />
           : <StandardPage lines={lines} template={template} photo={photo} showPlaceholder={showPlaceholder} />
       }
     </div>
