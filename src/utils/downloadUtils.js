@@ -533,7 +533,7 @@ function buildSharpPDF(text, sp, photo = null) {
       {
         table: {
           widths: ['36%', '*'],
-          heights: [700],
+          heights: [680],
           body: [[
             {
               stack: sidebarChildren,
@@ -747,7 +747,7 @@ export async function downloadAsPDF(text, filename, template = 'minimal', isLett
 export async function downloadAsWord(text, filename, template = 'minimal', isLetter = false, photo = null) {
   const cleanText = stripMarkdown(text)
   const {
-    Document, Packer, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType, ImageRun,
+    Document, Packer, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType, ImageRun, HeightRule,
   } = await import('docx')
 
   // Cover letter: business letter format
@@ -1036,21 +1036,21 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
     })
     if (mainChildren.length === 0) mainChildren.push(new Paragraph({ children: [] }))
 
+    const sidebarCell = new TableCell({
+      width: { size: 36, type: WidthType.PERCENTAGE },
+      children: sidebarChildren,
+      margins: { top: 280, bottom: 280, left: 280, right: 280 },
+      borders: { top: noBorder, bottom: noBorder, left: noBorder, right: { style: BorderStyle.SINGLE, size: 16, color: GREEN_WORD } },
+    })
+    const mainCell = new TableCell({
+      width: { size: 64, type: WidthType.PERCENTAGE },
+      children: mainChildren,
+      margins: { top: 280, bottom: 280, left: 280, right: 280 },
+      borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+    })
     const bodyRow = new TableRow({
-      children: [
-        new TableCell({
-          width: { size: 36, type: WidthType.PERCENTAGE },
-          children: sidebarChildren,
-          margins: { top: 280, bottom: 280, left: 280, right: 280 },
-          borders: { top: noBorder, bottom: noBorder, left: noBorder, right: { style: BorderStyle.SINGLE, size: 16, color: GREEN_WORD } },
-        }),
-        new TableCell({
-          width: { size: 64, type: WidthType.PERCENTAGE },
-          children: mainChildren,
-          margins: { top: 280, bottom: 280, left: 280, right: 280 },
-          borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
-        }),
-      ],
+      children: [sidebarCell, mainCell],
+      height: { value: 12500, rule: HeightRule.AT_LEAST },
     })
 
     const table = new Table({

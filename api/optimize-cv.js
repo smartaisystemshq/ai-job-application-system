@@ -20,7 +20,20 @@ YOUR TASK:
 - Bullet points use • character only
 - Fit content to one page worth of text
 - Detect the language of the CV and respond entirely in that language
-- Every sentence must be grammatically complete and correct`
+- Every sentence must be grammatically complete and correct
+
+CONTACT DATA RULE — CRITICAL:
+Extract ALL contact information from the original CV and include it at the top of the optimized CV. This includes:
+- Full name
+- Email address
+- Phone number
+- Full street address and house number
+- Postal code and city
+- Country (if present)
+- LinkedIn URL (if present)
+- Website/Portfolio (if present)
+
+Never omit any contact information that exists in the original CV. Copy it exactly as provided — do not change, shorten or reformat contact details. Place all contact info directly below the name in the header section.`
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')

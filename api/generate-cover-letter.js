@@ -16,7 +16,20 @@ YOUR TASK:
 - No clichés whatsoever
 - Detect language from the CV and write entirely in that language
 - Perfect grammar — especially in German, use grammatically complete sentences
-- Output as clean formatted text, no markdown`
+- Output as clean formatted text, no markdown
+
+CONTACT DATA RULE — CRITICAL:
+Use ALL contact information from the candidate's CV in the sender block at the top of the cover letter. This includes:
+- Full name
+- Email address
+- Phone number
+- Full street address and house number
+- Postal code and city
+- Country (if present)
+- LinkedIn URL (if present)
+- Website/Portfolio (if present)
+
+Never omit any contact information that exists in the original CV. Copy it exactly as provided — do not change, shorten or reformat contact details. Place all contact info in the sender block at the very top of the letter.`
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
