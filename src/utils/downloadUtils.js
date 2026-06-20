@@ -646,95 +646,46 @@ function buildPDFDocDef(text, sp, template, photo = null) {
 
 // ── Cover letter PDF builder ─────────────────────────────────────────────────
 
-function buildCoverLetterPDFDocDef(text, bodySize, template = 'minimal') {
-  const rawLines = sanitizeTextForPDF(text).split('\n')
-  const blocks = []
-  let cur = []
-  for (const line of rawLines) {
-    if (!line.trim()) {
-      if (cur.length) { blocks.push(cur); cur = [] }
-    } else { cur.push(line.trim()) }
-  }
-  if (cur.length) blocks.push(cur)
-
-  const content = []
-  const headerSize = bodySize + 1
-  const smallSize = bodySize - 1
-  const GREEN = '#1D9E75'
-  const isModern = template === 'modern' || template === 'sharp'
-  const isClassic = template === 'classic'
-  const isExecutive = template === 'executive'
-
-  // Template-specific top bar
-  if (isModern) {
-    content.push({ canvas: [{ type: 'rect', x: 0, y: 0, w: 455, h: 4, r: 0, color: GREEN }], margin: [0, 0, 0, 8] })
+function buildCoverLetterPDFDocDef(content, template = 'minimal') {
+  if (!content || typeof content !== 'string') {
+    throw new Error('Cover letter content is empty')
   }
 
-  for (let i = 0; i < blocks.length; i++) {
-    const blockLines = blocks[i]
-    const joined = blockLines.join(' ')
-    if (!joined) continue
+  const cleaned = sanitizeTextForPDF(content.trim())
+  const lines = cleaned.split('\n').map(l => l.trim())
 
-    // First block: sender / name / contact info
-    if (i === 0) {
-      const name = blockLines[0]
-      const contact = blockLines.slice(1).join('  |  ')
+  const contentBlocks = []
 
-      if (isClassic) {
-        content.push({ text: name, fontSize: headerSize + 2, bold: true, color: '#111111', alignment: 'center', margin: [0, 0, 0, 2] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 455, y2: 0, lineWidth: 1.2, lineColor: '#333333' }], margin: [0, 0, 0, 1] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 455, y2: 0, lineWidth: 0.4, lineColor: '#999999' }], margin: [0, 2, 0, 6] })
-        if (contact) content.push({ text: contact, fontSize: smallSize, color: '#555555', alignment: 'center', margin: [0, 0, 0, 12] })
-      } else if (isExecutive) {
-        content.push({ text: name.toUpperCase(), fontSize: headerSize + 2, bold: true, color: '#111111', characterSpacing: 1.5, margin: [0, 0, 0, 4] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 455, y2: 0, lineWidth: 2.5, lineColor: GREEN }], margin: [0, 0, 0, 6] })
-        if (contact) content.push({ text: contact, fontSize: smallSize, color: '#555555', margin: [0, 0, 0, 8] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 455, y2: 0, lineWidth: 0.4, lineColor: '#cccccc' }], margin: [0, 0, 0, 12] })
-      } else if (isModern) {
-        content.push({ text: name, fontSize: headerSize + 2, bold: true, color: '#111111', margin: [0, 0, 0, 4] })
-        if (contact) content.push({ text: contact, fontSize: smallSize, color: '#555555', margin: [0, 0, 0, 6] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 455, y2: 0, lineWidth: 1.2, lineColor: GREEN }], margin: [0, 0, 0, 12] })
-      } else {
-        // Minimal
-        content.push({ text: name, fontSize: headerSize + 2, bold: true, color: '#111111', margin: [0, 0, 0, 4] })
-        if (contact) content.push({ text: contact, fontSize: smallSize, color: '#555555', margin: [0, 0, 0, 8] })
-        content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 455, y2: 0, lineWidth: 0.5, lineColor: '#cccccc' }], margin: [0, 0, 0, 12] })
-      }
-      continue
+  lines.forEach((line, i) => {
+    if (line === '') {
+      contentBlocks.push({ text: ' ', fontSize: 10, margin: [0, 4, 0, 0] })
+      return
     }
 
-    // Date line
-    if (joined.length < 40 && i <= 2 &&
-      /\d{4}|january|february|march|april|may|june|july|august|september|october|november|december|\bjan\b|\bfeb\b|\bmar\b|\bapr\b|\bjun\b|\bjul\b|\baug\b|\bsep\b|\boct\b|\bnov\b|\bdec\b/i.test(joined)) {
-      content.push({ text: joined, fontSize: smallSize, color: '#555555', alignment: isClassic ? 'right' : 'left', margin: [0, 0, 0, 14] })
-      continue
-    }
+    const isHeader = i < 6
+    const isSubject = line.toLowerCase().startsWith('betreff') || line.toLowerCase().startsWith('subject') || line.toLowerCase().startsWith('re:')
+    const isSalutation = line.startsWith('Sehr geehrte') || line.startsWith('Liebe') || line.startsWith('Dear')
+    const isClosing = line.startsWith('Mit freundlichen') || line.startsWith('Best regards') || line.startsWith('Yours')
 
-    // Greeting / salutation
-    if (/^dear\b|^to whom\b|^liebe[rs]?\b|^sehr geehrte[rs]?\b/i.test(joined)) {
-      content.push({ text: joined, fontSize: bodySize, color: '#1a1a1a', margin: [0, 0, 0, bodySize], lineHeight: 1.55 })
-      continue
-    }
-
-    // Closing
-    if (i >= blocks.length - 2 && joined.length < 80 &&
-      /^(best|kind|sincerely|yours|mit freundlichen|hochachtungsvoll|regards)/i.test(joined)) {
-      for (const l of blockLines) {
-        content.push({ text: l, fontSize: bodySize, color: '#1a1a1a', margin: [0, 2, 0, 2], lineHeight: 1.4 })
-      }
-      content.push({ text: ' ', fontSize: bodySize * 0.3, margin: [0, 0, 0, 0] })
-      continue
-    }
-
-    // Body paragraph
-    content.push({ text: joined, fontSize: bodySize, color: '#2a2a2a', margin: [0, 0, 0, bodySize * 1.1], lineHeight: 1.6 })
-  }
+    contentBlocks.push({
+      text: line,
+      fontSize: isHeader ? 10 : 10.5,
+      bold: isSubject,
+      lineHeight: 1.5,
+      margin: [0, isSubject ? 6 : isSalutation ? 12 : isClosing ? 12 : 0, 0, 0],
+    })
+  })
 
   return {
     pageSize: 'A4',
-    pageMargins: [60, 50, 60, 50],
-    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.6 },
-    content,
+    pageMargins: [70, 60, 70, 60],
+    content: contentBlocks,
+    defaultStyle: {
+      font: 'Roboto',
+      fontSize: 10.5,
+      lineHeight: 1.5,
+      color: '#1a1a1a',
+    },
   }
 }
 
@@ -745,7 +696,7 @@ export async function downloadAsPDF(text, filename, template = 'minimal', isLett
   const pdfMake = await loadPdfMake()
   const sp = isLetter ? { bodySize: 11, margins: [60,50,60,50], lineHeight: 1.6, hSpB: 0, hSpA: 0 } : getScalingParams(cleanText)
   const docDef = isLetter
-    ? buildCoverLetterPDFDocDef(cleanText, sp.bodySize, template)
+    ? buildCoverLetterPDFDocDef(cleanText, template)
     : buildPDFDocDef(cleanText, sp, template, photo)
 
   // pdfmake 0.3.x: getBlob() returns a Promise, not a callback
