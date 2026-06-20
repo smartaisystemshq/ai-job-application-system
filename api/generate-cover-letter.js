@@ -1,45 +1,47 @@
 const Anthropic = require('@anthropic-ai/sdk')
-const { COVER_LETTER_EXPERT_KNOWLEDGE } = require('./expertKnowledge.js')
 const { checkRateLimit } = require('./rateLimit.js')
 const { validateAndSanitize } = require('./validation.js')
 const { applySecurityHeaders } = require('./securityHeaders.js')
 
-const languageInstruction = `
-CRITICAL LANGUAGE RULE:
-- Read the CV language carefully
-- If CV is in German → write the ENTIRE letter in German only. Use "Sehr geehrte/r" as salutation. Use "Mit freundlichen Grüßen" as closing. Zero English words.
-- If CV is in English → write the ENTIRE letter in English only. Use "Dear" as salutation. Use "Best regards" as closing. Zero German words.
-- NEVER mix languages. NEVER write salutation in one language and body in another.
-- If unsure → default to German.
+const systemPrompt = `
+You are a world-class cover letter writer who has helped thousands of candidates land interviews at top companies across Germany, Austria and Switzerland.
+
+LANGUAGE RULE — ABSOLUTE PRIORITY:
+Step 1: Read the CV language. If CV contains German words → output is 100% German. If CV is in English → output is 100% English.
+Step 2: Never mix languages under any circumstance. Not even one word.
+Step 3: German output uses "Sehr geehrte/r [Name]," as salutation. English uses "Dear [Name],"
+Step 4: German closing is always "Mit freundlichen Grüßen". English closing is "Best regards".
+
+OUTPUT FORMAT — RETURN EXACTLY THIS STRUCTURE:
+Return a JSON object with these exact fields:
+{
+  "sender_name": "full name from CV",
+  "sender_address": "street and number",
+  "sender_postal": "postal code and city",
+  "sender_email": "email from CV",
+  "sender_phone": "phone from CV",
+  "date": "city, den DD. Month YYYY" (German) or "City, Month DD, YYYY" (English),
+  "recipient_company": "company name and address from job description if available",
+  "subject": "Betreff: Bewerbung als [position]" (German) or "Re: Application for [position]" (English),
+  "salutation": "Sehr geehrte/r [Name]," or "Dear [Name],",
+  "body_paragraph_1": "opening paragraph — specific hook about company or role",
+  "body_paragraph_2": "middle paragraph — 2-3 specific achievements matching job requirements",
+  "body_paragraph_3": "closing paragraph — call to action, confident not submissive",
+  "closing": "Mit freundlichen Grüßen" or "Best regards",
+  "signature": "full name"
+}
+
+COVER LETTER RULES:
+- Maximum 250 words in body paragraphs combined
+- Never use: "I am a passionate team player", "I think outside the box", "Ich bewerbe mich hiermit"
+- Opening must reference something specific about the company or role
+- Each paragraph = exactly one topic, 3-5 sentences
+- Sound human, confident, specific — never generic
+- Perfect grammar — no fragments, no run-ons
+- Do NOT include placeholder text or markdown
+
+Return ONLY the JSON object. No other text, no markdown, no explanation.
 `
-
-const systemPrompt = `You are an expert cover letter writer who has helped thousands of candidates land interviews at top companies. You write compelling, human-sounding cover letters that get responses.
-
-${languageInstruction}
-
-${COVER_LETTER_EXPERT_KNOWLEDGE}
-
-YOUR TASK:
-- Write a tailored cover letter for the specific role using the candidate's CV
-- Maximum 250 words
-- Follow the structure from the knowledge base
-- Sound human and specific — never generic
-- No clichés whatsoever
-- Perfect grammar — especially in German, use grammatically complete sentences
-- Output as clean formatted text, no markdown
-
-CONTACT DATA RULE — CRITICAL:
-Use ALL contact information from the candidate's CV in the sender block at the top of the cover letter. This includes:
-- Full name
-- Email address
-- Phone number
-- Full street address and house number
-- Postal code and city
-- Country (if present)
-- LinkedIn URL (if present)
-- Website/Portfolio (if present)
-
-Never omit any contact information that exists in the original CV. Copy it exactly as provided — do not change, shorten or reformat contact details. Place all contact info in the sender block at the very top of the letter.`
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -105,18 +107,34 @@ module.exports = async function handler(req, res) {
         { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: jdPdf } },
       ]
     } else {
-      userContent = `=== CANDIDATE CV ===\n${sanitizedCv}\n\n=== JOB DESCRIPTION ===\n${sanitizedJd}`
+      userContent = `CV:\n${sanitizedCv}\n\nJOB DESCRIPTION:\n${sanitizedJd}`
     }
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 800,
-      temperature: 0,
+      max_tokens: 1500,
       system: systemPrompt,
       messages: [{ role: 'user', content: userContent }],
     })
 
-    return res.status(200).json({ result: message.content[0].text })
+    const rawText = message.content[0].text.trim()
+
+    let parsed
+    try {
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/)
+      parsed = JSON.parse(jsonMatch ? jsonMatch[0] : rawText)
+    } catch (e) {
+      return res.status(500).json({ error: 'Failed to parse cover letter structure' })
+    }
+
+    const requiredFields = ['sender_name', 'salutation', 'body_paragraph_1', 'closing', 'signature']
+    for (const field of requiredFields) {
+      if (!parsed[field]) {
+        return res.status(500).json({ error: `Missing field: ${field}` })
+      }
+    }
+
+    return res.status(200).json({ coverLetter: parsed })
   } catch (err) {
     console.error('Cover letter API error:', err)
     if (err.status === 401) return res.status(500).json({ error: 'Invalid API key. Please contact support.' })

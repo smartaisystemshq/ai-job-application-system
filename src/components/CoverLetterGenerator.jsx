@@ -3,21 +3,49 @@ import { useLang } from '../context/LanguageContext';
 import { t } from '../translations';
 import FileUploadField from './FileUploadField';
 import DownloadButtons from '../utils/DownloadButtons';
-import DocumentPreview from '../utils/DocumentPreview';
 import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
-import { cleanMarkdown } from '../utils/outputQualityAgent';
 import { TemplateSelector } from './TemplateSelector';
 import LockedContent from './LockedContent';
 
 const LS = {
   filename: 'sas_cover_filename',
-  result: 'jas.cl.result',
+  coverLetter: 'sas_cover_letter',
+  legacyResult: 'jas.cl.result',
   cvPdf: 'sas_cover_cv_pdf',
   cvIsPdf: 'sas_cover_cv_ispdf',
   jdFilename: 'sas_cover_jd_filename',
   jdPdf: 'sas_cover_jd_pdf',
   jdIsPdf: 'sas_cover_jd_ispdf',
 };
+
+function getCoverLetterPlainText(data) {
+  if (!data) return '';
+  return [
+    data.sender_name,
+    data.sender_address,
+    data.sender_postal,
+    data.sender_email,
+    data.sender_phone,
+    '',
+    data.date,
+    '',
+    data.recipient_company,
+    '',
+    data.subject,
+    '',
+    data.salutation,
+    '',
+    data.body_paragraph_1,
+    '',
+    data.body_paragraph_2,
+    '',
+    data.body_paragraph_3,
+    '',
+    data.closing,
+    '',
+    data.signature,
+  ].join('\n');
+}
 
 function CopyButton({ text }) {
   const { lang } = useLang();
@@ -34,15 +62,14 @@ function CopyButton({ text }) {
   );
 }
 
-function wordCount(text) {
-  if (!text.trim()) return 0;
-  // Skip the sender header block — count only letter body words
-  const blocks = text.split(/\n\n+/).filter(b => b.trim());
-  const body = (blocks.length > 1 ? blocks.slice(1) : blocks).join(' ').trim();
+function wordCount(data) {
+  if (!data) return 0;
+  const body = [data.body_paragraph_1, data.body_paragraph_2, data.body_paragraph_3]
+    .filter(Boolean).join(' ');
   return body ? body.split(/\s+/).filter(w => w).length : 0;
 }
 
-function MiniChatbot({ currentDocument, onUpdate }) {
+function MiniChatbot({ coverLetterData, onUpdate }) {
   const { lang } = useLang();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -55,11 +82,15 @@ function MiniChatbot({ currentDocument, onUpdate }) {
       const res = await fetch('/api/adjust-document', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ documentText: currentDocument, instruction: input.trim(), documentType: 'cover-letter' }),
+        body: JSON.stringify({
+          documentText: JSON.stringify(coverLetterData),
+          instruction: input.trim(),
+          documentType: 'cover-letter',
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Adjustment failed');
-      onUpdate(cleanMarkdown(data.result));
+      onUpdate(data.result);
       setInput('');
     } catch (err) {
       setError(err.message || 'Failed to apply adjustment. Please try again.');
@@ -101,7 +132,14 @@ export default function CoverLetterGenerator({ unlocked, onUnlock, cvText: cv, s
   const [jdFile, setJdFile] = useState(null);
   const [jdPdfBase64, setJdPdfBase64] = useState('');
 
-  const [result, setResult] = useState(() => localStorage.getItem(LS.result) || '');
+  const [coverLetterData, setCoverLetterData] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS.coverLetter);
+      return saved ? JSON.parse(saved) : null;
+    } catch (_) {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [score, setScore] = useState(null);
@@ -134,7 +172,11 @@ export default function CoverLetterGenerator({ unlocked, onUnlock, cvText: cv, s
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { if (result) localStorage.setItem(LS.result, result); }, [result]);
+  useEffect(() => {
+    if (coverLetterData) {
+      try { localStorage.setItem(LS.coverLetter, JSON.stringify(coverLetterData)); } catch (_) {}
+    }
+  }, [coverLetterData]);
   useEffect(() => {
     if (cvFile?.name) localStorage.setItem(LS.filename, cvFile.name);
     else localStorage.removeItem(LS.filename);
@@ -172,7 +214,7 @@ export default function CoverLetterGenerator({ unlocked, onUnlock, cvText: cv, s
 
   const handleGenerate = async () => {
     if (!canSubmit) { setError('Please provide both your CV and the job description.'); return; }
-    setLoading(true); setError(''); setResult(''); setScore(null);
+    setLoading(true); setError(''); setCoverLetterData(null); setScore(null);
     try {
       const res = await fetch('/api/generate-cover-letter', {
         method: 'POST',
@@ -186,10 +228,11 @@ export default function CoverLetterGenerator({ unlocked, onUnlock, cvText: cv, s
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate cover letter');
-      const clean = cleanMarkdown(data.result);
-      setResult(clean);
-      setScore(calculateAttractivenessScore(clean, jobDescription));
-      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+      if (data.coverLetter) {
+        setCoverLetterData(data.coverLetter);
+        setScore(calculateAttractivenessScore(getCoverLetterPlainText(data.coverLetter), jobDescription));
+        setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+      }
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
@@ -200,17 +243,25 @@ export default function CoverLetterGenerator({ unlocked, onUnlock, cvText: cv, s
   const handleClear = () => {
     setCv(''); setCvFile(null); setCvPdfBase64('');
     setJobDescription(''); setJdFile(null); setJdPdfBase64('');
-    setResult(''); setError(''); setScore(null);
+    setCoverLetterData(null); setError(''); setScore(null);
     Object.values(LS).forEach(k => localStorage.removeItem(k));
   };
 
-  const handleAdjustUpdate = (newResult) => {
-    setResult(newResult);
-    setScore(calculateAttractivenessScore(newResult, jobDescription));
+  const handleAdjustUpdate = (adjustResult) => {
+    try {
+      const jsonMatch = adjustResult.match(/\{[\s\S]*\}/);
+      const adjustedData = JSON.parse(jsonMatch ? jsonMatch[0] : adjustResult);
+      const newData = { ...coverLetterData, ...adjustedData };
+      setCoverLetterData(newData);
+      setScore(calculateAttractivenessScore(getCoverLetterPlainText(newData), jobDescription));
+    } catch (_) {
+      // If JSON parse fails, result is ignored
+    }
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   };
 
-  const resultWordCount = wordCount(result);
+  const resultWordCount = wordCount(coverLetterData);
+  const plainText = coverLetterData ? getCoverLetterPlainText(coverLetterData) : '';
 
   return (
     <div>
@@ -285,7 +336,7 @@ export default function CoverLetterGenerator({ unlocked, onUnlock, cvText: cv, s
           >
             {loading ? <><span className="spinner"></span> {t[lang].generating}</> : <>✦ {t[lang].cover_generate_btn}</>}
           </button>
-          {(cv || cvFile || jobDescription || jdFile || result) && (
+          {(cv || cvFile || jobDescription || jdFile || coverLetterData) && (
             <div style={{ textAlign: 'center', marginTop: 10 }}>
               <button className="btn btn-ghost" onClick={handleClear} disabled={loading} style={{ fontSize: 13 }}>
                 {t[lang].clear_all}
@@ -310,7 +361,7 @@ export default function CoverLetterGenerator({ unlocked, onUnlock, cvText: cv, s
       </div>
 
       {/* ── Section G: Result ── */}
-      {result && !loading && (
+      {coverLetterData && !loading && (
         <div className="tool-section" style={{ padding: '0 40px 80px', marginTop: 40 }}>
           <div ref={resultRef}>
             <LockedContent unlocked={unlocked} onUnlock={onUnlock}>
@@ -333,12 +384,37 @@ export default function CoverLetterGenerator({ unlocked, onUnlock, cvText: cv, s
                   }}>
                     {resultWordCount} {t[lang].cover_words}
                   </span>
-                  <DownloadButtons text={result} filename="cover-letter" isLetter={true} template={selectedTemplate} />
-                  <CopyButton text={result} />
+                  <DownloadButtons text={coverLetterData} filename="cover-letter" isLetter={true} template={selectedTemplate} />
+                  <CopyButton text={plainText} />
                 </div>
               </div>
 
-              <DocumentPreview text={result} type="letter" template={selectedTemplate} />
+              {/* Structured letter preview */}
+              <div style={{
+                background: 'linear-gradient(160deg, #0c0c1a 0%, #0f0f16 100%)',
+                borderRadius: 14,
+                padding: '28px 20px',
+                boxShadow: 'inset 0 0 60px rgba(0,0,0,0.5), 0 8px 40px rgba(0,0,0,0.4)',
+                maxHeight: 900,
+                overflowY: 'auto',
+              }}>
+                <div style={{ background: 'white', padding: '32px 40px', borderRadius: 8, fontFamily: 'Arial', fontSize: '10.5px', lineHeight: 1.7, color: '#1a1a1a', maxWidth: '680px', margin: '0 auto' }}>
+                  <div style={{ fontWeight: 700, fontSize: '13px' }}>{coverLetterData.sender_name}</div>
+                  <div>{coverLetterData.sender_address}</div>
+                  <div>{coverLetterData.sender_postal}</div>
+                  <div>{coverLetterData.sender_email}</div>
+                  <div style={{ marginBottom: '16px' }}>{coverLetterData.sender_phone}</div>
+                  <div style={{ marginBottom: '8px' }}>{coverLetterData.date}</div>
+                  <div style={{ marginBottom: '16px' }}>{coverLetterData.recipient_company}</div>
+                  <div style={{ fontWeight: 600, marginBottom: '16px' }}>{coverLetterData.subject}</div>
+                  <div style={{ marginBottom: '12px' }}>{coverLetterData.salutation}</div>
+                  <div style={{ marginBottom: '10px' }}>{coverLetterData.body_paragraph_1}</div>
+                  <div style={{ marginBottom: '10px' }}>{coverLetterData.body_paragraph_2}</div>
+                  <div style={{ marginBottom: '20px' }}>{coverLetterData.body_paragraph_3}</div>
+                  <div style={{ marginBottom: '32px' }}>{coverLetterData.closing}</div>
+                  <div style={{ fontWeight: 600 }}>{coverLetterData.signature}</div>
+                </div>
+              </div>
 
               <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
                 {t[lang].cover_review_note}
@@ -346,7 +422,7 @@ export default function CoverLetterGenerator({ unlocked, onUnlock, cvText: cv, s
 
               {score !== null && <ScoreCard score={score} />}
 
-              <MiniChatbot currentDocument={result} onUpdate={handleAdjustUpdate} />
+              <MiniChatbot coverLetterData={coverLetterData} onUpdate={handleAdjustUpdate} />
             </LockedContent>
 
             <div className="tool-tip-box" style={{ marginTop: 20, marginBottom: 16 }}>

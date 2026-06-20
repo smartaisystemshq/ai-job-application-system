@@ -3,7 +3,7 @@ const { checkRateLimit } = require('./rateLimit.js')
 const { validateAndSanitize } = require('./validation.js')
 const { applySecurityHeaders } = require('./securityHeaders.js')
 
-const systemPrompt = `You are an expert CV writer and career coach. When adjusting documents, maintain the same high professional standards: perfect grammar, strong action verbs, ATS-optimized keywords, and human-sounding language. Never introduce grammatical errors. Apply the user's requested change while improving overall quality.`
+const defaultSystemPrompt = `You are an expert CV writer and career coach. When adjusting documents, maintain the same high professional standards: perfect grammar, strong action verbs, ATS-optimized keywords, and human-sounding language. Never introduce grammatical errors. Apply the user's requested change while improving overall quality.`
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -47,12 +47,13 @@ module.exports = async function handler(req, res) {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
     let typeLabel, formatInstructions
+    let systemPrompt = defaultSystemPrompt
 
     if (documentType === 'cover-letter') {
       typeLabel = 'cover letter'
-      formatInstructions = `IMPORTANT — PLAIN TEXT FORMATTING:
-- Return PLAIN TEXT ONLY — no markdown symbols (no **, *, #, ##, __, _)
-- For cover letter: preserve the exact business letter structure from the current document (sender header block at top, date, greeting, body paragraphs, closing). Use blank lines between each section. Flowing prose only — no bullets or markdown headers.`
+      systemPrompt = `You are an expert cover letter editor. The cover letter is provided as a JSON object. Apply the user's requested change ONLY to the body paragraphs (body_paragraph_1, body_paragraph_2, body_paragraph_3). Return the complete JSON object with ONLY those fields updated. Keep all other fields exactly the same. Return ONLY valid JSON, no other text.`
+      formatInstructions = `IMPORTANT — JSON FORMAT:
+The document is a JSON object. Return the complete JSON object with only body_paragraph_1, body_paragraph_2, and body_paragraph_3 updated. Keep all other fields unchanged. Return ONLY valid JSON — no commentary, no markdown.`
     } else if (documentType === 'interview-questions') {
       typeLabel = 'interview preparation document'
       formatInstructions = `IMPORTANT — OUTPUT FORMAT (follow exactly):

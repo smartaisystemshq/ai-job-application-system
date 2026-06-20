@@ -644,124 +644,183 @@ function buildPDFDocDef(text, sp, template, photo = null) {
   }
 }
 
-// ── Cover letter PDF builder ─────────────────────────────────────────────────
+// ── Cover letter PDF builder (structured data) ───────────────────────────────
 
-function buildCoverLetterPDFDocDef(content, template = 'minimal') {
-  if (!content || typeof content !== 'string') {
-    throw new Error('Cover letter content is empty')
-  }
-
-  const cleaned = sanitizeTextForPDF(content.trim())
-  if (!cleaned) throw new Error('Cover letter content empty after sanitizing')
-
-  const lines = cleaned.split('\n').map(l => l.trim())
+export function buildCoverLetterPDF(data, template = 'minimal') {
+  if (!data || typeof data !== 'object') throw new Error('Invalid cover letter data')
 
   const ACCENT = '#1D9E75'
 
-  const templateStyles = {
-    minimal:   { headerBg: '#ffffff', headerColor: '#1a1a1a', accentLine: ACCENT,     bodyFont: 10.5 },
-    modern:    { headerBg: '#1a1a1a', headerColor: '#ffffff', accentLine: ACCENT,     bodyFont: 10.5 },
-    classic:   { headerBg: '#ffffff', headerColor: '#1a1a1a', accentLine: '#333333',  bodyFont: 10.5 },
-    executive: { headerBg: '#ffffff', headerColor: '#1a1a1a', accentLine: ACCENT,     bodyFont: 10.5 },
-    sharp:     { headerBg: ACCENT,   headerColor: '#ffffff', accentLine: '#ffffff',  bodyFont: 10.5 },
+  const templates = {
+    minimal:   { nameColor: '#1a1a1a', lineColor: '#cccccc', lineWidth: 0.5, subjectColor: '#1a1a1a', margins: [70, 60, 70, 60] },
+    modern:    { nameColor: '#1a1a1a', lineColor: ACCENT,    lineWidth: 1,   subjectColor: ACCENT,    margins: [70, 60, 70, 60] },
+    classic:   { nameColor: '#1a1a1a', lineColor: '#333333', lineWidth: 1,   subjectColor: '#1a1a1a', margins: [70, 60, 70, 60] },
+    executive: { nameColor: '#1a1a1a', lineColor: ACCENT,    lineWidth: 2,   subjectColor: '#1a1a1a', margins: [60, 55, 60, 55] },
+    sharp:     { nameColor: '#ffffff', lineColor: '#ffffff', lineWidth: 0.5, subjectColor: '#1a1a1a', margins: [0, 0, 60, 60] },
   }
 
-  const style = templateStyles[template] || templateStyles.minimal
+  const style = templates[template] || templates.minimal
 
-  const senderLines = []
-  const bodyLines = []
-  let senderDone = false
-
-  lines.forEach((line, i) => {
-    if (!senderDone && i < 8) {
-      senderLines.push(line)
-      if (line === '' && i > 2) senderDone = true
-    } else {
-      bodyLines.push(line)
-    }
+  const safeLine = (text) => ({
+    text: text || '',
+    fontSize: 10,
+    lineHeight: 1.5,
+    color: '#333333',
+    margin: [0, 1, 0, 0],
   })
 
-  const senderBlock = senderLines.filter(Boolean)
+  const senderBlock = [
+    { text: data.sender_name || '', fontSize: 14, bold: true, color: style.nameColor || '#1a1a1a', margin: [0, 0, 0, 4] },
+    safeLine(data.sender_address),
+    safeLine(data.sender_postal),
+    safeLine(data.sender_email),
+    safeLine(data.sender_phone),
+  ]
 
-  const headerContent = senderBlock.map((line, i) => ({
-    text: line,
-    fontSize: i === 0 ? 13 : 9.5,
-    bold: i === 0,
-    color: style.headerColor,
-    margin: [0, i === 0 ? 0 : 1, 0, 0],
-    lineHeight: 1.4,
-  }))
+  const dividerLine = {
+    canvas: [{ type: 'line', x1: 0, y1: 0, x2: 475, y2: 0, lineWidth: style.lineWidth, lineColor: style.lineColor }],
+    margin: [0, 10, 0, 14],
+  }
 
-  const bodyContent = []
-  bodyLines.forEach(line => {
-    const isEmpty = line === ''
-    const isSubject   = line.toLowerCase().startsWith('betreff') || line.toLowerCase().startsWith('subject')
-    const isSalutation = line.startsWith('Sehr geehrte') || line.startsWith('Liebe') || line.startsWith('Dear')
-    const isClosing    = line.startsWith('Mit freundlichen') || line.startsWith('Best regards') || line.startsWith('Yours') || line.startsWith('Kind regards')
+  const metaBlock = [
+    { text: data.date || '', fontSize: 10, color: '#555555', margin: [0, 0, 0, 10] },
+    { text: data.recipient_company || '', fontSize: 10, color: '#333333', margin: [0, 0, 0, 14] },
+    { text: data.subject || '', fontSize: 10, bold: true, color: style.subjectColor || '#1a1a1a', margin: [0, 0, 0, 14] },
+    { text: data.salutation || '', fontSize: 10.5, margin: [0, 0, 0, 10] },
+  ]
 
-    bodyContent.push({
-      text: isEmpty ? ' ' : line,
-      fontSize: style.bodyFont,
-      bold: isSubject,
-      color: isSubject ? ACCENT : '#1a1a1a',
-      lineHeight: 1.6,
-      margin: [0, isSalutation || isClosing ? 14 : isSubject ? 8 : 0, 0, isEmpty ? 6 : 0],
-    })
-  })
+  const bodyBlock = [
+    { text: data.body_paragraph_1 || '', fontSize: 10.5, lineHeight: 1.65, margin: [0, 0, 0, 10] },
+    { text: data.body_paragraph_2 || '', fontSize: 10.5, lineHeight: 1.65, margin: [0, 0, 0, 10] },
+    { text: data.body_paragraph_3 || '', fontSize: 10.5, lineHeight: 1.65, margin: [0, 0, 0, 24] },
+    { text: data.closing || '', fontSize: 10.5, margin: [0, 0, 0, 28] },
+    { text: data.signature || '', fontSize: 10.5, bold: true },
+  ]
 
-  const docContent = []
+  let content = []
 
   if (template === 'sharp') {
-    docContent.push({
+    content.push({
       table: {
         widths: ['100%'],
         body: [[{
-          stack: headerContent,
-          fillColor: style.headerBg,
+          stack: [
+            { text: data.sender_name || '', fontSize: 16, bold: true, color: '#ffffff', margin: [24, 16, 24, 4] },
+            { text: [data.sender_email, data.sender_phone, data.sender_address].filter(Boolean).join('   ·   '), fontSize: 8.5, color: 'rgba(255,255,255,0.85)', margin: [24, 0, 24, 14] },
+          ],
+          fillColor: ACCENT,
           border: [false, false, false, false],
-          margin: [24, 18, 24, 16],
         }]],
       },
       layout: 'noBorders',
       margin: [0, 0, 0, 0],
     })
+    content.push({ text: '', margin: [0, 20, 0, 0] })
+    content.push(...metaBlock.map(b => ({ ...b, margin: [60, b.margin?.[1] || 0, 60, b.margin?.[3] || 0] })))
+    content.push(...bodyBlock.map(b => ({ ...b, margin: [60, b.margin?.[1] || 0, 60, b.margin?.[3] || 0] })))
   } else {
-    docContent.push(...headerContent.map(h => ({ ...h, margin: [0, h.margin?.[1] || 0, 0, 2] })))
-    docContent.push({
-      canvas: [{
-        type: 'line',
-        x1: 0, y1: 0, x2: 475, y2: 0,
-        lineWidth: template === 'executive' ? 2 : 1,
-        lineColor: style.accentLine,
-      }],
-      margin: [0, 8, 0, 16],
-    })
+    content.push(...senderBlock)
+    content.push(dividerLine)
+    content.push(...metaBlock)
+    content.push(...bodyBlock)
   }
-
-  docContent.push(...bodyContent)
 
   return {
     pageSize: 'A4',
-    pageMargins: template === 'sharp' ? [0, 0, 60, 60] : [70, 60, 70, 60],
-    content: docContent,
+    pageMargins: template === 'sharp' ? [0, 0, 0, 50] : style.margins,
+    content,
     defaultStyle: {
       font: 'Roboto',
-      fontSize: style.bodyFont,
+      fontSize: 10.5,
       lineHeight: 1.6,
       color: '#1a1a1a',
     },
   }
 }
 
+// ── Cover letter Word builder (structured data) ──────────────────────────────
+
+export async function buildCoverLetterWord(data, template = 'minimal') {
+  if (!data || typeof data !== 'object') throw new Error('Invalid cover letter data')
+
+  const { Document, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType } = await import('docx')
+
+  const ACCENT = '1D9E75'
+  const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
+
+  const makeP = (text, opts = {}) => new Paragraph({
+    children: [new TextRun({
+      text: text || '',
+      size: opts.size || 20,
+      bold: opts.bold || false,
+      color: opts.color || '1a1a1a',
+      font: 'Arial',
+    })],
+    spacing: { before: opts.before || 0, after: opts.after !== undefined ? opts.after : 80 },
+  })
+
+  const children = []
+
+  if (template === 'sharp') {
+    children.push(new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [new TableRow({
+        children: [new TableCell({
+          children: [
+            makeP(data.sender_name, { size: 28, bold: true, color: 'FFFFFF', after: 60 }),
+            makeP([data.sender_email, data.sender_phone, data.sender_address].filter(Boolean).join('   ·   '), { size: 16, color: 'E8F5F0', after: 0 }),
+          ],
+          shading: { fill: ACCENT, type: ShadingType.CLEAR, color: ACCENT },
+          borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+          margins: { top: 200, bottom: 200, left: 400, right: 400 },
+        })],
+      })],
+    }))
+    children.push(makeP('', { after: 200 }))
+  } else {
+    children.push(makeP(data.sender_name, { size: 26, bold: true, after: 40 }))
+    children.push(makeP(data.sender_address, { size: 18, after: 40 }))
+    children.push(makeP(data.sender_postal, { size: 18, after: 40 }))
+    children.push(makeP(data.sender_email, { size: 18, after: 40 }))
+    children.push(makeP(data.sender_phone, { size: 18, after: 120 }))
+    children.push(new Paragraph({
+      border: { bottom: { style: BorderStyle.SINGLE, size: template === 'executive' ? 12 : 6, color: template === 'classic' ? '333333' : ACCENT } },
+      spacing: { after: 160 },
+    }))
+  }
+
+  children.push(makeP(data.date, { size: 19, color: '555555', after: 120 }))
+  children.push(makeP(data.recipient_company, { size: 19, after: 160 }))
+  children.push(makeP(data.subject, { size: 20, bold: true, after: 160 }))
+  children.push(makeP(data.salutation, { size: 20, after: 120 }))
+  children.push(makeP(data.body_paragraph_1, { size: 20, after: 120 }))
+  children.push(makeP(data.body_paragraph_2, { size: 20, after: 120 }))
+  children.push(makeP(data.body_paragraph_3, { size: 20, after: 360 }))
+  children.push(makeP(data.closing, { size: 20, after: 400 }))
+  children.push(makeP(data.signature, { size: 20, bold: true, after: 0 }))
+
+  return new Document({
+    sections: [{
+      properties: {
+        page: { margin: { top: 854, right: 1134, bottom: 854, left: 1134 } },
+      },
+      children,
+    }],
+  })
+}
+
 // ── Public: download as PDF ──────────────────────────────────────────────────
 
 export async function downloadAsPDF(text, filename, template = 'minimal', isLetter = false, photo = null) {
-  const cleanText = sanitizeTextForPDF(stripMarkdown(text))
   const pdfMake = await loadPdfMake()
-  const sp = isLetter ? { bodySize: 11, margins: [60,50,60,50], lineHeight: 1.6, hSpB: 0, hSpA: 0 } : getScalingParams(cleanText)
-  const docDef = isLetter
-    ? buildCoverLetterPDFDocDef(cleanText, template || 'minimal')
-    : buildPDFDocDef(cleanText, sp, template, photo)
+  let docDef
+  if (isLetter) {
+    docDef = buildCoverLetterPDF(text, template || 'minimal')
+  } else {
+    const cleanText = sanitizeTextForPDF(stripMarkdown(text))
+    const sp = getScalingParams(cleanText)
+    docDef = buildPDFDocDef(cleanText, sp, template, photo)
+  }
 
   // pdfmake 0.3.x: getBlob() returns a Promise, not a callback
   const pdf = pdfMake.createPdf(docDef)
@@ -783,94 +842,9 @@ export async function downloadAsPDF(text, filename, template = 'minimal', isLett
 // ── Public: download as Word (.docx) ────────────────────────────────────────
 
 export async function downloadAsWord(text, filename, template = 'minimal', isLetter = false, photo = null) {
-  const cleanText = stripMarkdown(text)
-  const {
-    Document, Packer, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType, ImageRun, HeightRule,
-  } = await import('docx')
-
-  // Cover letter: business letter format
   if (isLetter) {
-    const rawLines = cleanText.split('\n')
-    const blocks = []
-    let cur = []
-    for (const line of rawLines) {
-      if (!line.trim()) {
-        if (cur.length) { blocks.push(cur); cur = [] }
-      } else { cur.push(line.trim()) }
-    }
-    if (cur.length) blocks.push(cur)
-
-    const GREEN_WORD = '1D9E75'
-    const isModern = template === 'modern' || template === 'sharp'
-    const isClassic = template === 'classic'
-    const isExecutive = template === 'executive'
-    const letterFont = isClassic ? 'Georgia' : 'Calibri'
-
-    const paras = []
-    for (let i = 0; i < blocks.length; i++) {
-      const blockLines = blocks[i]
-      const joined = blockLines.join(' ')
-      if (!joined) continue
-
-      // First block: sender name (first line) + contact info (remaining lines)
-      if (i === 0) {
-        const name = blockLines[0]
-        const contact = blockLines.slice(1).join('  |  ')
-        const nameText = isExecutive ? name.toUpperCase() : name
-        const namePara = new Paragraph({
-          children: [new TextRun({ text: nameText, bold: true, size: 28, font: letterFont, color: '111111', characterSpacing: isExecutive ? 30 : 0 })],
-          spacing: { after: 40 },
-          alignment: isClassic ? 'center' : 'left',
-        })
-        paras.push(namePara)
-
-        if (isClassic) {
-          paras.push(new Paragraph({ children: [new TextRun({ text: '' })], border: { bottom: { style: BorderStyle.DOUBLE, size: 6, color: '333333', space: 1 } }, spacing: { after: 60 } }))
-        } else if (isExecutive) {
-          paras.push(new Paragraph({ children: [new TextRun({ text: '' })], border: { bottom: { style: BorderStyle.SINGLE, size: 14, color: GREEN_WORD, space: 1 } }, spacing: { after: 60 } }))
-        } else if (isModern) {
-          paras.push(new Paragraph({ children: [new TextRun({ text: '' })], border: { bottom: { style: BorderStyle.SINGLE, size: 10, color: GREEN_WORD, space: 1 } }, spacing: { after: 40 } }))
-        }
-
-        if (contact) {
-          const contactProps = {
-            children: [new TextRun({ text: contact, size: 18, font: letterFont, color: '666666' })],
-            spacing: { after: isClassic || isExecutive || isModern ? 80 : 60 },
-            alignment: isClassic ? 'center' : 'left',
-          }
-          if (!isClassic && !isExecutive && !isModern) {
-            contactProps.border = { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'cccccc', space: 4 } }
-          }
-          paras.push(new Paragraph(contactProps))
-        } else if (!isClassic && !isExecutive && !isModern) {
-          paras.push(new Paragraph({ children: [new TextRun({ text: '' })], border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'cccccc', space: 1 } }, spacing: { after: 80 } }))
-        }
-        continue
-      }
-      // Date line
-      if (joined.length < 40 && i <= 2 &&
-        /\d{4}|january|february|march|april|may|june|july|august|september|october|november|december|\bjan\b|\bfeb\b|\bmar\b|\bapr\b|\bjun\b|\bjul\b|\baug\b|\bsep\b|\boct\b|\bnov\b|\bdec\b/i.test(joined)) {
-        paras.push(new Paragraph({ children: [new TextRun({ text: joined, size: 18, font: letterFont, color: '666666' })], spacing: { after: 200 }, alignment: isClassic ? 'right' : 'left' }))
-        continue
-      }
-      // Greeting
-      if (/^dear\b|^to whom\b|^liebe[rs]?\b|^sehr geehrte[rs]?\b/i.test(joined)) {
-        paras.push(new Paragraph({ children: [new TextRun({ text: joined, size: 22, font: letterFont, color: '1a1a1a' })], spacing: { after: 160 } }))
-        continue
-      }
-      // Closing (toward end, starts with closing phrase)
-      if (i >= blocks.length - 2 && joined.length < 80 &&
-        /^(best|kind|sincerely|yours|mit freundlichen|hochachtungsvoll|regards)/i.test(joined)) {
-        for (const l of blockLines) {
-          paras.push(new Paragraph({ children: [new TextRun({ text: l, size: 22, font: letterFont, color: '1a1a1a' })], spacing: { before: i === blocks.length - 2 ? 200 : 0, after: 60 } }))
-        }
-        continue
-      }
-      // Body paragraph
-      paras.push(new Paragraph({ children: [new TextRun({ text: joined, size: 22, font: letterFont, color: '2a2a2a' })], spacing: { after: 200 } }))
-    }
-
-    const doc = new Document({ sections: [{ properties: { page: { margin: { top: 1000, right: 1200, bottom: 1000, left: 1200 } } }, children: paras }] })
+    const { Packer } = await import('docx')
+    const doc = await buildCoverLetterWord(text, template || 'minimal')
     const blob = await Packer.toBlob(doc)
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -879,6 +853,11 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
     setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url) }, 200)
     return
   }
+
+  const cleanText = stripMarkdown(text)
+  const {
+    Document, Packer, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType, ImageRun, HeightRule,
+  } = await import('docx')
 
   const lines = parseDocumentLines(cleanText)
   const GREEN = '1D9E75'
