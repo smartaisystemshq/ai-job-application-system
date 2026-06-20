@@ -652,38 +652,102 @@ function buildCoverLetterPDFDocDef(content, template = 'minimal') {
   }
 
   const cleaned = sanitizeTextForPDF(content.trim())
+  if (!cleaned) throw new Error('Cover letter content empty after sanitizing')
+
   const lines = cleaned.split('\n').map(l => l.trim())
 
-  const contentBlocks = []
+  const ACCENT = '#1D9E75'
+
+  const templateStyles = {
+    minimal:   { headerBg: '#ffffff', headerColor: '#1a1a1a', accentLine: ACCENT,     bodyFont: 10.5 },
+    modern:    { headerBg: '#1a1a1a', headerColor: '#ffffff', accentLine: ACCENT,     bodyFont: 10.5 },
+    classic:   { headerBg: '#ffffff', headerColor: '#1a1a1a', accentLine: '#333333',  bodyFont: 10.5 },
+    executive: { headerBg: '#ffffff', headerColor: '#1a1a1a', accentLine: ACCENT,     bodyFont: 10.5 },
+    sharp:     { headerBg: ACCENT,   headerColor: '#ffffff', accentLine: '#ffffff',  bodyFont: 10.5 },
+  }
+
+  const style = templateStyles[template] || templateStyles.minimal
+
+  const senderLines = []
+  const bodyLines = []
+  let senderDone = false
 
   lines.forEach((line, i) => {
-    if (line === '') {
-      contentBlocks.push({ text: ' ', fontSize: 10, margin: [0, 4, 0, 0] })
-      return
+    if (!senderDone && i < 8) {
+      senderLines.push(line)
+      if (line === '' && i > 2) senderDone = true
+    } else {
+      bodyLines.push(line)
     }
+  })
 
-    const isHeader = i < 6
-    const isSubject = line.toLowerCase().startsWith('betreff') || line.toLowerCase().startsWith('subject') || line.toLowerCase().startsWith('re:')
+  const senderBlock = senderLines.filter(Boolean)
+
+  const headerContent = senderBlock.map((line, i) => ({
+    text: line,
+    fontSize: i === 0 ? 13 : 9.5,
+    bold: i === 0,
+    color: style.headerColor,
+    margin: [0, i === 0 ? 0 : 1, 0, 0],
+    lineHeight: 1.4,
+  }))
+
+  const bodyContent = []
+  bodyLines.forEach(line => {
+    const isEmpty = line === ''
+    const isSubject   = line.toLowerCase().startsWith('betreff') || line.toLowerCase().startsWith('subject')
     const isSalutation = line.startsWith('Sehr geehrte') || line.startsWith('Liebe') || line.startsWith('Dear')
-    const isClosing = line.startsWith('Mit freundlichen') || line.startsWith('Best regards') || line.startsWith('Yours')
+    const isClosing    = line.startsWith('Mit freundlichen') || line.startsWith('Best regards') || line.startsWith('Yours') || line.startsWith('Kind regards')
 
-    contentBlocks.push({
-      text: line,
-      fontSize: isHeader ? 10 : 10.5,
+    bodyContent.push({
+      text: isEmpty ? ' ' : line,
+      fontSize: style.bodyFont,
       bold: isSubject,
-      lineHeight: 1.5,
-      margin: [0, isSubject ? 6 : isSalutation ? 12 : isClosing ? 12 : 0, 0, 0],
+      color: isSubject ? ACCENT : '#1a1a1a',
+      lineHeight: 1.6,
+      margin: [0, isSalutation || isClosing ? 14 : isSubject ? 8 : 0, 0, isEmpty ? 6 : 0],
     })
   })
 
+  const docContent = []
+
+  if (template === 'sharp') {
+    docContent.push({
+      table: {
+        widths: ['100%'],
+        body: [[{
+          stack: headerContent,
+          fillColor: style.headerBg,
+          border: [false, false, false, false],
+          margin: [24, 18, 24, 16],
+        }]],
+      },
+      layout: 'noBorders',
+      margin: [0, 0, 0, 0],
+    })
+  } else {
+    docContent.push(...headerContent.map(h => ({ ...h, margin: [0, h.margin?.[1] || 0, 0, 2] })))
+    docContent.push({
+      canvas: [{
+        type: 'line',
+        x1: 0, y1: 0, x2: 475, y2: 0,
+        lineWidth: template === 'executive' ? 2 : 1,
+        lineColor: style.accentLine,
+      }],
+      margin: [0, 8, 0, 16],
+    })
+  }
+
+  docContent.push(...bodyContent)
+
   return {
     pageSize: 'A4',
-    pageMargins: [70, 60, 70, 60],
-    content: contentBlocks,
+    pageMargins: template === 'sharp' ? [0, 0, 60, 60] : [70, 60, 70, 60],
+    content: docContent,
     defaultStyle: {
       font: 'Roboto',
-      fontSize: 10.5,
-      lineHeight: 1.5,
+      fontSize: style.bodyFont,
+      lineHeight: 1.6,
       color: '#1a1a1a',
     },
   }
@@ -696,7 +760,7 @@ export async function downloadAsPDF(text, filename, template = 'minimal', isLett
   const pdfMake = await loadPdfMake()
   const sp = isLetter ? { bodySize: 11, margins: [60,50,60,50], lineHeight: 1.6, hSpB: 0, hSpA: 0 } : getScalingParams(cleanText)
   const docDef = isLetter
-    ? buildCoverLetterPDFDocDef(cleanText, template)
+    ? buildCoverLetterPDFDocDef(cleanText, template || 'minimal')
     : buildPDFDocDef(cleanText, sp, template, photo)
 
   // pdfmake 0.3.x: getBlob() returns a Promise, not a callback

@@ -4,7 +4,18 @@ const { checkRateLimit } = require('./rateLimit.js')
 const { validateAndSanitize } = require('./validation.js')
 const { applySecurityHeaders } = require('./securityHeaders.js')
 
+const languageInstruction = `
+CRITICAL LANGUAGE RULE:
+- Read the CV language carefully
+- If CV is in German → write the ENTIRE letter in German only. Use "Sehr geehrte/r" as salutation. Use "Mit freundlichen Grüßen" as closing. Zero English words.
+- If CV is in English → write the ENTIRE letter in English only. Use "Dear" as salutation. Use "Best regards" as closing. Zero German words.
+- NEVER mix languages. NEVER write salutation in one language and body in another.
+- If unsure → default to German.
+`
+
 const systemPrompt = `You are an expert cover letter writer who has helped thousands of candidates land interviews at top companies. You write compelling, human-sounding cover letters that get responses.
+
+${languageInstruction}
 
 ${COVER_LETTER_EXPERT_KNOWLEDGE}
 
@@ -14,7 +25,6 @@ YOUR TASK:
 - Follow the structure from the knowledge base
 - Sound human and specific — never generic
 - No clichés whatsoever
-- Detect language from the CV and write entirely in that language
 - Perfect grammar — especially in German, use grammatically complete sentences
 - Output as clean formatted text, no markdown
 
