@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { unlockApp } from '../utils/accessControl';
 import { useLang } from '../context/LanguageContext';
 import { t } from '../translations';
 
@@ -23,20 +22,30 @@ export default function Paywall({ onUnlock, onClose }) {
   const handleUnlock = async () => {
     if (!code.trim()) return;
     setError('');
-    const result = await unlockApp(code.trim().toUpperCase());
-    if (result.valid) {
-      onUnlock?.();
-      onClose?.();
-    } else if (result.blocked) {
-      setIsBlocked(true);
-    } else {
-      const n = result.attemptsRemaining;
-      setAttemptsRemaining(n ?? null);
-      setError(
-        n != null
-          ? t[lang].paywall_attempts_left.replace('{n}', n)
-          : t[lang].paywall_invalid
-      );
+    try {
+      const response = await fetch('/api/validate-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code.trim().toUpperCase() }),
+      });
+      const data = await response.json();
+      if (data.valid) {
+        localStorage.setItem('sas_access_token', btoa('unlocked_' + Date.now()));
+        onUnlock?.();
+        onClose?.();
+      } else if (data.blocked) {
+        setIsBlocked(true);
+      } else {
+        const n = data.attemptsRemaining;
+        setAttemptsRemaining(n ?? null);
+        setError(
+          n != null
+            ? t[lang].paywall_attempts_left.replace('{n}', n)
+            : t[lang].paywall_invalid
+        );
+      }
+    } catch {
+      setError(t[lang].paywall_invalid);
     }
   };
 

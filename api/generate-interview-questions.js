@@ -4,6 +4,20 @@ const { checkRateLimit } = require('./rateLimit.js')
 const { validateAndSanitize } = require('./validation.js')
 const { applySecurityHeaders } = require('./securityHeaders.js')
 
+function runQualityAgent(text, type) {
+  if (!text || typeof text !== 'string') return text
+  let out = text
+  out = out.replace(/^#{1,6}\s+/gm, '')
+  out = out.replace(/\*\*\*([^*\n]+)\*\*\*/g, '$1')
+  out = out.replace(/\*\*([^*\n]+)\*\*/g, '$1')
+  out = out.replace(/___([^_\n]+)___/g, '$1')
+  out = out.replace(/__([^_\n]+)__/g, '$1')
+  out = out.replace(/`([^`\n]+)`/g, '$1')
+  out = out.replace(/\[(?:add|insert|your|füge|Name|Company)[^\]]*\]/gi, '')
+  out = out.replace(/\n{3,}/g, '\n\n')
+  return out.trim()
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -70,8 +84,8 @@ YOUR TASK:
       ]
     })
 
-    const result = message.content[0].type === 'text' ? message.content[0].text : ''
-    return res.status(200).json({ result })
+    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+    return res.status(200).json({ result: runQualityAgent(raw, 'interview') })
   } catch (error) {
     if (error.status === 401) {
       return res.status(500).json({ error: 'Invalid API key configuration. Please contact support.' })

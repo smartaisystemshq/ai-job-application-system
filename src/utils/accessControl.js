@@ -3,7 +3,8 @@ const TOKEN_VALUE = 'unlocked-v1';
 
 export function isUnlocked() {
   try {
-    return localStorage.getItem(TOKEN_KEY) === TOKEN_VALUE;
+    return localStorage.getItem(TOKEN_KEY) === TOKEN_VALUE ||
+           !!localStorage.getItem('sas_access_token');
   } catch {
     return false;
   }

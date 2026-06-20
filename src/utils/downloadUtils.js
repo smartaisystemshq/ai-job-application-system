@@ -188,7 +188,7 @@ function getOptimalFontSize(text) {
 
 function wrapHeaderWithPhoto(headerItems, photo) {
   if (!photo || !headerItems.length) return headerItems
-  return [{ columns: [{ stack: headerItems, width: '*' }, { image: photo, fit: [68, 87], alignment: 'right', margin: [4, 0, 0, 0] }], margin: [0, 0, 0, 6] }]
+  return [{ columns: [{ stack: headerItems, width: '*' }, { image: photo, fit: [65, 83], alignment: 'right', margin: [4, 0, 0, 0] }], margin: [0, 0, 0, 6] }]
 }
 
 // ── Template-specific PDF builders ──────────────────────────────────────────
@@ -1114,7 +1114,7 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
         else { hDone = true; bodyLines.push(line) }
       }
       const headerParas = buildParagraphs(headerLines)
-      const photoImageRun = new ImageRun({ data: photoBytes, transformation: { width: 68, height: 87 }, type: photoType })
+      const photoImageRun = new ImageRun({ data: photoBytes, transformation: { width: 65, height: 83 }, type: photoType })
       const photoPara = new Paragraph({ children: [photoImageRun], spacing: { after: 0 } })
       const headerTable = new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },

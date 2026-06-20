@@ -322,14 +322,16 @@ export default function CVBuilder({ unlocked, onUnlock }) {
   const [skillsLoading, setSkillsLoading] = useState(false);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [apiError, setApiError] = useState('');
-  const [adjustedCvText, setAdjustedCvText] = useState(null);
+  const [adjustedCvText, setAdjustedCvText] = useState(() => {
+    try { return localStorage.getItem('sas_builder_output') || null; } catch { return null; }
+  });
   const [cvScore, setCvScore] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState('minimal');
 
   const previewRef = useRef(null);
   const photoInputRef = useRef(null);
   const jdFileRef = useRef(null);
-  const [photoBase64, setPhotoBase64] = useState('');
+  const [photoBase64, setPhotoBase64] = useState(() => localStorage.getItem('sas_builder_photo') || '');
   const [photoError, setPhotoError] = useState('');
   const [photoHover, setPhotoHover] = useState(false);
   const [builderJdFilename, setBuilderJdFilename] = useState(null);
@@ -340,8 +342,26 @@ export default function CVBuilder({ unlocked, onUnlock }) {
   }, [state]);
 
   useEffect(() => {
-    if (state.step !== 8) setAdjustedCvText(null);
+    if (state.step !== 8) {
+      setAdjustedCvText(null);
+    }
   }, [state.step]);
+
+  useEffect(() => {
+    if (photoBase64) {
+      localStorage.setItem('sas_builder_photo', photoBase64);
+    } else {
+      localStorage.removeItem('sas_builder_photo');
+    }
+  }, [photoBase64]);
+
+  useEffect(() => {
+    if (adjustedCvText !== null) {
+      localStorage.setItem('sas_builder_output', adjustedCvText);
+    } else {
+      localStorage.removeItem('sas_builder_output');
+    }
+  }, [adjustedCvText]);
 
   const set = (key, val) => setState(s => ({ ...s, [key]: val }));
   const setP = (key, val) => setState(s => ({ ...s, personal: { ...s.personal, [key]: val } }));
@@ -443,6 +463,8 @@ export default function CVBuilder({ unlocked, onUnlock }) {
   const startOver = () => {
     setState(BLANK);
     localStorage.removeItem(LS_KEY);
+    localStorage.removeItem('sas_builder_photo');
+    localStorage.removeItem('sas_builder_output');
     setSuggestedSkills([]);
     setAdjustedCvText(null);
     setPhotoBase64('');

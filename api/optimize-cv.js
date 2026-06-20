@@ -35,6 +35,27 @@ Extract ALL contact information from the original CV and include it at the top o
 
 Never omit any contact information that exists in the original CV. Copy it exactly as provided — do not change, shorten or reformat contact details. Place all contact info directly below the name in the header section.`
 
+function runQualityAgent(text, type) {
+  if (!text || typeof text !== 'string') return text
+  let out = text
+  out = out.replace(/^#{1,6}\s+/gm, '')
+  out = out.replace(/\*\*\*([^*\n]+)\*\*\*/g, '$1')
+  out = out.replace(/\*\*([^*\n]+)\*\*/g, '$1')
+  out = out.replace(/___([^_\n]+)___/g, '$1')
+  out = out.replace(/__([^_\n]+)__/g, '$1')
+  out = out.replace(/`([^`\n]+)`/g, '$1')
+  out = out.replace(/^\s*[-*]\s+/gm, '• ')
+  out = out.replace(/^\s*\d+[.)]\s+/gm, '• ')
+  out = out.replace(/\[(?:add|insert|your|füge|Name|Company)[^\]]*\]/gi, '')
+  out = out.replace(/\n{3,}/g, '\n\n')
+  if (type === 'cover-letter') {
+    const hasGerman = /\b(?:und|die|der|das|ist|mit|für|eine|eines)\b/.test(out)
+    const hasEnglish = /\b(?:the|and|for|with|your|our|have|this|that|will)\b/.test(out)
+    if (hasGerman && hasEnglish) console.warn('[QualityAgent] Mixed language detected in cover-letter')
+  }
+  return out.trim()
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -112,7 +133,8 @@ module.exports = async function handler(req, res) {
       messages: [{ role: 'user', content: userContent }],
     })
 
-    return res.status(200).json({ result: message.content[0].text })
+    const cleanOutput = runQualityAgent(message.content[0].text, 'cv')
+    return res.status(200).json({ result: cleanOutput })
   } catch (err) {
     console.error('Claude API error:', err)
     if (err.status === 401) return res.status(500).json({ error: 'Invalid API key. Please contact support.' })
