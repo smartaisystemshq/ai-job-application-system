@@ -3,6 +3,7 @@ import { useLang } from '../context/LanguageContext';
 import { t } from '../translations';
 import FileUploadField from './FileUploadField';
 import LockedContent from './LockedContent';
+import { cleanMarkdown } from '../utils/outputQualityAgent';
 
 const LS = {
   jd: 'sas_interview_jd',
@@ -203,8 +204,8 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate questions');
-      const en = Array.isArray(data.en) ? data.en : [];
-      const de = Array.isArray(data.de) ? data.de : [];
+      const en = Array.isArray(data.en) ? data.en.map(q => ({ question: cleanMarkdown(q.question || ''), framework: cleanMarkdown(q.framework || '') })) : [];
+      const de = Array.isArray(data.de) ? data.de.map(q => ({ question: cleanMarkdown(q.question || ''), framework: cleanMarkdown(q.framework || '') })) : [];
       setQuestionsEN(en);
       setQuestionsDE(de);
       localStorage.setItem(LS.questionsEN, JSON.stringify(en));
@@ -234,7 +235,10 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
   };
 
   const handleAdjustUpdate = (newRaw) => {
-    const parsed = parseQuestions(newRaw);
+    const parsed = parseQuestions(newRaw).map(q => ({
+      question: cleanMarkdown(q.question || ''),
+      framework: cleanMarkdown(q.framework || ''),
+    }));
     if (lang === 'DE') {
       setQuestionsDE(parsed);
       localStorage.setItem(LS.questionsDE, JSON.stringify(parsed));

@@ -5,7 +5,7 @@ import FileUploadField from './FileUploadField';
 import DownloadButtons from '../utils/DownloadButtons';
 import DocumentPreview from '../utils/DocumentPreview';
 import ScoreCard, { calculateAttractivenessScore, KeywordMatch } from './ScoreCard';
-import { stripMarkdown } from '../utils/downloadUtils';
+import { cleanMarkdown } from '../utils/outputQualityAgent';
 import { TEMPLATES, TemplateSelector } from './TemplateSelector';
 import LockedContent from './LockedContent';
 
@@ -51,7 +51,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Adjustment failed');
-      onUpdate(stripMarkdown(data.result));
+      onUpdate(cleanMarkdown(data.result));
       setInput('');
     } catch (err) {
       setError(err.message || 'Failed to apply adjustment. Please try again.');
@@ -218,7 +218,7 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to optimize CV');
-      const clean = stripMarkdown(data.result);
+      const clean = cleanMarkdown(data.result);
       setResult(clean);
       setScore(calculateAttractivenessScore(clean, jobDescription));
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);

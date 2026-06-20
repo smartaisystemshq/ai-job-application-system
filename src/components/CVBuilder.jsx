@@ -4,7 +4,7 @@ import { t } from '../translations';
 import DownloadButtons from '../utils/DownloadButtons';
 import DocumentPreview from '../utils/DocumentPreview';
 import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
-import { stripMarkdown } from '../utils/downloadUtils';
+import { cleanMarkdown } from '../utils/outputQualityAgent';
 import { TemplateSelector } from './TemplateSelector';
 import LockedContent from './LockedContent';
 
@@ -192,7 +192,7 @@ function MiniChatbot({ currentDocument, onUpdate }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Adjustment failed');
-      onUpdate(stripMarkdown(data.result));
+      onUpdate(cleanMarkdown(data.result));
       setInput('');
     } catch (err) {
       setError(err.message || 'Failed to apply adjustment. Please try again.');
@@ -394,7 +394,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      updExp(expId, 'bullets', stripMarkdown(data.result));
+      updExp(expId, 'bullets', cleanMarkdown(data.result));
     } catch (err) {
       setApiError(err.message || 'Failed to generate bullet points.');
     } finally {
@@ -432,7 +432,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      set('summary', stripMarkdown(data.result));
+      set('summary', cleanMarkdown(data.result));
     } catch (err) {
       setApiError(err.message || 'Failed to generate summary.');
     } finally {

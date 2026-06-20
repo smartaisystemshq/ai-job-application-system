@@ -70,6 +70,19 @@ export function stripMarkdown(text) {
     .join('\n')
 }
 
+// -- PDF text sanitizer ---
+
+function sanitizeTextForPDF(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text.split('').filter(function(ch) {
+    var c = ch.charCodeAt(0);
+    return (c >= 0x09 && c <= 0x0A) || c === 0x0D ||
+           (c >= 0x20 && c <= 0x7E) ||
+           (c >= 0xA0 && c <= 0xFF) ||
+           (c >= 0x0100 && c <= 0x024F);
+  }).join('').trim();
+}
+
 // ── Line parser ──────────────────────────────────────────────────────────────
 
 function isSectionHeader(text) {
@@ -214,7 +227,7 @@ function buildMinimalPDF(text, sp, photo = null) {
 
   const docDef = {
     pageSize: 'A4', pageMargins: margins,
-    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
+    defaultStyle: { font: 'Helvetica', fontSize: bodySize, lineHeight },
     content: [...wrapHeaderWithPhoto(headerItems, photo), ...bodyContent],
   }
   return autoFitToOnePage(docDef, text)
@@ -266,7 +279,7 @@ function buildModernPDF(text, sp, photo = null) {
 
   const docDef = {
     pageSize: 'A4', pageMargins: margins,
-    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
+    defaultStyle: { font: 'Helvetica', fontSize: bodySize, lineHeight },
     content: [topBar, ...wrapHeaderWithPhoto(headerItems, photo), ...bodyContent],
   }
   return autoFitToOnePage(docDef, text)
@@ -345,7 +358,7 @@ function buildClassicPDF(text, sp, photo = null) {
 
   const docDef = {
     pageSize: 'A4', pageMargins: margins,
-    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
+    defaultStyle: { font: 'Helvetica', fontSize: bodySize, lineHeight },
     content: [...headerContent, ...bodyContent],
   }
   return autoFitToOnePage(docDef, text)
@@ -415,7 +428,7 @@ function buildExecutivePDF(text, sp, photo = null) {
 
   const docDef = {
     pageSize: 'A4', pageMargins: margins,
-    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
+    defaultStyle: { font: 'Helvetica', fontSize: bodySize, lineHeight },
     content: [...headerContent, ...bodyContent],
   }
   return autoFitToOnePage(docDef, text)
@@ -514,8 +527,8 @@ function buildSharpPDF(text, sp, photo = null) {
           widths: ['100%'],
           body: [[{
             stack: [
-              { text: (name || '').toUpperCase(), fontSize: 22, bold: true, color: '#FFFFFF', characterSpacing: 0.5, margin: [24, 18, 24, 5] },
-              { text: contactLine || '', fontSize: 8.5, color: '#FFFFFF', margin: [24, 0, 24, 16], lineHeight: 1.4 },
+              { text: sanitizeTextForPDF((name || '').toUpperCase()), fontSize: 22, bold: true, color: '#FFFFFF', characterSpacing: 0.5, margin: [24, 18, 24, 5] },
+              { text: sanitizeTextForPDF(contactLine || ''), fontSize: 8.5, color: '#FFFFFF', margin: [24, 0, 24, 16], lineHeight: 1.4 },
             ],
             fillColor: GREEN,
             border: [false, false, false, false],
@@ -562,7 +575,7 @@ function buildSharpPDF(text, sp, photo = null) {
         },
       },
     ],
-    defaultStyle: { font: 'Roboto', fontSize: 9.5, lineHeight: 1.5 },
+    defaultStyle: { font: 'Helvetica', fontSize: 9.5, lineHeight: 1.5 },
   }
 }
 
@@ -624,7 +637,7 @@ function buildPDFDocDef(text, sp, template, photo = null) {
 // ── Cover letter PDF builder ─────────────────────────────────────────────────
 
 function buildCoverLetterPDFDocDef(text, bodySize, template = 'minimal') {
-  const rawLines = text.split('\n')
+  const rawLines = sanitizeTextForPDF(text).split('\n')
   const blocks = []
   let cur = []
   for (const line of rawLines) {
@@ -710,7 +723,7 @@ function buildCoverLetterPDFDocDef(text, bodySize, template = 'minimal') {
   return {
     pageSize: 'A4',
     pageMargins: [60, 50, 60, 50],
-    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.6 },
+    defaultStyle: { font: 'Helvetica', fontSize: bodySize, lineHeight: 1.6 },
     content,
   }
 }
@@ -718,7 +731,7 @@ function buildCoverLetterPDFDocDef(text, bodySize, template = 'minimal') {
 // ── Public: download as PDF ──────────────────────────────────────────────────
 
 export async function downloadAsPDF(text, filename, template = 'minimal', isLetter = false, photo = null) {
-  const cleanText = stripMarkdown(text)
+  const cleanText = sanitizeTextForPDF(stripMarkdown(text))
   const pdfMake = await loadPdfMake()
   const sp = isLetter ? { bodySize: 11, margins: [60,50,60,50], lineHeight: 1.6, hSpB: 0, hSpA: 0 } : getScalingParams(cleanText)
   const docDef = isLetter
