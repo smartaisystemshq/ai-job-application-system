@@ -437,6 +437,179 @@ function LetterPage({ text, template = 'minimal' }) {
   )
 }
 
+// ── Sharp cover letter preview ───────────────────────────────────────────────
+
+function SharpCoverLetterPreview({ data }) {
+  const contactLine = [data.sender_email, data.sender_phone, data.sender_address]
+    .filter(Boolean).join('   ·   ')
+
+  return (
+    <div style={{
+      background: 'white',
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '10px',
+      color: '#1a1a1a',
+      maxWidth: '680px',
+      margin: '0 auto',
+      position: 'relative',
+      minHeight: '900px',
+      boxShadow: '0 20px 70px rgba(0,0,0,0.65), 0 4px 20px rgba(0,0,0,0.35)',
+      borderRadius: 2,
+      overflow: 'hidden',
+    }}>
+      {/* Green vertical accent line */}
+      <div style={{ position: 'absolute', left: 0, top: 0, width: '3px', height: '100%', background: '#1D9E75' }} />
+
+      {/* Header */}
+      <div style={{ background: '#1D9E75', padding: '20px 28px 0px' }}>
+        <div style={{ fontSize: '18px', fontWeight: 700, color: '#FFFFFF', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>
+          {data.sender_name}
+        </div>
+        <div style={{ height: '1px', background: 'rgba(255,255,255,0.3)', marginBottom: '8px' }} />
+        <div style={{ fontSize: '8.5px', color: 'rgba(255,255,255,0.85)', letterSpacing: '0.2px', paddingBottom: '14px' }}>
+          {contactLine}
+        </div>
+        {/* Dark accent strip */}
+        <div style={{ height: '4px', background: '#0f6b50', margin: '0 -28px' }} />
+      </div>
+
+      {/* Body content */}
+      <div style={{ padding: '20px 28px 28px 28px' }}>
+        {/* Date right-aligned */}
+        <div style={{ textAlign: 'right', fontSize: '9.5px', color: '#555555', fontStyle: 'italic', marginBottom: '12px' }}>
+          {data.date}
+        </div>
+
+        {/* Recipient */}
+        <div style={{ fontSize: '9.5px', color: '#333333', paddingLeft: '16px', marginBottom: '8px', lineHeight: 1.5 }}>
+          {data.recipient_company}
+        </div>
+
+        {/* Thin green divider */}
+        <div style={{ height: '0.5px', background: '#1D9E75', margin: '10px 0' }} />
+
+        {/* Subject with green left border */}
+        <div style={{ background: 'rgba(29,158,117,0.07)', borderLeft: '3px solid #1D9E75', padding: '6px 12px', fontSize: '10px', fontWeight: 600, color: '#1a1a1a', marginBottom: '16px' }}>
+          {data.subject}
+        </div>
+
+        {/* Salutation */}
+        <div style={{ fontSize: '10.5px', fontWeight: 600, marginBottom: '12px', paddingLeft: '16px' }}>
+          {data.salutation}
+        </div>
+
+        {/* Body paragraphs */}
+        {[data.body_paragraph_1, data.body_paragraph_2, data.body_paragraph_3].filter(Boolean).map((p, i) => (
+          <div key={i} style={{ fontSize: '10.5px', lineHeight: 1.7, color: '#333333', marginBottom: '12px', paddingLeft: '16px' }}>{p}</div>
+        ))}
+
+        {/* Divider above closing */}
+        <div style={{ height: '0.5px', background: '#cccccc', margin: '20px 0 14px' }} />
+
+        {/* Closing */}
+        <div style={{ fontSize: '11px', paddingLeft: '16px', marginBottom: '32px' }}>{data.closing}</div>
+
+        {/* Signature */}
+        <div style={{ fontSize: '11px', fontWeight: 600, paddingLeft: '16px' }}>{data.signature}</div>
+      </div>
+    </div>
+  )
+}
+
+// ── Standard cover letter previews (minimal / modern / classic / executive) ──
+
+function StandardCoverLetterPreview({ data, template }) {
+  const isModern = template === 'modern'
+  const isClassic = template === 'classic'
+  const isExecutive = template === 'executive'
+  const fontFamily = isClassic ? "'Times New Roman', Georgia, serif" : "'Inter', -apple-system, sans-serif"
+  const contactLine = [data.sender_address, data.sender_postal, data.sender_email, data.sender_phone]
+    .filter(Boolean).join('   ·   ')
+
+  return (
+    <div style={{
+      background: 'white',
+      maxWidth: '680px',
+      margin: '0 auto',
+      padding: '32px 40px',
+      boxShadow: '0 20px 70px rgba(0,0,0,0.65), 0 4px 20px rgba(0,0,0,0.35)',
+      borderRadius: 2,
+      fontFamily,
+      fontSize: '10.5px',
+      lineHeight: 1.7,
+      color: '#1a1a1a',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* Modern: green top bar */}
+      {isModern && (
+        <div style={{ height: 5, background: GREEN, marginLeft: -40, marginRight: -40, marginTop: -32, marginBottom: 14 }} />
+      )}
+
+      {/* Sender block */}
+      <div style={{ marginBottom: 12 }}>
+        <div style={{
+          fontSize: isExecutive ? '13px' : '14px',
+          fontWeight: 700,
+          color: '#111',
+          marginBottom: 3,
+          textAlign: isClassic ? 'center' : 'left',
+          textTransform: isExecutive ? 'uppercase' : 'none',
+          letterSpacing: isExecutive ? '1px' : 0,
+        }}>{data.sender_name}</div>
+        <div style={{ fontSize: '9px', color: '#666', textAlign: isClassic ? 'center' : 'left' }}>{contactLine}</div>
+        {isClassic && (
+          <>
+            <div style={{ height: 1.5, background: '#333', margin: '6px 0 2px' }} />
+            <div style={{ height: 0.5, background: '#999', marginBottom: 4 }} />
+          </>
+        )}
+        {(isModern || isExecutive) && <div style={{ height: isExecutive ? 2 : 1.5, background: GREEN, marginTop: 8 }} />}
+        {!isClassic && !isModern && !isExecutive && <div style={{ height: 0.5, background: '#ccc', marginTop: 8 }} />}
+      </div>
+
+      {/* Date */}
+      <div style={{ fontSize: '9px', color: '#666', marginBottom: 8, textAlign: isClassic ? 'right' : 'left', fontStyle: isClassic ? 'italic' : 'normal' }}>
+        {data.date}
+      </div>
+
+      {/* Recipient */}
+      <div style={{ fontSize: '9.5px', color: '#333', marginBottom: 8, lineHeight: 1.5 }}>{data.recipient_company}</div>
+
+      {/* Thin divider before subject */}
+      <div style={{ height: 0.5, background: '#e0e0e0', margin: '8px 0' }} />
+
+      {/* Subject */}
+      <div style={{ fontSize: '10px', fontWeight: 600, color: isModern ? GREEN : '#1a1a1a', marginBottom: 12 }}>{data.subject}</div>
+
+      {/* Salutation */}
+      <div style={{ fontWeight: 600, marginBottom: 10 }}>{data.salutation}</div>
+
+      {/* Body paragraphs */}
+      {[data.body_paragraph_1, data.body_paragraph_2, data.body_paragraph_3].filter(Boolean).map((p, i) => (
+        <div key={i} style={{ color: '#333', marginBottom: 10, lineHeight: 1.7 }}>{p}</div>
+      ))}
+
+      {/* Divider above closing */}
+      <div style={{ height: 0.5, background: '#ccc', margin: '16px 0 12px' }} />
+
+      {/* Closing */}
+      <div style={{ fontSize: '11px', marginBottom: 28 }}>{data.closing}</div>
+
+      {/* Signature */}
+      <div style={{ fontSize: '11px', fontWeight: 600 }}>{data.signature}</div>
+    </div>
+  )
+}
+
+// ── Public: cover letter preview dispatcher ──────────────────────────────────
+
+export function CoverLetterPreview({ data, template = 'minimal' }) {
+  if (!data) return null
+  if (template === 'sharp') return <SharpCoverLetterPreview data={data} />
+  return <StandardCoverLetterPreview data={data} template={template} />
+}
+
 // ── Public component ──────────────────────────────────────────────────────────
 
 export default function DocumentPreview({ text, template = 'minimal', maxHeight = 900, type = 'cv', photo = null, showPlaceholder = false }) {

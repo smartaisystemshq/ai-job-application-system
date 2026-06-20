@@ -649,6 +649,64 @@ function buildPDFDocDef(text, sp, template, photo = null) {
 export function buildCoverLetterPDF(data, template = 'minimal') {
   if (!data || typeof data !== 'object') throw new Error('Invalid cover letter data')
 
+  if (template === 'sharp') {
+    return {
+      pageSize: 'A4',
+      pageMargins: [0, 0, 56, 56],
+      content: [
+        {
+          table: {
+            widths: ['100%'],
+            body: [[{
+              stack: [
+                { text: (data.sender_name || '').toUpperCase(), fontSize: 16, bold: true, color: '#FFFFFF', characterSpacing: 1, margin: [28, 18, 28, 6] },
+                { canvas: [{ type: 'line', x1: 28, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#FFFFFF' }], margin: [0, 0, 0, 6] },
+                { text: [data.sender_email, data.sender_phone, data.sender_address].filter(Boolean).join('   ·   '), fontSize: 8, color: '#FFFFFF', margin: [28, 0, 28, 0] },
+                { canvas: [{ type: 'rect', x: 0, y: 8, w: 595, h: 4, color: '#0f6b50' }], margin: [0, 0, 0, 0] },
+              ],
+              fillColor: '#1D9E75',
+              border: [false, false, false, false],
+            }]],
+          },
+          layout: 'noBorders',
+        },
+        {
+          columns: [
+            { width: 3, canvas: [{ type: 'rect', x: 0, y: 0, w: 3, h: 700, color: '#1D9E75' }] },
+            {
+              width: '*',
+              stack: [
+                { text: data.date || '', fontSize: 9, color: '#555555', italics: true, alignment: 'right', margin: [28, 18, 0, 10] },
+                { text: data.recipient_company || '', fontSize: 9.5, color: '#333333', margin: [44, 0, 0, 6], lineHeight: 1.4 },
+                { canvas: [{ type: 'line', x1: 28, y1: 0, x2: 500, y2: 0, lineWidth: 0.5, lineColor: '#1D9E75' }], margin: [0, 8, 0, 8] },
+                {
+                  table: {
+                    widths: [3, '*'],
+                    body: [[
+                      { text: '', border: [false, false, false, false], fillColor: '#1D9E75', margin: [0, 0, 0, 0] },
+                      { text: data.subject || '', fontSize: 10, bold: true, color: '#1a1a1a', border: [false, false, false, false], fillColor: '#e8f5f0', margin: [9, 6, 9, 6] },
+                    ]],
+                  },
+                  layout: { defaultBorder: false, paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 0, paddingBottom: () => 0 },
+                  margin: [28, 0, 0, 14],
+                },
+                { text: data.salutation || '', fontSize: 10.5, bold: true, margin: [28, 0, 0, 10] },
+                { text: data.body_paragraph_1 || '', fontSize: 10.5, lineHeight: 1.65, color: '#333333', margin: [44, 0, 0, 10] },
+                { text: data.body_paragraph_2 || '', fontSize: 10.5, lineHeight: 1.65, color: '#333333', margin: [44, 0, 0, 10] },
+                { text: data.body_paragraph_3 || '', fontSize: 10.5, lineHeight: 1.65, color: '#333333', margin: [44, 0, 0, 20] },
+                { canvas: [{ type: 'line', x1: 28, y1: 0, x2: 500, y2: 0, lineWidth: 0.5, lineColor: '#cccccc' }], margin: [0, 0, 0, 12] },
+                { text: data.closing || '', fontSize: 11, margin: [44, 0, 0, 32] },
+                { text: data.signature || '', fontSize: 11, bold: true, margin: [44, 0, 0, 0] },
+              ],
+            },
+          ],
+          columnGap: 0,
+        },
+      ],
+      defaultStyle: { font: 'Roboto', fontSize: 10.5, color: '#1a1a1a' },
+    }
+  }
+
   const ACCENT = '#1D9E75'
 
   const templates = {
@@ -656,7 +714,6 @@ export function buildCoverLetterPDF(data, template = 'minimal') {
     modern:    { nameColor: '#1a1a1a', lineColor: ACCENT,    lineWidth: 1,   subjectColor: ACCENT,    margins: [70, 60, 70, 60] },
     classic:   { nameColor: '#1a1a1a', lineColor: '#333333', lineWidth: 1,   subjectColor: '#1a1a1a', margins: [70, 60, 70, 60] },
     executive: { nameColor: '#1a1a1a', lineColor: ACCENT,    lineWidth: 2,   subjectColor: '#1a1a1a', margins: [60, 55, 60, 55] },
-    sharp:     { nameColor: '#ffffff', lineColor: '#ffffff', lineWidth: 0.5, subjectColor: '#1a1a1a', margins: [0, 0, 60, 60] },
   }
 
   const style = templates[template] || templates.minimal
@@ -697,44 +754,13 @@ export function buildCoverLetterPDF(data, template = 'minimal') {
     { text: data.signature || '', fontSize: 10.5, bold: true },
   ]
 
-  let content = []
-
-  if (template === 'sharp') {
-    content.push({
-      table: {
-        widths: ['100%'],
-        body: [[{
-          stack: [
-            { text: data.sender_name || '', fontSize: 16, bold: true, color: '#ffffff', margin: [24, 16, 24, 4] },
-            { text: [data.sender_email, data.sender_phone, data.sender_address].filter(Boolean).join('   ·   '), fontSize: 8.5, color: 'rgba(255,255,255,0.85)', margin: [24, 0, 24, 14] },
-          ],
-          fillColor: ACCENT,
-          border: [false, false, false, false],
-        }]],
-      },
-      layout: 'noBorders',
-      margin: [0, 0, 0, 0],
-    })
-    content.push({ text: '', margin: [0, 20, 0, 0] })
-    content.push(...metaBlock.map(b => ({ ...b, margin: [60, b.margin?.[1] || 0, 60, b.margin?.[3] || 0] })))
-    content.push(...bodyBlock.map(b => ({ ...b, margin: [60, b.margin?.[1] || 0, 60, b.margin?.[3] || 0] })))
-  } else {
-    content.push(...senderBlock)
-    content.push(dividerLine)
-    content.push(...metaBlock)
-    content.push(...bodyBlock)
-  }
+  const content = [...senderBlock, dividerLine, ...metaBlock, ...bodyBlock]
 
   return {
     pageSize: 'A4',
-    pageMargins: template === 'sharp' ? [0, 0, 0, 50] : style.margins,
+    pageMargins: style.margins,
     content,
-    defaultStyle: {
-      font: 'Roboto',
-      fontSize: 10.5,
-      lineHeight: 1.6,
-      color: '#1a1a1a',
-    },
+    defaultStyle: { font: 'Roboto', fontSize: 10.5, lineHeight: 1.6, color: '#1a1a1a' },
   }
 }
 

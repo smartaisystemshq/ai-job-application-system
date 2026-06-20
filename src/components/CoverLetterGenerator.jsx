@@ -3,6 +3,7 @@ import { useLang } from '../context/LanguageContext';
 import { t } from '../translations';
 import FileUploadField from './FileUploadField';
 import DownloadButtons from '../utils/DownloadButtons';
+import { CoverLetterPreview } from '../utils/DocumentPreview';
 import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
 import { TemplateSelector } from './TemplateSelector';
 import LockedContent from './LockedContent';
@@ -389,7 +390,7 @@ export default function CoverLetterGenerator({ unlocked, onUnlock, cvText: cv, s
                 </div>
               </div>
 
-              {/* Structured letter preview */}
+              {/* Template-aware letter preview */}
               <div style={{
                 background: 'linear-gradient(160deg, #0c0c1a 0%, #0f0f16 100%)',
                 borderRadius: 14,
@@ -398,22 +399,7 @@ export default function CoverLetterGenerator({ unlocked, onUnlock, cvText: cv, s
                 maxHeight: 900,
                 overflowY: 'auto',
               }}>
-                <div style={{ background: 'white', padding: '32px 40px', borderRadius: 8, fontFamily: 'Arial', fontSize: '10.5px', lineHeight: 1.7, color: '#1a1a1a', maxWidth: '680px', margin: '0 auto' }}>
-                  <div style={{ fontWeight: 700, fontSize: '13px' }}>{coverLetterData.sender_name}</div>
-                  <div>{coverLetterData.sender_address}</div>
-                  <div>{coverLetterData.sender_postal}</div>
-                  <div>{coverLetterData.sender_email}</div>
-                  <div style={{ marginBottom: '16px' }}>{coverLetterData.sender_phone}</div>
-                  <div style={{ marginBottom: '8px' }}>{coverLetterData.date}</div>
-                  <div style={{ marginBottom: '16px' }}>{coverLetterData.recipient_company}</div>
-                  <div style={{ fontWeight: 600, marginBottom: '16px' }}>{coverLetterData.subject}</div>
-                  <div style={{ marginBottom: '12px' }}>{coverLetterData.salutation}</div>
-                  <div style={{ marginBottom: '10px' }}>{coverLetterData.body_paragraph_1}</div>
-                  <div style={{ marginBottom: '10px' }}>{coverLetterData.body_paragraph_2}</div>
-                  <div style={{ marginBottom: '20px' }}>{coverLetterData.body_paragraph_3}</div>
-                  <div style={{ marginBottom: '32px' }}>{coverLetterData.closing}</div>
-                  <div style={{ fontWeight: 600 }}>{coverLetterData.signature}</div>
-                </div>
+                <CoverLetterPreview data={coverLetterData} template={selectedTemplate} />
               </div>
 
               <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
