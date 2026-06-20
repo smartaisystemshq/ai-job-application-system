@@ -1,5 +1,14 @@
 // PDF via pdfmake, Word via docx
 
+const PDF_FONTS = {
+  Roboto: {
+    normal: 'Roboto-Regular.ttf',
+    bold: 'Roboto-Medium.ttf',
+    italics: 'Roboto-Italic.ttf',
+    bolditalics: 'Roboto-MediumItalic.ttf',
+  },
+}
+
 let _pdfMake = null
 
 async function loadPdfMake() {
@@ -22,6 +31,7 @@ async function loadPdfMake() {
     pdfMake.vfs = raw?.pdfMake?.vfs || raw?.vfs || raw
   }
 
+  pdfMake.fonts = PDF_FONTS
   _pdfMake = pdfMake
   return pdfMake
 }
@@ -227,7 +237,7 @@ function buildMinimalPDF(text, sp, photo = null) {
 
   const docDef = {
     pageSize: 'A4', pageMargins: margins,
-    defaultStyle: { font: 'Helvetica', fontSize: bodySize, lineHeight },
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content: [...wrapHeaderWithPhoto(headerItems, photo), ...bodyContent],
   }
   return autoFitToOnePage(docDef, text)
@@ -279,7 +289,7 @@ function buildModernPDF(text, sp, photo = null) {
 
   const docDef = {
     pageSize: 'A4', pageMargins: margins,
-    defaultStyle: { font: 'Helvetica', fontSize: bodySize, lineHeight },
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content: [topBar, ...wrapHeaderWithPhoto(headerItems, photo), ...bodyContent],
   }
   return autoFitToOnePage(docDef, text)
@@ -358,7 +368,7 @@ function buildClassicPDF(text, sp, photo = null) {
 
   const docDef = {
     pageSize: 'A4', pageMargins: margins,
-    defaultStyle: { font: 'Helvetica', fontSize: bodySize, lineHeight },
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content: [...headerContent, ...bodyContent],
   }
   return autoFitToOnePage(docDef, text)
@@ -428,7 +438,7 @@ function buildExecutivePDF(text, sp, photo = null) {
 
   const docDef = {
     pageSize: 'A4', pageMargins: margins,
-    defaultStyle: { font: 'Helvetica', fontSize: bodySize, lineHeight },
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content: [...headerContent, ...bodyContent],
   }
   return autoFitToOnePage(docDef, text)
@@ -575,7 +585,7 @@ function buildSharpPDF(text, sp, photo = null) {
         },
       },
     ],
-    defaultStyle: { font: 'Helvetica', fontSize: 9.5, lineHeight: 1.5 },
+    defaultStyle: { font: 'Roboto', fontSize: 9.5, lineHeight: 1.5 },
   }
 }
 
@@ -723,7 +733,7 @@ function buildCoverLetterPDFDocDef(text, bodySize, template = 'minimal') {
   return {
     pageSize: 'A4',
     pageMargins: [60, 50, 60, 50],
-    defaultStyle: { font: 'Helvetica', fontSize: bodySize, lineHeight: 1.6 },
+    defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight: 1.6 },
     content,
   }
 }
