@@ -188,7 +188,7 @@ function getOptimalFontSize(text) {
 
 function wrapHeaderWithPhoto(headerItems, photo) {
   if (!photo || !headerItems.length) return headerItems
-  return [{ columns: [{ stack: headerItems, width: '*' }, { image: photo, fit: [65, 83], alignment: 'right', margin: [4, 0, 0, 0] }], margin: [0, 0, 0, 6] }]
+  return [{ columns: [{ stack: headerItems, width: '*' }, { image: photo, fit: [65, 83], width: 75, alignment: 'right', margin: [8, 0, 0, 0] }], margin: [0, 0, 0, 12] }]
 }
 
 // ── Template-specific PDF builders ──────────────────────────────────────────
@@ -634,6 +634,32 @@ function autoFitToOnePage(docDefinition, text) {
   return applyFontScale(docDefinition, 7.5)
 }
 
+function shouldCompress(text) {
+  const estimatedPages = text.length / 3200;
+  return estimatedPages > 1.0 && estimatedPages < 1.15;
+}
+
+function applyCompression(docDef) {
+  function scaleNode(node) {
+    if (!node || typeof node !== 'object') return;
+    if (node.fontSize && node.fontSize >= 9 && node.fontSize <= 11) {
+      node.fontSize = node.fontSize - 0.5;
+    }
+    if (node.margin && Array.isArray(node.margin)) {
+      node.margin = node.margin.map((m, i) =>
+        (i === 1 || i === 3) ? Math.max(1, Math.floor(m * 0.75)) : m
+      );
+    }
+    Object.values(node).forEach(v => {
+      if (Array.isArray(v)) v.forEach(scaleNode);
+      else if (v && typeof v === 'object') scaleNode(v);
+    });
+  }
+  const compressed = JSON.parse(JSON.stringify(docDef));
+  scaleNode(compressed);
+  return compressed;
+}
+
 function buildPDFDocDef(text, sp, template, photo = null) {
   switch (template) {
     case 'modern':    return buildModernPDF(text, sp, photo)
@@ -846,6 +872,9 @@ export async function downloadAsPDF(text, filename, template = 'minimal', isLett
     const cleanText = sanitizeTextForPDF(stripMarkdown(text))
     const sp = getScalingParams(cleanText)
     docDef = buildPDFDocDef(cleanText, sp, template, photo)
+    if (shouldCompress(cleanText)) {
+      docDef = applyCompression(docDef)
+    }
   }
 
   // pdfmake 0.3.x: getBlob() returns a Promise, not a callback
@@ -882,7 +911,7 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
 
   const cleanText = stripMarkdown(text)
   const {
-    Document, Packer, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType, ImageRun, HeightRule,
+    Document, Packer, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType, ImageRun, HeightRule, LineRuleType,
   } = await import('docx')
 
   const lines = parseDocumentLines(cleanText)
@@ -959,24 +988,23 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
             spacing: { before: 60, after: 60 },
           })); break
         case 'header': {
-          const headerColor = isDarkBg ? (template === 'sharp' ? 'ffffff' : accentColor) : (template === 'modern' ? GREEN : headingColor)
-          const borderColor = isDarkBg ? accentColor : ((template === 'modern' || template === 'sharp') ? GREEN : '888888')
+          const headerColor = isDarkBg ? 'ffffff' : GREEN
           children.push(new Paragraph({
-            children: [new TextRun({ text: line.text, bold: true, size: headerHalfPt, font: 'Calibri', color: headerColor })],
-            border: { bottom: { style: BorderStyle.SINGLE, size: (template === 'modern' || isDarkBg) ? 10 : 6, color: borderColor, space: 1 } },
-            spacing: { before: 200, after: 80 },
+            children: [new TextRun({ text: line.text, bold: true, size: headerHalfPt, font: 'Arial', color: headerColor })],
+            border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: isDarkBg ? 'ffffff' : GREEN, space: 1 } },
+            spacing: { before: 240, after: 80 },
           })); break
         }
         case 'bullet':
           children.push(new Paragraph({
-            children: [new TextRun({ text: '•  ' + line.text, size: bodyHalfPt, font: 'Calibri', color: textColor })],
+            children: [new TextRun({ text: '•  ' + line.text, size: bodyHalfPt, font: 'Arial', color: textColor })],
             indent: { left: 280 },
-            spacing: { after: 40 },
+            spacing: { before: 60, after: 120, line: 276, lineRule: LineRuleType ? LineRuleType.AUTO : undefined },
           })); break
         case 'body':
           children.push(new Paragraph({
-            children: [new TextRun({ text: line.text, size: bodyHalfPt, font: 'Calibri', color: textColor })],
-            spacing: { after: 40 },
+            children: [new TextRun({ text: line.text, size: bodyHalfPt, font: 'Arial', color: textColor })],
+            spacing: { before: 60, after: 120, line: 276, lineRule: LineRuleType ? LineRuleType.AUTO : undefined },
           })); break
         case 'empty':
           children.push(new Paragraph({ children: [new TextRun({ text: '' })], spacing: { after: 80 } })); break

@@ -5,7 +5,6 @@ import { t } from '../translations';
 export default function Paywall({ onUnlock, onClose }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
-  const [attemptsRemaining, setAttemptsRemaining] = useState(null);
   const [isBlocked, setIsBlocked] = useState(false);
   const { lang } = useLang();
 
@@ -20,30 +19,36 @@ export default function Paywall({ onUnlock, onClose }) {
   ];
 
   const handleUnlock = async () => {
-    if (!code.trim()) return;
-    setError('');
+    const trimmedCode = code.trim().toUpperCase();
+    if (!trimmedCode || trimmedCode.length < 8) return;
+
     try {
       const response = await fetch('/api/validate-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code.trim().toUpperCase() }),
+        body: JSON.stringify({ code: trimmedCode }),
       });
       const data = await response.json();
+
       if (data.valid) {
         localStorage.setItem('sas_access_token', btoa('unlocked_' + Date.now()));
+        localStorage.setItem('sas_unlocked', 'true');
         onUnlock?.();
         onClose?.();
-      } else if (data.blocked) {
-        setIsBlocked(true);
-      } else {
-        const n = data.attemptsRemaining;
-        setAttemptsRemaining(n ?? null);
-        setError(
-          n != null
-            ? t[lang].paywall_attempts_left.replace('{n}', n)
-            : t[lang].paywall_invalid
-        );
+        return;
       }
+
+      if (data.blocked) {
+        setIsBlocked(true);
+        setError(t[lang].paywall_blocked);
+        return;
+      }
+
+      setError(
+        data.attemptsRemaining !== undefined
+          ? `${t[lang].paywall_invalid} (${data.attemptsRemaining} ${t[lang].paywall_attempts_left})`
+          : t[lang].paywall_invalid
+      );
     } catch {
       setError(t[lang].paywall_invalid);
     }

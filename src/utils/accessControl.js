@@ -2,12 +2,7 @@ const TOKEN_KEY = 'jas.access.token';
 const TOKEN_VALUE = 'unlocked-v1';
 
 export function isUnlocked() {
-  try {
-    return localStorage.getItem(TOKEN_KEY) === TOKEN_VALUE ||
-           !!localStorage.getItem('sas_access_token');
-  } catch {
-    return false;
-  }
+  return localStorage.getItem('sas_unlocked') === 'true';
 }
 
 export async function unlockApp(code) {

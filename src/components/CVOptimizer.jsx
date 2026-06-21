@@ -102,9 +102,8 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
   const [photoHover, setPhotoHover] = useState(false);
 
   const [score, setScore] = useState(() => {
-    const r = localStorage.getItem(LS.result);
-    const jd = localStorage.getItem('sas_jd_text') || localStorage.getItem('sas_cv_jd') || '';
-    return r ? calculateAttractivenessScore(r, jd) : null;
+    const saved = localStorage.getItem('sas_cv_score');
+    return saved ? JSON.parse(saved) : null;
   });
 
   const jdRef = useRef(null);
@@ -135,6 +134,11 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { if (result) localStorage.setItem(LS.result, result); }, [result]);
+  useEffect(() => {
+    if (score !== null && score !== undefined) {
+      localStorage.setItem('sas_cv_score', JSON.stringify(score));
+    }
+  }, [score]);
   useEffect(() => {
     if (cvFile?.name) localStorage.setItem(LS.filename, cvFile.name);
     else localStorage.removeItem(LS.filename);
@@ -234,12 +238,12 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
     setJobDescription(''); setJdFile(null); setJdPdfBase64('');
     setResult(''); setError(''); setScore(null);
     setCvPhoto(null);
+    localStorage.removeItem('sas_cv_score');
     Object.values(LS).forEach(k => localStorage.removeItem(k));
   };
 
   const handleAdjustUpdate = (newResult) => {
     setResult(newResult);
-    setScore(calculateAttractivenessScore(newResult, jobDescription));
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   };
 

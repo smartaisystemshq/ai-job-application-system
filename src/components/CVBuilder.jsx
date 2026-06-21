@@ -325,7 +325,12 @@ export default function CVBuilder({ unlocked, onUnlock }) {
   const [adjustedCvText, setAdjustedCvText] = useState(() => {
     try { return localStorage.getItem('sas_builder_output') || null; } catch { return null; }
   });
-  const [cvScore, setCvScore] = useState(null);
+  const [cvScore, setCvScore] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sas_cvb_score');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
   const [selectedTemplate, setSelectedTemplate] = useState('minimal');
 
   const previewRef = useRef(null);
@@ -362,6 +367,12 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       localStorage.removeItem('sas_builder_output');
     }
   }, [adjustedCvText]);
+
+  useEffect(() => {
+    if (cvScore !== null && cvScore !== undefined) {
+      localStorage.setItem('sas_cvb_score', JSON.stringify(cvScore));
+    }
+  }, [cvScore]);
 
   const set = (key, val) => setState(s => ({ ...s, [key]: val }));
   const setP = (key, val) => setState(s => ({ ...s, personal: { ...s.personal, [key]: val } }));
@@ -465,8 +476,10 @@ export default function CVBuilder({ unlocked, onUnlock }) {
     localStorage.removeItem(LS_KEY);
     localStorage.removeItem('sas_builder_photo');
     localStorage.removeItem('sas_builder_output');
+    localStorage.removeItem('sas_cvb_score');
     setSuggestedSkills([]);
     setAdjustedCvText(null);
+    setCvScore(null);
     setPhotoBase64('');
     setBuilderJdFilename(null);
   };
@@ -1081,7 +1094,6 @@ export default function CVBuilder({ unlocked, onUnlock }) {
           currentDocument={displayCvText}
           onUpdate={(newText) => {
             setAdjustedCvText(newText);
-            setCvScore(calculateAttractivenessScore(newText));
             setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
           }}
         />

@@ -4,9 +4,34 @@ const { checkRateLimit } = require('./rateLimit.js')
 const { validateAndSanitize } = require('./validation.js')
 const { applySecurityHeaders } = require('./securityHeaders.js')
 
+const sectionInstruction = `
+SECTION DETECTION — CRITICAL:
+Before writing the optimized CV, analyze the input CV and identify ALL sections present. Common sections include:
+- Profil / Professional Summary
+- Praktische Erfahrung / Work Experience
+- Ausbildung / Education
+- Kenntnisse / Skills (may include subsections like EDV, Sprachen/Languages)
+- Sprachen / Languages — ALWAYS a separate section with its own heading
+- Persönliche Stärken / Personal Strengths — ALWAYS a separate section with its own heading
+- Projekte / Projects
+- Ehrenamt / Volunteering
+- Zertifikate / Certifications
+- Hobbies / Interests
+
+RULES:
+1. Every section from the input must appear in the output with its own ALL-CAPS heading
+2. Never merge sections — Sprachen and Persönliche Stärken are always separate
+3. Never let a section heading appear at the bottom of a page with content starting on next page
+4. Add proper spacing between sections
+5. If a section would only have 1-2 lines on a new page, compress previous section slightly to keep it together
+6. Subsections within Kenntnisse (like EDV, Persönliche Stärken, Sprachen) each get their own subheading
+`
+
 const systemPrompt = `You are a world-class professional CV writer and career coach with 15+ years of experience helping candidates land jobs at top companies. You have deep expertise in ATS optimization, recruiter psychology, and industry-specific CV standards.
 
 ${CV_EXPERT_KNOWLEDGE}
+
+${sectionInstruction}
 
 YOUR TASK:
 - Rewrite the candidate's CV to perfectly match the job description
@@ -15,7 +40,7 @@ YOUR TASK:
 - Use strong action verbs and quantify achievements
 - Mirror keywords from the job description naturally
 - Output clean plain text with no markdown symbols (no #, **, *, --)
-- Structure: PROFESSIONAL SUMMARY, WORK EXPERIENCE, EDUCATION, SKILLS (and LANGUAGES if present)
+- Detect ALL sections from the input and preserve each as a separate ALL-CAPS heading
 - Section headers in ALL CAPS
 - Bullet points use • character only
 - Fit content to one page worth of text
