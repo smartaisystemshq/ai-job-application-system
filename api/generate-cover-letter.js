@@ -2,6 +2,7 @@ const Anthropic = require('@anthropic-ai/sdk')
 const { checkRateLimit } = require('./rateLimit.js')
 const { validateAndSanitize } = require('./validation.js')
 const { applySecurityHeaders } = require('./securityHeaders.js')
+const { runQualityAgent } = require('./qualityAgent.js')
 
 const systemPrompt = `
 You are a world-class cover letter writer who has helped thousands of candidates land interviews at top companies across Germany, Austria and Switzerland.
@@ -42,25 +43,6 @@ COVER LETTER RULES:
 
 Return ONLY the JSON object. No other text, no markdown, no explanation.
 `
-
-function runQualityAgent(text, type) {
-  if (!text || typeof text !== 'string') return text
-  let out = text
-  out = out.replace(/^#{1,6}\s+/gm, '')
-  out = out.replace(/\*\*\*([^*\n]+)\*\*\*/g, '$1')
-  out = out.replace(/\*\*([^*\n]+)\*\*/g, '$1')
-  out = out.replace(/___([^_\n]+)___/g, '$1')
-  out = out.replace(/__([^_\n]+)__/g, '$1')
-  out = out.replace(/`([^`\n]+)`/g, '$1')
-  out = out.replace(/\[(?:add|insert|your|füge|Name|Company)[^\]]*\]/gi, '')
-  out = out.replace(/\n{3,}/g, '\n\n')
-  if (type === 'cover-letter') {
-    const hasGerman = /\b(?:und|die|der|das|ist|mit|für|eine|eines)\b/.test(out)
-    const hasEnglish = /\b(?:the|and|for|with|your|our|have|this|that|will)\b/.test(out)
-    if (hasGerman && hasEnglish) console.warn('[QualityAgent] Mixed language detected in cover-letter')
-  }
-  return out.trim()
-}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -153,8 +135,9 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const bodyFields = ['body_paragraph_1', 'body_paragraph_2', 'body_paragraph_3']
-    bodyFields.forEach(f => { if (parsed[f]) parsed[f] = runQualityAgent(parsed[f], 'cover-letter') })
+    Object.keys(parsed).forEach(key => {
+      if (typeof parsed[key] === 'string') { parsed[key] = runQualityAgent(parsed[key], 'cover-letter').text }
+    })
 
     return res.status(200).json({ coverLetter: parsed })
   } catch (err) {

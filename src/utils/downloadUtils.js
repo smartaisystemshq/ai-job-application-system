@@ -501,7 +501,21 @@ function buildSharpPDF(text, sp, photo = null) {
   if (skills.length > 0) {
     sidebarChildren.push({ text: 'SKILLS', fontSize: 8, bold: true, color: GREEN, margin: [0, 0, 0, 5] })
     skills.forEach(skill => {
-      sidebarChildren.push({ text: '· ' + skill, fontSize: 8.5, color: '#444444', margin: [0, 0, 0, 3], lineHeight: 1.4 })
+      const colonIdx = skill.indexOf(':')
+      if (colonIdx > 0 && colonIdx < 30) {
+        const label = skill.slice(0, colonIdx).trim()
+        const items = skill.slice(colonIdx + 1).split(',').map(s => s.trim()).filter(Boolean)
+        if (items.length > 0) {
+          sidebarChildren.push({ text: label, fontSize: 8, bold: true, color: '#333333', margin: [0, 4, 0, 2] })
+          items.forEach(item => {
+            sidebarChildren.push({ columns: [{ canvas: [{ type: 'ellipse', x: 3, y: 4, r1: 2.5, r2: 2.5, color: '#1D9E75' }], width: 10 }, { text: item, fontSize: 8.5, color: '#444444' }], margin: [0, 0, 0, 3] })
+          })
+          return
+        }
+      }
+      skill.split(',').map(s => s.trim()).filter(Boolean).forEach(item => {
+        sidebarChildren.push({ columns: [{ canvas: [{ type: 'ellipse', x: 3, y: 4, r1: 2.5, r2: 2.5, color: '#1D9E75' }], width: 10 }, { text: item, fontSize: 8.5, color: '#444444' }], margin: [0, 0, 0, 3] })
+      })
     })
   }
   sections.filter(s => s.sidebar).forEach(section => {

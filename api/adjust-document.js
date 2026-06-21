@@ -2,6 +2,7 @@ const Anthropic = require('@anthropic-ai/sdk')
 const { checkRateLimit } = require('./rateLimit.js')
 const { validateAndSanitize } = require('./validation.js')
 const { applySecurityHeaders } = require('./securityHeaders.js')
+const { runQualityAgent } = require('./qualityAgent.js')
 
 const defaultSystemPrompt = `You are an expert CV writer and career coach. When adjusting documents, maintain the same high professional standards: perfect grammar, strong action verbs, ATS-optimized keywords, and human-sounding language. Never introduce grammatical errors. Apply the user's requested change while improving overall quality.`
 
@@ -110,7 +111,10 @@ Return ONLY the complete updated ${typeLabel} text — no commentary, no "Here i
       system: systemPrompt,
       messages: [{ role: 'user', content: prompt }],
     })
-    return res.status(200).json({ result: message.content[0].text })
+    const rawResult = message.content[0].text
+    const type = req.body.documentType === 'cover-letter' ? 'cover-letter' : 'cv'
+    const { text: cleanResult } = runQualityAgent(rawResult, type)
+    return res.status(200).json({ result: cleanResult })
   } catch (err) {
     console.error('Adjust document API error:', err)
     if (err.status === 401) return res.status(500).json({ error: 'Invalid API key. Please contact support.' })

@@ -205,6 +205,20 @@ function StandardPage({ lines, template, photo = null, showPlaceholder = false }
 
 // ── Two-column sharp page ─────────────────────────────────────────────────────
 
+function parseSkillsWithCategories(skills) {
+  const parsed = []
+  skills.forEach(skill => {
+    const colonIdx = skill.indexOf(':')
+    if (colonIdx > 0 && colonIdx < 30) {
+      const label = skill.slice(0, colonIdx).trim()
+      const items = skill.slice(colonIdx + 1).split(',').map(s => s.trim()).filter(Boolean)
+      if (items.length > 0) { parsed.push({ type: 'category', label, items }); return }
+    }
+    skill.split(',').map(s => s.trim()).filter(Boolean).forEach(s => parsed.push({ type: 'plain', skill: s }))
+  })
+  return parsed
+}
+
 function SharpPage({ data, photo = null, showPlaceholder = false }) {
   const { name, contactLine, sections, skills } = data
   const G = GREEN
@@ -285,15 +299,26 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
             </div>
           )}
 
-          {/* Skills as green pills */}
+          {/* Skills as dot-list */}
           {skills.length > 0 && (
             <div style={{ marginBottom: '14px' }}>
               <div style={{ fontSize: '9px', fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '6px' }}>Skills</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                {skills.map((skill, i) => (
-                  <span key={i} style={{ background: '#e8f5f0', color: G, fontSize: '8.5px', padding: '3px 8px', borderRadius: '3px', display: 'inline-block' }}>{skill}</span>
-                ))}
-              </div>
+              {parseSkillsWithCategories(skills).map((entry, i) => (
+                entry.type === 'category'
+                  ? <div key={i} style={{ marginBottom: '4px' }}>
+                      <div style={{ fontSize: '8px', fontWeight: 700, color: '#333', marginBottom: '2px' }}>{entry.label}</div>
+                      {entry.items.map((item, j) => (
+                        <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                          <span style={{ width: 5, height: 5, borderRadius: '50%', background: G, flexShrink: 0, display: 'inline-block' }} />
+                          <span style={{ fontSize: '8.5px', color: '#444' }}>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  : <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: G, flexShrink: 0, display: 'inline-block' }} />
+                      <span style={{ fontSize: '8.5px', color: '#444' }}>{entry.skill}</span>
+                    </div>
+              ))}
             </div>
           )}
 
