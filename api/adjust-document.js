@@ -1,8 +1,8 @@
 const Anthropic = require('@anthropic-ai/sdk')
-const { checkRateLimit } = require('./rateLimit.js')
-const { validateAndSanitize } = require('./validation.js')
-const { applySecurityHeaders } = require('./securityHeaders.js')
-const { runQualityAgent } = require('./qualityAgent.js')
+const { checkRateLimit } = require('../src/lib/rateLimit.js')
+const { validateAndSanitize } = require('../src/lib/validation.js')
+const { applySecurityHeaders } = require('../src/lib/securityHeaders.js')
+const { runQualityAgent } = require('../src/lib/qualityAgent.js')
 
 const defaultSystemPrompt = `You are an expert CV writer and career coach. When adjusting documents, maintain the same high professional standards: perfect grammar, strong action verbs, ATS-optimized keywords, and human-sounding language. Never introduce grammatical errors. Apply the user's requested change while improving overall quality.`
 

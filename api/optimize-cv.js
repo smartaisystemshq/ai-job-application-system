@@ -1,9 +1,9 @@
 const Anthropic = require('@anthropic-ai/sdk')
-const { CV_EXPERT_KNOWLEDGE } = require('./expertKnowledge.js')
-const { checkRateLimit } = require('./rateLimit.js')
-const { validateAndSanitize } = require('./validation.js')
-const { applySecurityHeaders } = require('./securityHeaders.js')
-const { runQualityAgent, validateStructure } = require('./qualityAgent.js')
+const { CV_EXPERT_KNOWLEDGE } = require('../src/lib/expertKnowledge.js')
+const { checkRateLimit } = require('../src/lib/rateLimit.js')
+const { validateAndSanitize } = require('../src/lib/validation.js')
+const { applySecurityHeaders } = require('../src/lib/securityHeaders.js')
+const { runQualityAgent, validateStructure } = require('../src/lib/qualityAgent.js')
 
 const sectionInstruction = `
 SECTION DETECTION — CRITICAL:

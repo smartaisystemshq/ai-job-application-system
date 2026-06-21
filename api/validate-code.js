@@ -1,4 +1,4 @@
-const { applySecurityHeaders } = require('./securityHeaders.js')
+const { applySecurityHeaders } = require('../src/lib/securityHeaders.js')
 
 // ── Brute force & honeypot protection ───────────────────────────────────────
 

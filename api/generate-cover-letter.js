@@ -1,8 +1,8 @@
 const Anthropic = require('@anthropic-ai/sdk')
-const { checkRateLimit } = require('./rateLimit.js')
-const { validateAndSanitize } = require('./validation.js')
-const { applySecurityHeaders } = require('./securityHeaders.js')
-const { runQualityAgent } = require('./qualityAgent.js')
+const { checkRateLimit } = require('../src/lib/rateLimit.js')
+const { validateAndSanitize } = require('../src/lib/validation.js')
+const { applySecurityHeaders } = require('../src/lib/securityHeaders.js')
+const { runQualityAgent } = require('../src/lib/qualityAgent.js')
 
 const systemPrompt = `
 You are a world-class cover letter writer who has helped thousands of candidates land interviews at top companies across Germany, Austria and Switzerland.

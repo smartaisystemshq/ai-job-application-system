@@ -1,9 +1,9 @@
 const Anthropic = require('@anthropic-ai/sdk')
-const { INTERVIEW_EXPERT_KNOWLEDGE } = require('./expertKnowledge.js')
-const { checkRateLimit } = require('./rateLimit.js')
-const { validateAndSanitize } = require('./validation.js')
-const { applySecurityHeaders } = require('./securityHeaders.js')
-const { runQualityAgent } = require('./qualityAgent.js')
+const { INTERVIEW_EXPERT_KNOWLEDGE } = require('../src/lib/expertKnowledge.js')
+const { checkRateLimit } = require('../src/lib/rateLimit.js')
+const { validateAndSanitize } = require('../src/lib/validation.js')
+const { applySecurityHeaders } = require('../src/lib/securityHeaders.js')
+const { runQualityAgent } = require('../src/lib/qualityAgent.js')
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')

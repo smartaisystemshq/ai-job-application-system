@@ -1,6 +1,6 @@
 const mammoth = require('mammoth')
-const { checkRateLimit } = require('./rateLimit.js')
-const { applySecurityHeaders } = require('./securityHeaders.js')
+const { checkRateLimit } = require('../src/lib/rateLimit.js')
+const { applySecurityHeaders } = require('../src/lib/securityHeaders.js')
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
