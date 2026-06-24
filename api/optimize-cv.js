@@ -28,7 +28,26 @@ RULES:
 6. Subsections within Kenntnisse (like EDV, Persönliche Stärken, Sprachen) each get their own subheading
 `
 
-const systemPrompt = `You are a world-class professional CV writer and career coach with 15+ years of experience helping candidates land jobs at top companies. You have deep expertise in ATS optimization, recruiter psychology, and industry-specific CV standards.
+const languageInstruction = `LANGUAGE RULE — CRITICAL:
+Detect the language of the JOB DESCRIPTION (not the CV).
+- If job description is in English → write the ENTIRE optimized CV in English
+- If job description is in German → write the ENTIRE optimized CV in German
+- If job description is in another language → write in that language
+- NEVER mix languages in the output
+- The CV language must match the job description language so the candidate fits the role perfectly
+This rule overrides everything else — output language = job description language always.`
+
+const fitAssessmentInstruction = `After writing the optimized CV, add a SEPARATE section at the very end of your response using this exact format:
+
+---JOB_FIT_ASSESSMENT---
+SCORE: [number 1-10]
+FIT: [STRONG/MODERATE/WEAK]
+NOTE: [One sentence in the same language as the job description explaining the main strength or gap]
+---END_ASSESSMENT---`
+
+const systemPrompt = `${languageInstruction}
+
+You are a world-class professional CV writer and career coach with 15+ years of experience helping candidates land jobs at top companies. You have deep expertise in ATS optimization, recruiter psychology, and industry-specific CV standards.
 
 ${CV_EXPERT_KNOWLEDGE}
 
@@ -45,7 +64,6 @@ YOUR TASK:
 - Section headers in ALL CAPS
 - Bullet points use • character only
 - Fit content to one page worth of text
-- Detect the language of the CV and respond entirely in that language
 - Every sentence must be grammatically complete and correct
 
 CONTACT DATA RULE — CRITICAL:
@@ -59,7 +77,9 @@ Extract ALL contact information from the original CV and include it at the top o
 - LinkedIn URL (if present)
 - Website/Portfolio (if present)
 
-Never omit any contact information that exists in the original CV. Copy it exactly as provided — do not change, shorten or reformat contact details. Place all contact info directly below the name in the header section.`
+Never omit any contact information that exists in the original CV. Copy it exactly as provided — do not change, shorten or reformat contact details. Place all contact info directly below the name in the header section.
+
+${fitAssessmentInstruction}`
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -139,10 +159,27 @@ module.exports = async function handler(req, res) {
     })
 
     const rawOutput = message.content[0].text
-    const { text: cleanOutput, issues } = runQualityAgent(rawOutput, 'cv')
+
+    let cvText = rawOutput
+    let fitAssessment = null
+    const assessmentMatch = rawOutput.match(/---JOB_FIT_ASSESSMENT---([\s\S]*?)---END_ASSESSMENT---/)
+    if (assessmentMatch) {
+      cvText = rawOutput.replace(/---JOB_FIT_ASSESSMENT---[\s\S]*?---END_ASSESSMENT---/, '').trim()
+      const assessmentText = assessmentMatch[1]
+      const scoreMatch = assessmentText.match(/SCORE:\s*(\d+)/)
+      const fitMatch = assessmentText.match(/FIT:\s*(STRONG|MODERATE|WEAK)/)
+      const noteMatch = assessmentText.match(/NOTE:\s*(.+)/)
+      fitAssessment = {
+        score: scoreMatch ? parseInt(scoreMatch[1]) : null,
+        fit: fitMatch ? fitMatch[1] : null,
+        note: noteMatch ? noteMatch[1].trim() : null
+      }
+    }
+
+    const { text: cleanOutput, issues } = runQualityAgent(cvText, 'cv')
     const warnings = validateStructure(cleanOutput, 'cv')
     if (warnings.length > 0) { console.warn('[Quality Agent] CV warnings:', warnings) }
-    return res.status(200).json({ result: cleanOutput, qualityIssues: issues })
+    return res.status(200).json({ result: cleanOutput, fitAssessment, qualityIssues: issues })
   } catch (err) {
     console.error('Claude API error:', err)
     if (err.status === 401) return res.status(500).json({ error: 'Invalid API key. Please contact support.' })

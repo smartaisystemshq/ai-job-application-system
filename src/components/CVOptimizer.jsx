@@ -106,6 +106,11 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
     return saved ? JSON.parse(saved) : null;
   });
 
+  const [fitAssessment, setFitAssessment] = useState(() => {
+    const saved = localStorage.getItem('sas_fit_assessment');
+    return saved ? JSON.parse(saved) : null;
+  });
+
   const jdRef = useRef(null);
   const generateRef = useRef(null);
   const resultRef = useRef(null);
@@ -139,6 +144,10 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
       localStorage.setItem('sas_cv_score', JSON.stringify(score));
     }
   }, [score]);
+  useEffect(() => {
+    if (fitAssessment) localStorage.setItem('sas_fit_assessment', JSON.stringify(fitAssessment));
+    else localStorage.removeItem('sas_fit_assessment');
+  }, [fitAssessment]);
   useEffect(() => {
     if (cvFile?.name) localStorage.setItem(LS.filename, cvFile.name);
     else localStorage.removeItem(LS.filename);
@@ -225,6 +234,7 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
       const clean = cleanMarkdown(data.result);
       setResult(clean);
       setScore(calculateAttractivenessScore(clean, jobDescription));
+      setFitAssessment(data.fitAssessment || null);
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
@@ -236,9 +246,10 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
   const handleClear = () => {
     setCv(''); setCvFile(null); setCvPdfBase64('');
     setJobDescription(''); setJdFile(null); setJdPdfBase64('');
-    setResult(''); setError(''); setScore(null);
+    setResult(''); setError(''); setScore(null); setFitAssessment(null);
     setCvPhoto(null);
     localStorage.removeItem('sas_cv_score');
+    localStorage.removeItem('sas_fit_assessment');
     Object.values(LS).forEach(k => localStorage.removeItem(k));
   };
 
@@ -455,6 +466,29 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
               </p>
 
               {score !== null && <ScoreCard score={score} />}
+
+              {fitAssessment && (() => {
+                const fitColors = { STRONG: '#1D9E75', MODERATE: '#f59e0b', WEAK: '#f87171' };
+                const fitBg = { STRONG: 'rgba(29,158,117,0.08)', MODERATE: 'rgba(245,158,11,0.08)', WEAK: 'rgba(248,113,113,0.08)' };
+                const fitBorder = { STRONG: 'rgba(29,158,117,0.25)', MODERATE: 'rgba(245,158,11,0.25)', WEAK: 'rgba(248,113,113,0.25)' };
+                const fitKey = { STRONG: 'fit_label_strong', MODERATE: 'fit_label_moderate', WEAK: 'fit_label_weak' };
+                const color = fitColors[fitAssessment.fit] || '#e2ede8';
+                return (
+                  <div style={{ marginTop: 16, padding: '14px 16px', background: fitBg[fitAssessment.fit] || 'rgba(255,255,255,0.04)', border: `1px solid ${fitBorder[fitAssessment.fit] || 'rgba(255,255,255,0.1)'}`, borderRadius: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t[lang].fit_label}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color }}>{t[lang][fitKey[fitAssessment.fit]] || fitAssessment.fit}</span>
+                      {fitAssessment.score && <span style={{ fontSize: 11, color: 'rgba(226,237,232,0.4)', marginLeft: 'auto' }}>{fitAssessment.score}/10</span>}
+                    </div>
+                    {fitAssessment.note && <p style={{ fontSize: 12, color: 'rgba(226,237,232,0.7)', margin: 0, lineHeight: 1.5 }}>{fitAssessment.note}</p>}
+                  </div>
+                );
+              })()}
+              {fitAssessment && (
+                <p style={{ fontSize: 11, color: 'rgba(226,237,232,0.35)', fontStyle: 'italic', marginTop: 6, marginBottom: 0 }}>
+                  {t[lang].fit_persists_note}
+                </p>
+              )}
 
               <MiniChatbot currentDocument={result} onUpdate={handleAdjustUpdate} />
             </LockedContent>

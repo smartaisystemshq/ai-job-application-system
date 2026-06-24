@@ -171,7 +171,7 @@ function getScalingParams(text) {
   }
 
   // Returns { bodySize, margins, lineHeight, headerSpacingBefore, headerSpacingAfter }
-  if (effective <= 50)  return { bodySize: 10.5, margins: [40,50,40,36], lineHeight: 1.28, hSpB: 8, hSpA: 3 }
+  if (effective <= 50)  return { bodySize: 11,   margins: [40,50,40,36], lineHeight: 1.55, hSpB: 8, hSpA: 3 }
   if (effective <= 54)  return { bodySize: 10.0, margins: [40,50,40,34], lineHeight: 1.26, hSpB: 7, hSpA: 2 }
   if (effective <= 58)  return { bodySize: 9.5,  margins: [38,50,38,32], lineHeight: 1.24, hSpB: 6, hSpA: 2 }
   if (effective <= 63)  return { bodySize: 9.0,  margins: [36,50,36,28], lineHeight: 1.22, hSpB: 5, hSpA: 2 }
@@ -200,7 +200,7 @@ function buildMinimalPDF(text, sp, photo = null) {
   const bodyContent = []
   let headerDone = false
   const nameSize = Math.round(bodySize + 7)
-  const contactSize = bodySize - 1.5
+  const contactSize = Math.min(9, bodySize - 1.5)
   const headerSize = bodySize + 0.5
   const pw = 515 - (40 - margins[0]) * 2
 
@@ -253,7 +253,7 @@ function buildModernPDF(text, sp, photo = null) {
   const bodyContent = []
   let headerDone = false
   const nameSize = Math.round(bodySize + 7)
-  const contactSize = bodySize - 1.5
+  const contactSize = Math.min(9, bodySize - 1.5)
   const headerSize = bodySize + 0.5
   const GREEN = '#1D9E75'
   const pw = 515 - (40 - margins[0]) * 2
@@ -307,7 +307,7 @@ function buildClassicPDF(text, sp, photo = null) {
   const bodyContent = []
   let headerDone = false
   const nameSize = Math.round(bodySize + 8)
-  const contactSize = bodySize - 1.5
+  const contactSize = Math.min(9, bodySize - 1.5)
   const headerSize = bodySize + 0.5
   const pw = 515 - (40 - margins[0]) * 2
   const hw = pw / 2
@@ -389,7 +389,7 @@ function buildExecutivePDF(text, sp, photo = null) {
   const bodyContent = []
   let headerDone = false
   const nameSize = Math.round(bodySize + 8)
-  const contactSize = bodySize - 1.5
+  const contactSize = Math.min(9, bodySize - 1.5)
   const headerSize = bodySize + 0.5
   const GREEN = '#1D9E75'
   const pw = 515 - (40 - margins[0]) * 2
@@ -549,13 +549,17 @@ function buildSharpPDF(text, sp, photo = null) {
       decorationColor: GREEN,
       decorationStyle: 'solid',
     })
-    mainChildren.push({ text: section.content, fontSize: 9.5, color: '#333333', lineHeight: 1.6, margin: [0, 2, 0, 0] })
+    mainChildren.push({ text: section.content, fontSize: 11, color: '#333333', lineHeight: 1.55, margin: [0, 2, 0, 0] })
   })
   if (mainChildren.length === 0) mainChildren.push({ text: '' })
 
   return {
     pageSize: 'A4',
-    pageMargins: [0, 0, 0, 0],
+    pageMargins: [0, 0, 0, 40],
+    header: function(currentPage) {
+      if (currentPage === 1) return null;
+      return { text: '', margin: [0, 40, 0, 0] };
+    },
     content: [
       // Green header — full-width table cell with green fill
       {
@@ -612,7 +616,7 @@ function buildSharpPDF(text, sp, photo = null) {
         },
       },
     ],
-    defaultStyle: { font: 'Roboto', fontSize: 9.5, lineHeight: 1.5 },
+    defaultStyle: { font: 'Roboto', fontSize: 11, lineHeight: 1.55 },
   }
 }
 
@@ -620,7 +624,7 @@ function buildSharpPDF(text, sp, photo = null) {
 
 function estimatedPageCount(text, fontSize) {
   const totalChars = text.length
-  const charsPerPage = fontSize > 9.5 ? 3000 : fontSize > 8.5 ? 3600 : 4200
+  const charsPerPage = fontSize > 10.5 ? 2700 : fontSize > 9.5 ? 3000 : fontSize > 8.5 ? 3600 : 4200
   return Math.ceil(totalChars / charsPerPage)
 }
 
@@ -652,7 +656,7 @@ function applyFontScale(docDef, baseFontSize) {
 }
 
 function autoFitToOnePage(docDefinition, text) {
-  const FONT_STEPS = [10.5, 10, 9.5, 9, 8.5, 8, 7.5]
+  const FONT_STEPS = [11, 10.5, 10, 9.5, 9, 8.5, 8, 7.5]
   for (const fontSize of FONT_STEPS) {
     if (estimatedPageCount(text, fontSize) <= 1) {
       return applyFontScale(docDefinition, fontSize)
@@ -676,6 +680,30 @@ function applyCompression(docDef) {
       node.margin = node.margin.map((m, i) =>
         (i === 1 || i === 3) ? Math.max(1, Math.floor(m * 0.75)) : m
       );
+    }
+    Object.values(node).forEach(v => {
+      if (Array.isArray(v)) v.forEach(scaleNode);
+      else if (v && typeof v === 'object') scaleNode(v);
+    });
+  }
+  const compressed = JSON.parse(JSON.stringify(docDef));
+  scaleNode(compressed);
+  return compressed;
+}
+
+function applyMicroCompression(docDef) {
+  function scaleNode(node) {
+    if (!node || typeof node !== 'object') return;
+    if (node.fontSize && node.fontSize >= 10 && node.fontSize <= 12) {
+      node.fontSize = node.fontSize - 0.5;
+    }
+    if (node.margin && Array.isArray(node.margin)) {
+      node.margin = node.margin.map((m, i) =>
+        (i === 1 || i === 3) ? Math.max(1, Math.floor(m * 0.82)) : m
+      );
+    }
+    if (node.lineHeight && node.lineHeight > 1.3) {
+      node.lineHeight = Math.max(1.3, node.lineHeight - 0.1);
     }
     Object.values(node).forEach(v => {
       if (Array.isArray(v)) v.forEach(scaleNode);
@@ -900,7 +928,7 @@ export async function downloadAsPDF(text, filename, template = 'minimal', isLett
     const sp = getScalingParams(cleanText)
     docDef = buildPDFDocDef(cleanText, sp, template, photo)
     if (shouldCompress(cleanText)) {
-      docDef = applyCompression(docDef)
+      docDef = applyMicroCompression(docDef)
     }
   }
 
@@ -946,7 +974,7 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
   const nameHalfPt = 44
   const contactHalfPt = 18
   const headerHalfPt = 22
-  const bodyHalfPt = 20
+  const bodyHalfPt = 22
 
   function buildParagraphs(linesToProcess, isDarkBg = false) {
     const children = []
@@ -1098,7 +1126,7 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
       }))
       sSkills.forEach(skill => {
         sidebarChildren.push(new Paragraph({
-          children: [new TextRun({ text: '· ' + skill, size: 20, color: '444444', font: 'Calibri' })],
+          children: [new TextRun({ text: '· ' + skill, size: 22, color: '444444', font: 'Calibri' })],
           spacing: { before: 0, after: 100, line: 276 },
         }))
       })
@@ -1110,7 +1138,7 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
       }))
       section.content.split('\n').forEach(ln => {
         sidebarChildren.push(new Paragraph({
-          children: [new TextRun({ text: ln, size: 20, color: '444444', font: 'Calibri' })],
+          children: [new TextRun({ text: ln, size: 22, color: '444444', font: 'Calibri' })],
           spacing: { before: 0, after: 100, line: 276 },
         }))
       })
@@ -1127,7 +1155,7 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
       }))
       section.content.split('\n').forEach(ln => {
         mainChildren.push(new Paragraph({
-          children: [new TextRun({ text: ln, size: 20, color: '333333', font: 'Calibri' })],
+          children: [new TextRun({ text: ln, size: 22, color: '333333', font: 'Calibri' })],
           spacing: { before: 0, after: 100, line: 276 },
         }))
       })
@@ -1156,7 +1184,7 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
       rows: [headerRow, bodyRow],
     })
 
-    sections = [{ properties: { page: { margin: { top: 0, right: 0, bottom: 0, left: 0 } } }, children: [table] }]
+    sections = [{ properties: { page: { margin: { top: 720, right: 1134, bottom: 720, left: 0 } } }, children: [table] }]
   } else {
     let children
     if (photoBytes) {

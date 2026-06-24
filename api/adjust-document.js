@@ -4,7 +4,11 @@ const { validateAndSanitize } = require('../src/lib/validation.js')
 const { applySecurityHeaders } = require('../src/lib/securityHeaders.js')
 const { runQualityAgent } = require('../src/lib/qualityAgent.js')
 
-const defaultSystemPrompt = `You are an expert CV writer and career coach. When adjusting documents, maintain the same high professional standards: perfect grammar, strong action verbs, ATS-optimized keywords, and human-sounding language. Never introduce grammatical errors. Apply the user's requested change while improving overall quality.`
+const defaultSystemPrompt = `You are an expert CV editor. Apply the user's requested change PRECISELY and MEASURABLY throughout the entire CV.
+- Word count changes must be exact
+- Style changes must be applied to every relevant paragraph
+- Never return nearly identical text — changes must be clearly visible
+- Return clean plain text with no markdown symbols`
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -52,7 +56,17 @@ module.exports = async function handler(req, res) {
 
     if (documentType === 'cover-letter') {
       typeLabel = 'cover letter'
-      systemPrompt = `You are an expert cover letter editor. The cover letter is provided as a JSON object. Apply the user's requested change ONLY to the body paragraphs (body_paragraph_1, body_paragraph_2, body_paragraph_3). Return the complete JSON object with ONLY those fields updated. Keep all other fields exactly the same. Return ONLY valid JSON, no other text.`
+      systemPrompt = `You are an expert cover letter editor. Apply the user's requested change PRECISELY and MEASURABLY.
+CRITICAL RULES:
+- If user says "make it X words shorter" → count current words, subtract X, rewrite to hit that exact count
+- If user says "make it shorter" → reduce by at least 20% of current word count
+- If user says "more formal" → replace casual language with formal equivalents throughout
+- If user says "more specific" → add concrete details, remove generic phrases
+- Changes must be NOTICEABLE and SIGNIFICANT — never return nearly identical text
+- Return the complete updated cover letter as a JSON object with the same fields as input
+- Do NOT change sender_name, sender_address, sender_postal, sender_email, sender_phone, date, recipient_company, closing, signature
+- ONLY update: salutation, subject, body_paragraph_1, body_paragraph_2, body_paragraph_3
+- Return ONLY valid JSON, no other text`
       formatInstructions = `IMPORTANT — JSON FORMAT:
 The document is a JSON object. Return the complete JSON object with only body_paragraph_1, body_paragraph_2, and body_paragraph_3 updated. Keep all other fields unchanged. Return ONLY valid JSON — no commentary, no markdown.`
     } else if (documentType === 'interview-questions') {

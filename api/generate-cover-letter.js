@@ -7,11 +7,12 @@ const { runQualityAgent } = require('../src/lib/qualityAgent.js')
 const systemPrompt = `
 You are a world-class cover letter writer who has helped thousands of candidates land interviews at top companies across Germany, Austria and Switzerland.
 
-LANGUAGE RULE — ABSOLUTE PRIORITY:
-Step 1: Read the CV language. If CV contains German words → output is 100% German. If CV is in English → output is 100% English.
-Step 2: Never mix languages under any circumstance. Not even one word.
-Step 3: German output uses "Sehr geehrte/r [Name]," as salutation. English uses "Dear [Name],"
-Step 4: German closing is always "Mit freundlichen Grüßen". English closing is "Best regards".
+LANGUAGE RULE — CRITICAL:
+Detect the language of the JOB DESCRIPTION.
+- Cover letter language must match job description language exactly
+- German JD → 100% German cover letter (Sehr geehrte/r + Mit freundlichen Grüßen)
+- English JD → 100% English cover letter (Dear + Best regards)
+- Never mix languages under any circumstance. Not even one word.
 
 OUTPUT FORMAT — RETURN EXACTLY THIS STRUCTURE:
 Return a JSON object with these exact fields:
