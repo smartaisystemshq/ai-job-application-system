@@ -6,6 +6,7 @@ export default function Paywall({ onUnlock, onClose }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [isBlocked, setIsBlocked] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
   const { lang } = useLang();
 
   const FEATURES = [
@@ -20,7 +21,9 @@ export default function Paywall({ onUnlock, onClose }) {
 
   const handleUnlock = async () => {
     const trimmedCode = code.trim().toUpperCase();
-    if (!trimmedCode || trimmedCode.length < 8) return;
+    if (!trimmedCode || isValidating) return;
+
+    setIsValidating(true);
 
     try {
       const response = await fetch('/api/validate-code', {
@@ -38,6 +41,8 @@ export default function Paywall({ onUnlock, onClose }) {
         return;
       }
 
+      setIsValidating(false);
+
       if (data.blocked) {
         setIsBlocked(true);
         setError(t[lang].paywall_blocked);
@@ -50,9 +55,34 @@ export default function Paywall({ onUnlock, onClose }) {
           : t[lang].paywall_invalid
       );
     } catch {
+      setIsValidating(false);
       setError(t[lang].paywall_invalid);
     }
   };
+
+  if (isValidating) {
+    return (
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(4,8,6,0.85)',
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '2px solid rgba(29,158,117,0.3)',
+          borderTop: '2px solid #1D9E75',
+          borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+      </div>
+    );
+  }
 
   return (
     <>

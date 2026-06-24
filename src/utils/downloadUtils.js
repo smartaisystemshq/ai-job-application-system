@@ -171,13 +171,13 @@ function getScalingParams(text) {
   }
 
   // Returns { bodySize, margins, lineHeight, headerSpacingBefore, headerSpacingAfter }
-  if (effective <= 50)  return { bodySize: 10.5, margins: [40,36,40,36], lineHeight: 1.28, hSpB: 8, hSpA: 3 }
-  if (effective <= 54)  return { bodySize: 10.0, margins: [40,34,40,34], lineHeight: 1.26, hSpB: 7, hSpA: 2 }
-  if (effective <= 58)  return { bodySize: 9.5,  margins: [38,32,38,32], lineHeight: 1.24, hSpB: 6, hSpA: 2 }
-  if (effective <= 63)  return { bodySize: 9.0,  margins: [36,28,36,28], lineHeight: 1.22, hSpB: 5, hSpA: 2 }
-  if (effective <= 69)  return { bodySize: 8.5,  margins: [34,24,34,24], lineHeight: 1.20, hSpB: 4, hSpA: 1 }
-  if (effective <= 76)  return { bodySize: 8.0,  margins: [32,20,32,20], lineHeight: 1.18, hSpB: 3, hSpA: 1 }
-  return                       { bodySize: 7.5,  margins: [30,18,30,18], lineHeight: 1.16, hSpB: 2, hSpA: 1 }
+  if (effective <= 50)  return { bodySize: 10.5, margins: [40,50,40,36], lineHeight: 1.28, hSpB: 8, hSpA: 3 }
+  if (effective <= 54)  return { bodySize: 10.0, margins: [40,50,40,34], lineHeight: 1.26, hSpB: 7, hSpA: 2 }
+  if (effective <= 58)  return { bodySize: 9.5,  margins: [38,50,38,32], lineHeight: 1.24, hSpB: 6, hSpA: 2 }
+  if (effective <= 63)  return { bodySize: 9.0,  margins: [36,50,36,28], lineHeight: 1.22, hSpB: 5, hSpA: 2 }
+  if (effective <= 69)  return { bodySize: 8.5,  margins: [34,50,34,24], lineHeight: 1.20, hSpB: 4, hSpA: 1 }
+  if (effective <= 76)  return { bodySize: 8.0,  margins: [32,50,32,20], lineHeight: 1.18, hSpB: 3, hSpA: 1 }
+  return                       { bodySize: 7.5,  margins: [30,50,30,18], lineHeight: 1.16, hSpB: 2, hSpA: 1 }
 }
 
 function getOptimalFontSize(text) {
@@ -239,6 +239,9 @@ function buildMinimalPDF(text, sp, photo = null) {
     pageSize: 'A4', pageMargins: margins,
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content: [...wrapHeaderWithPhoto(headerItems, photo), ...bodyContent],
+    pageBreakBefore: function(currentNode, followingNodesOnPage) {
+      return currentNode.headlineLevel === 1 && followingNodesOnPage.length === 0;
+    },
   }
   return autoFitToOnePage(docDef, text)
 }
@@ -291,6 +294,9 @@ function buildModernPDF(text, sp, photo = null) {
     pageSize: 'A4', pageMargins: margins,
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content: [topBar, ...wrapHeaderWithPhoto(headerItems, photo), ...bodyContent],
+    pageBreakBefore: function(currentNode, followingNodesOnPage) {
+      return currentNode.headlineLevel === 1 && followingNodesOnPage.length === 0;
+    },
   }
   return autoFitToOnePage(docDef, text)
 }
@@ -370,6 +376,9 @@ function buildClassicPDF(text, sp, photo = null) {
     pageSize: 'A4', pageMargins: margins,
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content: [...headerContent, ...bodyContent],
+    pageBreakBefore: function(currentNode, followingNodesOnPage) {
+      return currentNode.headlineLevel === 1 && followingNodesOnPage.length === 0;
+    },
   }
   return autoFitToOnePage(docDef, text)
 }
@@ -440,6 +449,9 @@ function buildExecutivePDF(text, sp, photo = null) {
     pageSize: 'A4', pageMargins: margins,
     defaultStyle: { font: 'Roboto', fontSize: bodySize, lineHeight },
     content: [...headerContent, ...bodyContent],
+    pageBreakBefore: function(currentNode, followingNodesOnPage) {
+      return currentNode.headlineLevel === 1 && followingNodesOnPage.length === 0;
+    },
   }
   return autoFitToOnePage(docDef, text)
 }
@@ -566,6 +578,7 @@ function buildSharpPDF(text, sp, photo = null) {
           paddingBottom: () => 0,
         },
       },
+      { text: '', margin: [0, 8, 0, 0] },
       // Two-column body — vLineWidth draws the green border from row top to bottom
       {
         table: {

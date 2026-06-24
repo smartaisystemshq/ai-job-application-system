@@ -4,7 +4,7 @@ import { t } from '../translations';
 import FileUploadField from './FileUploadField';
 import DownloadButtons from '../utils/DownloadButtons';
 import DocumentPreview from '../utils/DocumentPreview';
-import ScoreCard, { calculateAttractivenessScore, KeywordMatch } from './ScoreCard';
+import ScoreCard, { calculateAttractivenessScore } from './ScoreCard';
 import { cleanMarkdown } from '../utils/outputQualityAgent';
 import { TEMPLATES, TemplateSelector } from './TemplateSelector';
 import LockedContent from './LockedContent';
@@ -455,8 +455,6 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
               </p>
 
               {score !== null && <ScoreCard score={score} />}
-
-              <KeywordMatch cvText={result} jdText={jobDescription} />
 
               <MiniChatbot currentDocument={result} onUpdate={handleAdjustUpdate} />
             </LockedContent>

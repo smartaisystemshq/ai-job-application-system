@@ -69,11 +69,6 @@ function recordFailedAttempt(ip) {
   codeAttempts.set(ip, attempts)
 }
 
-async function constantTimeCompare(a, b) {
-  await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 50))
-  return a === b
-}
-
 /*
  * ACCESS CODES — generated 2026-06-19
  * Set VALID_ACCESS_CODES in Vercel Environment Variables to:
@@ -94,7 +89,7 @@ async function constantTimeCompare(a, b) {
  * FAMILY-FREE-0001,FAMILY-FREE-0002,FAMILY-FREE-0003,FAMILY-FREE-0004
  */
 
-module.exports = async function handler(req, res) {
+module.exports = function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -139,13 +134,7 @@ module.exports = async function handler(req, res) {
 
   const codeUpper = code.trim().toUpperCase()
 
-  // Compare all codes — never short-circuit to prevent timing attacks
-  let isValid = false
-  for (const validCode of validCodes) {
-    if (await constantTimeCompare(validCode, codeUpper)) {
-      isValid = true
-    }
-  }
+  const isValid = validCodes.includes(codeUpper)
 
   if (!isValid) {
     recordFailedAttempt(ip)
