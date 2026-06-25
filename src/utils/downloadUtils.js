@@ -615,7 +615,7 @@ function buildSharpPDF(text, sp, photo = null) {
                   text: sanitizeTextForPDF(contactLine || ''),
                   fontSize: 8.5, color: '#FFFFFF',
                   margin: [24, 6, 24, 6],
-                  fillColor: '#0d7a52',
+                  fillColor: '#0f6b45',
                   border: [false, false, false, false],
                 }]] },
                 layout: { defaultBorder: false, paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 0, paddingBottom: () => 0 },

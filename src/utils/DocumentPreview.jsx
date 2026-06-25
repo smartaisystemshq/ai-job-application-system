@@ -248,8 +248,8 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
           padding: '18px 24px 0px',
         }}>{name}</div>
         <div style={{
-          background: 'rgba(10,80,55,0.45)',
-          padding: '5px 24px 7px',
+          background: 'rgba(10,70,42,0.35)',
+          padding: '5px 24px',
           fontSize: '8.5px',
           color: 'rgba(255,255,255,0.9)',
           letterSpacing: '0.2px',
