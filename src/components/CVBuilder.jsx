@@ -239,8 +239,8 @@ function buildCVText({ personal, experience, projects, education, skills, summar
   const { name, email, phone, street, city, postalCode, country, linkedin, portfolio } = personal;
   const lines = [];
   lines.push((name || 'YOUR NAME').toUpperCase());
-  const loc = [city, country].filter(Boolean).join(', ');
-  const contact = [email, phone, loc].filter(Boolean).join(' | ');
+  const cityStr = [postalCode, city].filter(s => s && s.trim()).join(' ') || city;
+  const contact = [email, phone, street, cityStr, country].filter(s => s && s.trim()).join(' | ');
   if (contact) lines.push(contact);
   if (linkedin) lines.push(linkedin);
   if (portfolio) lines.push(portfolio);
@@ -421,7 +421,7 @@ export default function CVBuilder({ unlocked, onUnlock }) {
       const res = await fetch('/api/cv-builder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate-bullets', data: { jobTitle: exp.jobTitle, company: exp.company, description: exp.description, targetRole: state.personal.targetRole } }),
+        body: JSON.stringify({ action: 'generate-bullets', data: { jobTitle: exp.jobTitle, company: exp.company, description: exp.description, targetRole: state.personal.targetRole, jobDescription: state.personal.jobDescription } }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);

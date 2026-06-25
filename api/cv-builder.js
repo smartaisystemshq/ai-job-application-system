@@ -3,6 +3,36 @@ const { checkRateLimit } = require('../src/lib/rateLimit.js')
 const { validateAndSanitize } = require('../src/lib/validation.js')
 const { applySecurityHeaders } = require('../src/lib/securityHeaders.js')
 
+function cleanField(val) {
+  if (val === undefined || val === null) return ''
+  if (typeof val === 'string' && (val.trim() === '' || val.trim() === 'undefined')) return ''
+  return val
+}
+
+function sanitizeData(data) {
+  if (!data || typeof data !== 'object') return {}
+  const out = {}
+  for (const [k, v] of Object.entries(data)) {
+    if (Array.isArray(v)) {
+      out[k] = v
+        .map(item => typeof item === 'object' && item !== null
+          ? Object.fromEntries(Object.entries(item).map(([ik, iv]) => [ik, cleanField(iv)]))
+          : cleanField(item))
+        .filter(item => typeof item !== 'string' || item !== '')
+    } else {
+      out[k] = cleanField(v)
+    }
+  }
+  return out
+}
+
+function detectLanguage(text) {
+  if (!text) return 'EN'
+  const germanWords = ['und', 'die', 'der', 'das', 'für', 'mit', 'sie', 'wir', 'ihr', 'haben', 'sein', 'werden', 'nicht', 'auch', 'nach', 'bei', 'auf']
+  const germanCount = germanWords.filter(w => text.toLowerCase().split(/\s+/).includes(w)).length
+  return germanCount >= 3 ? 'DE' : 'EN'
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -29,7 +59,8 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: 'API key not configured' })
     }
 
-    const { action, data } = req.body || {}
+    const { action, data: rawData } = req.body || {}
+    const data = sanitizeData(rawData || {})
     if (!action) return res.status(400).json({ error: 'action is required.' })
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -37,7 +68,7 @@ module.exports = async function handler(req, res) {
     let prompt
 
     if (action === 'generate-bullets') {
-      const { jobTitle, company, description, targetRole } = data || {}
+      const { jobTitle, company, description, targetRole, jobDescription } = data || {}
       if (!description) return res.status(400).json({ error: 'description is required.' })
 
       const descValidation = validateAndSanitize(description, 'cvText')
@@ -46,17 +77,25 @@ module.exports = async function handler(req, res) {
       const roleValidation = validateAndSanitize(targetRole || '', 'nameField')
       if (!roleValidation.valid) return res.status(400).json({ error: roleValidation.error })
 
-      prompt = `You are an elite CV writer. Generate exactly 4 CV bullet points for this work experience entry.
+      const langSrc = jobDescription || description || ''
+      const bulletLang = detectLanguage(langSrc) === 'DE' ? 'German' : 'English'
+
+      prompt = `LANGUAGE RULE — ABSOLUTE:
+All bullet points MUST be written in ${bulletLang}.
+Every single bullet point must be in ${bulletLang} — no exceptions, no mixing languages.
+CRITICAL: Never write the word "undefined" anywhere. If a field is missing, simply omit it.
+
+You are an elite CV writer. Generate exactly 4 CV bullet points for this work experience entry.
 
 Job Title: ${jobTitle || 'Not specified'}
 Company: ${company || 'Not specified'}
 Target Role (candidate is applying for): ${roleValidation.value || 'Not specified'}
-Candidate's description of their work: ${descValidation.value}
+${jobDescription ? `Job Description language context: ${jobDescription.slice(0, 300)}\n` : ''}Candidate's description of their work: ${descValidation.value}
 
 REQUIREMENTS FOR EACH BULLET:
-- Start with the strongest possible action verb: Spearheaded, Architected, Doubled, Slashed, Launched, Negotiated, Automated, Secured, Mentored, Overhauled, Streamlined, Drove
+- Start with the strongest possible action verb
 - Format: [Action verb] + [what/how] + [measurable result or scale]
-- Quantify aggressively: percentages, revenue, headcount, time saved, volume — if the description doesn't have numbers, make a realistic inference based on the role level and write "[add your specific metric]" at the end
+- Quantify aggressively: percentages, revenue, headcount, time saved, volume — if no numbers available, write "[add your specific metric]" at the end
 - Maximum 18 words per bullet
 - Each bullet must demonstrate impact, not just describe a task
 - Tailor to the target role if one is specified
@@ -70,7 +109,8 @@ Return exactly 4 bullet points. Each starts with • on its own line. No preambl
       const roleValidation = validateAndSanitize(targetRole, 'nameField')
       if (!roleValidation.valid) return res.status(400).json({ error: roleValidation.error })
 
-      prompt = `You are a senior recruiter and career expert. Suggest exactly 10 highly relevant skills for a "${roleValidation.value}" position.
+      prompt = `CRITICAL: Never write the word "undefined" anywhere in your response.
+You are a senior recruiter and career expert. Suggest exactly 10 highly relevant skills for a "${roleValidation.value}" position.
 
 Skills the candidate already has listed: ${(existingSkills || []).join(', ') || 'none listed'}
 
@@ -103,7 +143,12 @@ RULES:
 
       const sanitizedJd = jdValidation.value
 
-      prompt = `You are an elite CV writer. Write a professional summary section (3 sentences, under 75 words).
+      const summaryLang = detectLanguage(sanitizedJd || expText) === 'DE' ? 'German' : 'English'
+
+      prompt = `LANGUAGE RULE — ABSOLUTE: Write the ENTIRE summary in ${summaryLang}. Every word must be in ${summaryLang}.
+CRITICAL: Never write the word "undefined" anywhere. If a field is missing or empty, simply omit it.
+
+You are an elite CV writer. Write a professional summary section (3 sentences, under 75 words).
 
 Candidate name: ${name || 'the candidate'}
 Target role: ${targetRole || 'not specified'}
