@@ -779,124 +779,210 @@ function buildPDFDocDef(text, sp, template, photo = null) {
   }
 }
 
-// ── Cover letter PDF builder (structured data) ───────────────────────────────
+// ── Cover letter PDF builders — one per template ─────────────────────────────
+
+function buildMinimalCoverLetterPDF(data) {
+  const safe = (v) => v || ''
+  return {
+    pageSize: 'A4',
+    pageMargins: [70, 65, 70, 65],
+    content: [
+      { text: safe(data.sender_name), fontSize: 16, bold: true, color: '#1a1a1a', margin: [0,0,0,4] },
+      { text: [safe(data.sender_address), safe(data.sender_postal)].filter(Boolean).join(', '), fontSize: 9.5, color: '#555555', margin: [0,0,0,2] },
+      { text: safe(data.sender_email), fontSize: 9.5, color: '#555555', margin: [0,0,0,2] },
+      { text: safe(data.sender_phone), fontSize: 9.5, color: '#555555', margin: [0,0,0,10] },
+      { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 455, y2: 0, lineWidth: 0.5, lineColor: '#cccccc' }], margin: [0,0,0,14] },
+      { text: safe(data.date), fontSize: 10, color: '#555555', italics: true, alignment: 'right', margin: [0,0,0,12] },
+      { text: safe(data.recipient_company), fontSize: 10, color: '#333333', margin: [0,0,0,14], lineHeight: 1.5 },
+      { text: safe(data.subject), fontSize: 11, bold: true, color: '#1a1a1a', margin: [0,0,0,14] },
+      { text: safe(data.salutation), fontSize: 11, margin: [0,0,0,12] },
+      { text: safe(data.body_paragraph_1), fontSize: 11, lineHeight: 1.7, color: '#333333', margin: [0,0,0,12] },
+      { text: safe(data.body_paragraph_2), fontSize: 11, lineHeight: 1.7, color: '#333333', margin: [0,0,0,12] },
+      { text: safe(data.body_paragraph_3), fontSize: 11, lineHeight: 1.7, color: '#333333', margin: [0,0,0,24] },
+      { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 455, y2: 0, lineWidth: 0.5, lineColor: '#cccccc' }], margin: [0,0,0,14] },
+      { text: safe(data.closing), fontSize: 11, margin: [0,0,0,36] },
+      { text: safe(data.signature), fontSize: 11, bold: true },
+    ],
+    defaultStyle: { font: 'Roboto', fontSize: 11, color: '#1a1a1a' },
+  }
+}
+
+function buildModernCoverLetterPDF(data) {
+  const safe = (v) => v || ''
+  const ACCENT = '#1D9E75'
+  return {
+    pageSize: 'A4',
+    pageMargins: [0, 0, 60, 60],
+    content: [
+      {
+        table: {
+          widths: ['100%'],
+          body: [[{
+            stack: [
+              { text: safe(data.sender_name), fontSize: 18, bold: true, color: '#FFFFFF', margin: [60, 28, 24, 6] },
+              { text: [safe(data.sender_email), safe(data.sender_phone), safe(data.sender_address)].filter(Boolean).join('   ·   '), fontSize: 8.5, color: '#cccccc', margin: [60, 0, 24, 12] },
+            ],
+            fillColor: '#1a1a1a',
+            border: [false, false, false, false],
+          }]],
+        },
+        layout: { defaultBorder: false, paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 0, paddingBottom: () => 0 },
+      },
+      {
+        columns: [
+          { canvas: [{ type: 'rect', x: 0, y: 0, w: 3, h: 680, color: ACCENT }], width: 3 },
+          {
+            width: '*',
+            stack: [
+              { text: safe(data.date), fontSize: 10, color: '#555555', italics: true, alignment: 'right', margin: [24, 20, 0, 12] },
+              { text: safe(data.recipient_company), fontSize: 10, color: '#333333', margin: [24, 0, 0, 14], lineHeight: 1.5 },
+              { text: safe(data.subject), fontSize: 11, bold: true, color: ACCENT, margin: [24, 0, 0, 14] },
+              { text: safe(data.salutation), fontSize: 11, margin: [24, 0, 0, 12] },
+              { text: safe(data.body_paragraph_1), fontSize: 11, lineHeight: 1.7, color: '#333333', margin: [24, 0, 0, 12] },
+              { text: safe(data.body_paragraph_2), fontSize: 11, lineHeight: 1.7, color: '#333333', margin: [24, 0, 0, 12] },
+              { text: safe(data.body_paragraph_3), fontSize: 11, lineHeight: 1.7, color: '#333333', margin: [24, 0, 0, 24] },
+              { canvas: [{ type: 'line', x1: 24, y1: 0, x2: 480, y2: 0, lineWidth: 0.5, lineColor: '#cccccc' }], margin: [0, 0, 0, 14] },
+              { text: safe(data.closing), fontSize: 11, margin: [24, 0, 0, 36] },
+              { text: safe(data.signature), fontSize: 11, bold: true, margin: [24, 0, 0, 0] },
+            ],
+          },
+        ],
+        columnGap: 0,
+      },
+    ],
+    defaultStyle: { font: 'Roboto', fontSize: 11, color: '#1a1a1a' },
+  }
+}
+
+function buildClassicCoverLetterPDF(data) {
+  const safe = (v) => v || ''
+  return {
+    pageSize: 'A4',
+    pageMargins: [70, 65, 70, 65],
+    content: [
+      { text: safe(data.sender_name), fontSize: 16, bold: true, color: '#1a1a1a', alignment: 'center', margin: [0,0,0,4] },
+      { text: [safe(data.sender_address), safe(data.sender_postal)].filter(Boolean).join(' | '), fontSize: 9.5, color: '#555555', alignment: 'center', margin: [0,0,0,2] },
+      { text: [safe(data.sender_email), safe(data.sender_phone)].filter(Boolean).join(' | '), fontSize: 9.5, color: '#555555', alignment: 'center', margin: [0,0,0,10] },
+      { canvas: [{ type: 'line', x1: 100, y1: 0, x2: 355, y2: 0, lineWidth: 0.5, lineColor: '#cccccc' }], margin: [0,0,0,16] },
+      { text: safe(data.date), fontSize: 10, color: '#555555', italics: true, alignment: 'right', margin: [0,0,0,14] },
+      { text: safe(data.recipient_company), fontSize: 10, color: '#333333', margin: [0,0,0,16], lineHeight: 1.5 },
+      { text: safe(data.subject), fontSize: 11, bold: true, color: '#1a1a1a', decoration: 'underline', margin: [0,0,0,16] },
+      { text: safe(data.salutation), fontSize: 11, margin: [0,0,0,14] },
+      { text: safe(data.body_paragraph_1), fontSize: 11, lineHeight: 1.7, color: '#333333', margin: [0,0,0,12] },
+      { text: safe(data.body_paragraph_2), fontSize: 11, lineHeight: 1.7, color: '#333333', margin: [0,0,0,12] },
+      { text: safe(data.body_paragraph_3), fontSize: 11, lineHeight: 1.7, color: '#333333', margin: [0,0,0,24] },
+      { text: safe(data.closing), fontSize: 11, margin: [0,0,0,36] },
+      { text: safe(data.signature), fontSize: 11, bold: true },
+    ],
+    defaultStyle: { font: 'Roboto', fontSize: 11, color: '#1a1a1a' },
+  }
+}
+
+function buildExecutiveCoverLetterPDF(data) {
+  const safe = (v) => v || ''
+  const ACCENT = '#1D9E75'
+  return {
+    pageSize: 'A4',
+    pageMargins: [65, 60, 65, 60],
+    content: [
+      { text: safe(data.sender_name).toUpperCase(), fontSize: 20, bold: true, color: '#1a1a1a', margin: [0,0,0,6] },
+      { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 465, y2: 0, lineWidth: 2, lineColor: ACCENT }], margin: [0,0,0,8] },
+      { text: [safe(data.sender_email), safe(data.sender_phone), safe(data.sender_address), safe(data.sender_postal)].filter(Boolean).join('   ·   '), fontSize: 9, color: '#666666', margin: [0,0,0,18] },
+      { text: safe(data.date), fontSize: 10, color: '#555555', italics: true, alignment: 'right', margin: [0,0,0,14] },
+      { text: safe(data.recipient_company), fontSize: 10.5, color: '#333333', margin: [0,0,0,14], lineHeight: 1.5 },
+      {
+        table: { widths: ['100%'], body: [[{ text: safe(data.subject), fontSize: 11, bold: true, color: '#1a1a1a', fillColor: '#f0faf7', margin: [10,8,10,8], border: [false,false,false,false] }]] },
+        layout: 'noBorders',
+        margin: [0,0,0,16],
+      },
+      { text: safe(data.salutation), fontSize: 11, margin: [0,0,0,14] },
+      { text: safe(data.body_paragraph_1), fontSize: 11, lineHeight: 1.75, color: '#333333', margin: [0,0,0,14] },
+      { text: safe(data.body_paragraph_2), fontSize: 11, lineHeight: 1.75, color: '#333333', margin: [0,0,0,14] },
+      { text: safe(data.body_paragraph_3), fontSize: 11, lineHeight: 1.75, color: '#333333', margin: [0,0,0,28] },
+      { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 465, y2: 0, lineWidth: 0.5, lineColor: '#cccccc' }], margin: [0,0,0,16] },
+      { text: safe(data.closing), fontSize: 11, margin: [0,0,0,40] },
+      { text: safe(data.signature), fontSize: 11, bold: true },
+    ],
+    defaultStyle: { font: 'Roboto', fontSize: 11, color: '#1a1a1a' },
+  }
+}
+
+function buildSharpCoverLetterPDF(data) {
+  const safe = (v) => v || ''
+  const ACCENT = '#1D9E75'
+  return {
+    pageSize: 'A4',
+    pageMargins: [0, 55, 55, 55],
+    header: function(currentPage) {
+      if (currentPage === 1) return { text: '', margin: [0, 0, 0, 0] }
+      return { text: '', margin: [0, 55, 0, 0] }
+    },
+    content: [
+      {
+        absolutePosition: { x: 0, y: 0 },
+        table: {
+          widths: ['100%'],
+          body: [[{
+            stack: [
+              { text: safe(data.sender_name).toUpperCase(), fontSize: 16, bold: true, color: '#FFFFFF', margin: [24, 16, 24, 8] },
+              {
+                table: { widths: ['100%'], body: [[{
+                  text: [safe(data.sender_email), safe(data.sender_phone), safe(data.sender_address)].filter(Boolean).join('   ·   '),
+                  fontSize: 8.5, color: '#FFFFFF', fillColor: '#0f6b45', margin: [24, 5, 24, 5],
+                  border: [false, false, false, false],
+                }]] },
+                layout: { defaultBorder: false, paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 0, paddingBottom: () => 0 },
+              },
+            ],
+            fillColor: ACCENT,
+            border: [false, false, false, false],
+          }]],
+        },
+        layout: { defaultBorder: false, paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 0, paddingBottom: () => 0 },
+      },
+      { text: '', margin: [0, 20, 0, 0] },
+      {
+        columns: [
+          { canvas: [{ type: 'rect', x: 0, y: 0, w: 3, h: 680, color: ACCENT }], width: 3 },
+          {
+            width: '*',
+            stack: [
+              { text: safe(data.date), fontSize: 10, color: '#555555', italics: true, alignment: 'right', margin: [20, 0, 0, 12] },
+              { text: safe(data.recipient_company), fontSize: 10, color: '#333333', margin: [20, 0, 0, 14], lineHeight: 1.5 },
+              { canvas: [{ type: 'line', x1: 20, y1: 0, x2: 480, y2: 0, lineWidth: 0.5, lineColor: ACCENT }], margin: [0, 0, 0, 8] },
+              {
+                table: { widths: ['100%'], body: [[{ text: safe(data.subject), fontSize: 11, bold: true, color: '#1a1a1a', fillColor: '#f0faf7', margin: [8,6,8,6], border: [false,false,false,false] }]] },
+                layout: 'noBorders',
+                margin: [20, 0, 0, 14],
+              },
+              { text: safe(data.salutation), fontSize: 11, bold: true, margin: [20, 0, 0, 12] },
+              { text: safe(data.body_paragraph_1), fontSize: 11, lineHeight: 1.7, color: '#333333', margin: [20, 0, 0, 12] },
+              { text: safe(data.body_paragraph_2), fontSize: 11, lineHeight: 1.7, color: '#333333', margin: [20, 0, 0, 12] },
+              { text: safe(data.body_paragraph_3), fontSize: 11, lineHeight: 1.7, color: '#333333', margin: [20, 0, 0, 24] },
+              { canvas: [{ type: 'line', x1: 20, y1: 0, x2: 480, y2: 0, lineWidth: 0.5, lineColor: '#cccccc' }], margin: [0, 0, 0, 14] },
+              { text: safe(data.closing), fontSize: 11, margin: [20, 0, 0, 36] },
+              { text: safe(data.signature), fontSize: 11, bold: true, margin: [20, 0, 0, 0] },
+            ],
+          },
+        ],
+        columnGap: 0,
+      },
+    ],
+    defaultStyle: { font: 'Roboto', fontSize: 11, color: '#1a1a1a' },
+  }
+}
 
 export function buildCoverLetterPDF(data, template = 'minimal') {
   if (!data || typeof data !== 'object') throw new Error('Invalid cover letter data')
-
-  if (template === 'sharp') {
-    return {
-      pageSize: 'A4',
-      pageMargins: [0, 0, 56, 56],
-      content: [
-        {
-          table: {
-            widths: ['100%'],
-            body: [[{
-              stack: [
-                { text: (data.sender_name || '').toUpperCase(), fontSize: 16, bold: true, color: '#FFFFFF', characterSpacing: 1, margin: [28, 18, 28, 6] },
-                { canvas: [{ type: 'line', x1: 28, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#FFFFFF' }], margin: [0, 0, 0, 6] },
-                { text: [data.sender_email, data.sender_phone, data.sender_address].filter(Boolean).join('   ·   '), fontSize: 8, color: '#FFFFFF', margin: [28, 0, 28, 0] },
-                { canvas: [{ type: 'rect', x: 0, y: 8, w: 595, h: 4, color: '#0f6b50' }], margin: [0, 0, 0, 0] },
-              ],
-              fillColor: '#1D9E75',
-              border: [false, false, false, false],
-            }]],
-          },
-          layout: 'noBorders',
-        },
-        {
-          columns: [
-            { width: 3, canvas: [{ type: 'rect', x: 0, y: 0, w: 3, h: 700, color: '#1D9E75' }] },
-            {
-              width: '*',
-              stack: [
-                { text: data.date || '', fontSize: 9, color: '#555555', italics: true, alignment: 'right', margin: [28, 18, 0, 10] },
-                { text: data.recipient_company || '', fontSize: 9.5, color: '#333333', margin: [44, 0, 0, 6], lineHeight: 1.4 },
-                { canvas: [{ type: 'line', x1: 28, y1: 0, x2: 500, y2: 0, lineWidth: 0.5, lineColor: '#1D9E75' }], margin: [0, 8, 0, 8] },
-                {
-                  table: {
-                    widths: [3, '*'],
-                    body: [[
-                      { text: '', border: [false, false, false, false], fillColor: '#1D9E75', margin: [0, 0, 0, 0] },
-                      { text: data.subject || '', fontSize: 10, bold: true, color: '#1a1a1a', border: [false, false, false, false], fillColor: '#e8f5f0', margin: [9, 6, 9, 6] },
-                    ]],
-                  },
-                  layout: { defaultBorder: false, paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 0, paddingBottom: () => 0 },
-                  margin: [28, 0, 0, 14],
-                },
-                { text: data.salutation || '', fontSize: 10.5, bold: true, margin: [28, 0, 0, 10] },
-                { text: data.body_paragraph_1 || '', fontSize: 10.5, lineHeight: 1.65, color: '#333333', margin: [44, 0, 0, 10] },
-                { text: data.body_paragraph_2 || '', fontSize: 10.5, lineHeight: 1.65, color: '#333333', margin: [44, 0, 0, 10] },
-                { text: data.body_paragraph_3 || '', fontSize: 10.5, lineHeight: 1.65, color: '#333333', margin: [44, 0, 0, 20] },
-                { canvas: [{ type: 'line', x1: 28, y1: 0, x2: 500, y2: 0, lineWidth: 0.5, lineColor: '#cccccc' }], margin: [0, 0, 0, 12] },
-                { text: data.closing || '', fontSize: 11, margin: [44, 0, 0, 32] },
-                { text: data.signature || '', fontSize: 11, bold: true, margin: [44, 0, 0, 0] },
-              ],
-            },
-          ],
-          columnGap: 0,
-        },
-      ],
-      defaultStyle: { font: 'Roboto', fontSize: 10.5, color: '#1a1a1a' },
-    }
+  const builders = {
+    minimal:   buildMinimalCoverLetterPDF,
+    modern:    buildModernCoverLetterPDF,
+    classic:   buildClassicCoverLetterPDF,
+    executive: buildExecutiveCoverLetterPDF,
+    sharp:     buildSharpCoverLetterPDF,
   }
-
-  const ACCENT = '#1D9E75'
-
-  const templates = {
-    minimal:   { nameColor: '#1a1a1a', lineColor: '#cccccc', lineWidth: 0.5, subjectColor: '#1a1a1a', margins: [70, 60, 70, 60] },
-    modern:    { nameColor: '#1a1a1a', lineColor: ACCENT,    lineWidth: 1,   subjectColor: ACCENT,    margins: [70, 60, 70, 60] },
-    classic:   { nameColor: '#1a1a1a', lineColor: '#333333', lineWidth: 1,   subjectColor: '#1a1a1a', margins: [70, 60, 70, 60] },
-    executive: { nameColor: '#1a1a1a', lineColor: ACCENT,    lineWidth: 2,   subjectColor: '#1a1a1a', margins: [60, 55, 60, 55] },
-  }
-
-  const style = templates[template] || templates.minimal
-
-  const safeLine = (text) => ({
-    text: text || '',
-    fontSize: 10,
-    lineHeight: 1.5,
-    color: '#333333',
-    margin: [0, 1, 0, 0],
-  })
-
-  const senderBlock = [
-    { text: data.sender_name || '', fontSize: 14, bold: true, color: style.nameColor || '#1a1a1a', margin: [0, 0, 0, 4] },
-    safeLine(data.sender_address),
-    safeLine(data.sender_postal),
-    safeLine(data.sender_email),
-    safeLine(data.sender_phone),
-  ]
-
-  const dividerLine = {
-    canvas: [{ type: 'line', x1: 0, y1: 0, x2: 475, y2: 0, lineWidth: style.lineWidth, lineColor: style.lineColor }],
-    margin: [0, 10, 0, 14],
-  }
-
-  const metaBlock = [
-    { text: data.date || '', fontSize: 10, color: '#555555', margin: [0, 0, 0, 10] },
-    { text: data.recipient_company || '', fontSize: 10, color: '#333333', margin: [0, 0, 0, 14] },
-    { text: data.subject || '', fontSize: 10, bold: true, color: style.subjectColor || '#1a1a1a', margin: [0, 0, 0, 14] },
-    { text: data.salutation || '', fontSize: 10.5, margin: [0, 0, 0, 10] },
-  ]
-
-  const bodyBlock = [
-    { text: data.body_paragraph_1 || '', fontSize: 10.5, lineHeight: 1.65, margin: [0, 0, 0, 10] },
-    { text: data.body_paragraph_2 || '', fontSize: 10.5, lineHeight: 1.65, margin: [0, 0, 0, 10] },
-    { text: data.body_paragraph_3 || '', fontSize: 10.5, lineHeight: 1.65, margin: [0, 0, 0, 24] },
-    { text: data.closing || '', fontSize: 10.5, margin: [0, 0, 0, 28] },
-    { text: data.signature || '', fontSize: 10.5, bold: true },
-  ]
-
-  const content = [...senderBlock, dividerLine, ...metaBlock, ...bodyBlock]
-
-  return {
-    pageSize: 'A4',
-    pageMargins: style.margins,
-    content,
-    defaultStyle: { font: 'Roboto', fontSize: 10.5, lineHeight: 1.6, color: '#1a1a1a' },
-  }
+  const builder = builders[template] || builders.minimal
+  return builder(data)
 }
 
 // ── Cover letter Word builder (structured data) ──────────────────────────────
@@ -904,61 +990,204 @@ export function buildCoverLetterPDF(data, template = 'minimal') {
 export async function buildCoverLetterWord(data, template = 'minimal') {
   if (!data || typeof data !== 'object') throw new Error('Invalid cover letter data')
 
-  const { Document, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType } = await import('docx')
+  const { Document, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType } = await import('docx')
 
   const ACCENT = '1D9E75'
+  const safe = (v) => v || ''
+
   const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
 
-  const makeP = (text, opts = {}) => new Paragraph({
+  const makePara = (text, opts = {}) => new Paragraph({
+    alignment: opts.alignment || AlignmentType.LEFT,
+    spacing: { before: opts.before || 0, after: opts.after !== undefined ? opts.after : 80 },
     children: [new TextRun({
-      text: text || '',
-      size: opts.size || 20,
+      text: safe(text),
+      size: opts.size || 22,
       bold: opts.bold || false,
+      italics: opts.italics || false,
+      underline: opts.underline ? {} : undefined,
       color: opts.color || '1a1a1a',
       font: 'Arial',
     })],
-    spacing: { before: opts.before || 0, after: opts.after !== undefined ? opts.after : 80 },
   })
 
-  const children = []
+  const makeContactLine = (parts, opts = {}) => new Paragraph({
+    alignment: opts.alignment || AlignmentType.LEFT,
+    spacing: { before: 0, after: opts.after !== undefined ? opts.after : 60 },
+    children: parts.filter(Boolean).map((part, i, arr) => new TextRun({
+      text: i < arr.length - 1 ? part + '   ·   ' : part,
+      size: opts.size || 18,
+      color: opts.color || '555555',
+      font: 'Arial',
+    })),
+  })
 
-  if (template === 'sharp') {
+  const makeGreyDivider = (borderColor = 'cccccc', borderSize = 6, afterSpacing = 200) => new Paragraph({
+    border: { bottom: { style: BorderStyle.SINGLE, size: borderSize, color: borderColor } },
+    spacing: { before: 0, after: afterSpacing },
+    children: [],
+  })
+
+  const makeBodyParagraph = (text, afterSpacing = 160) => new Paragraph({
+    spacing: { before: 0, after: afterSpacing },
+    children: [new TextRun({ text: safe(text), size: 22, color: '333333', font: 'Arial' })],
+  })
+
+  let children = []
+
+  if (template === 'minimal') {
+    children.push(makePara(data.sender_name, { size: 30, bold: true, after: 60 }))
+    children.push(makeContactLine(
+      [safe(data.sender_address), safe(data.sender_postal)].filter(Boolean),
+      { after: 60 }
+    ))
+    children.push(makeContactLine(
+      [safe(data.sender_email), safe(data.sender_phone)].filter(Boolean),
+      { after: 140 }
+    ))
+    children.push(makeGreyDivider('cccccc', 4, 200))
+    children.push(makePara(data.date, { size: 18, color: '555555', italics: true, alignment: AlignmentType.RIGHT, after: 160 }))
+    children.push(makePara(data.recipient_company, { size: 19, color: '333333', after: 200 }))
+    children.push(makePara(data.subject, { size: 22, bold: true, after: 200 }))
+    children.push(makePara(data.salutation, { size: 22, after: 160 }))
+    children.push(makeBodyParagraph(data.body_paragraph_1, 160))
+    children.push(makeBodyParagraph(data.body_paragraph_2, 160))
+    children.push(makeBodyParagraph(data.body_paragraph_3, 320))
+    children.push(makeGreyDivider('cccccc', 4, 200))
+    children.push(makePara(data.closing, { size: 22, after: 480 }))
+    children.push(makePara(data.signature, { size: 22, bold: true, after: 0 }))
+
+  } else if (template === 'modern') {
     children.push(new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       rows: [new TableRow({
         children: [new TableCell({
           children: [
-            makeP(data.sender_name, { size: 28, bold: true, color: 'FFFFFF', after: 60 }),
-            makeP([data.sender_email, data.sender_phone, data.sender_address].filter(Boolean).join('   ·   '), { size: 16, color: 'E8F5F0', after: 0 }),
+            makePara(data.sender_name, { size: 32, bold: true, color: 'FFFFFF', after: 80 }),
+            makeContactLine(
+              [safe(data.sender_email), safe(data.sender_phone), safe(data.sender_address)].filter(Boolean),
+              { size: 17, color: 'CCCCCC', after: 60 }
+            ),
           ],
-          shading: { fill: ACCENT, type: ShadingType.CLEAR, color: ACCENT },
+          shading: { fill: '1a1a1a', type: ShadingType.CLEAR, color: '1a1a1a' },
           borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
-          margins: { top: 200, bottom: 200, left: 400, right: 400 },
+          margins: { top: 240, bottom: 240, left: 600, right: 400 },
         })],
       })],
     }))
-    children.push(makeP('', { after: 200 }))
-  } else {
-    children.push(makeP(data.sender_name, { size: 26, bold: true, after: 40 }))
-    children.push(makeP(data.sender_address, { size: 18, after: 40 }))
-    children.push(makeP(data.sender_postal, { size: 18, after: 40 }))
-    children.push(makeP(data.sender_email, { size: 18, after: 40 }))
-    children.push(makeP(data.sender_phone, { size: 18, after: 120 }))
-    children.push(new Paragraph({
-      border: { bottom: { style: BorderStyle.SINGLE, size: template === 'executive' ? 12 : 6, color: template === 'classic' ? '333333' : ACCENT } },
-      spacing: { after: 160 },
-    }))
-  }
+    children.push(makePara('', { after: 80 }))
+    children.push(makePara(data.date, { size: 18, color: '555555', italics: true, alignment: AlignmentType.RIGHT, after: 160 }))
+    children.push(makePara(data.recipient_company, { size: 19, color: '333333', after: 200 }))
+    children.push(makePara(data.subject, { size: 22, bold: true, color: ACCENT, after: 200 }))
+    children.push(makePara(data.salutation, { size: 22, after: 160 }))
+    children.push(makeBodyParagraph(data.body_paragraph_1, 160))
+    children.push(makeBodyParagraph(data.body_paragraph_2, 160))
+    children.push(makeBodyParagraph(data.body_paragraph_3, 320))
+    children.push(makeGreyDivider('cccccc', 4, 200))
+    children.push(makePara(data.closing, { size: 22, after: 480 }))
+    children.push(makePara(data.signature, { size: 22, bold: true, after: 0 }))
 
-  children.push(makeP(data.date, { size: 19, color: '555555', after: 120 }))
-  children.push(makeP(data.recipient_company, { size: 19, after: 160 }))
-  children.push(makeP(data.subject, { size: 20, bold: true, after: 160 }))
-  children.push(makeP(data.salutation, { size: 20, after: 120 }))
-  children.push(makeP(data.body_paragraph_1, { size: 20, after: 120 }))
-  children.push(makeP(data.body_paragraph_2, { size: 20, after: 120 }))
-  children.push(makeP(data.body_paragraph_3, { size: 20, after: 360 }))
-  children.push(makeP(data.closing, { size: 20, after: 400 }))
-  children.push(makeP(data.signature, { size: 20, bold: true, after: 0 }))
+  } else if (template === 'classic') {
+    children.push(makePara(data.sender_name, { size: 30, bold: true, alignment: AlignmentType.CENTER, after: 60 }))
+    children.push(makeContactLine(
+      [safe(data.sender_address), safe(data.sender_postal)].filter(Boolean),
+      { after: 60, alignment: AlignmentType.CENTER }
+    ))
+    children.push(makeContactLine(
+      [safe(data.sender_email), safe(data.sender_phone)].filter(Boolean),
+      { after: 140, alignment: AlignmentType.CENTER }
+    ))
+    children.push(makeGreyDivider('cccccc', 4, 200))
+    children.push(makePara(data.date, { size: 18, color: '555555', italics: true, alignment: AlignmentType.RIGHT, after: 180 }))
+    children.push(makePara(data.recipient_company, { size: 19, color: '333333', after: 200 }))
+    children.push(makePara(data.subject, { size: 22, bold: true, underline: true, after: 200 }))
+    children.push(makePara(data.salutation, { size: 22, after: 160 }))
+    children.push(makeBodyParagraph(data.body_paragraph_1, 160))
+    children.push(makeBodyParagraph(data.body_paragraph_2, 160))
+    children.push(makeBodyParagraph(data.body_paragraph_3, 320))
+    children.push(makePara(data.closing, { size: 22, after: 480 }))
+    children.push(makePara(data.signature, { size: 22, bold: true, after: 0 }))
+
+  } else if (template === 'executive') {
+    children.push(makePara((safe(data.sender_name)).toUpperCase(), { size: 36, bold: true, after: 0 }))
+    children.push(makeGreyDivider(ACCENT, 18, 80))
+    children.push(makeContactLine(
+      [safe(data.sender_email), safe(data.sender_phone), safe(data.sender_address), safe(data.sender_postal)].filter(Boolean),
+      { size: 17, color: '666666', after: 240 }
+    ))
+    children.push(makePara(data.date, { size: 18, color: '555555', italics: true, alignment: AlignmentType.RIGHT, after: 180 }))
+    children.push(makePara(data.recipient_company, { size: 19, color: '333333', after: 200 }))
+    children.push(new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [new TableRow({
+        children: [new TableCell({
+          children: [makePara(data.subject, { size: 22, bold: true, after: 0 })],
+          shading: { fill: 'f0faf7', type: ShadingType.CLEAR, color: 'f0faf7' },
+          borders: { top: noBorder, bottom: noBorder, left: { style: BorderStyle.SINGLE, size: 18, color: ACCENT }, right: noBorder },
+          margins: { top: 100, bottom: 100, left: 160, right: 160 },
+        })],
+      })],
+    }))
+    children.push(makePara('', { after: 80 }))
+    children.push(makePara(data.salutation, { size: 22, after: 180 }))
+    children.push(makeBodyParagraph(data.body_paragraph_1, 160))
+    children.push(makeBodyParagraph(data.body_paragraph_2, 160))
+    children.push(makeBodyParagraph(data.body_paragraph_3, 320))
+    children.push(makeGreyDivider('cccccc', 4, 200))
+    children.push(makePara(data.closing, { size: 22, after: 500 }))
+    children.push(makePara(data.signature, { size: 22, bold: true, after: 0 }))
+
+  } else {
+    // sharp
+    children.push(new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [new TableRow({
+        children: [new TableCell({
+          children: [
+            makePara((safe(data.sender_name)).toUpperCase(), { size: 30, bold: true, color: 'FFFFFF', after: 80 }),
+          ],
+          shading: { fill: ACCENT, type: ShadingType.CLEAR, color: ACCENT },
+          borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+          margins: { top: 180, bottom: 80, left: 400, right: 400 },
+        })],
+      }), new TableRow({
+        children: [new TableCell({
+          children: [
+            makeContactLine(
+              [safe(data.sender_email), safe(data.sender_phone), safe(data.sender_address)].filter(Boolean),
+              { size: 16, color: 'FFFFFF', after: 0 }
+            ),
+          ],
+          shading: { fill: '0f6b45', type: ShadingType.CLEAR, color: '0f6b45' },
+          borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+          margins: { top: 80, bottom: 80, left: 400, right: 400 },
+        })],
+      })],
+    }))
+    children.push(makePara('', { after: 160 }))
+    children.push(makePara(data.date, { size: 18, color: '555555', italics: true, alignment: AlignmentType.RIGHT, after: 160 }))
+    children.push(makePara(data.recipient_company, { size: 19, color: '333333', after: 200 }))
+    children.push(makeGreyDivider(ACCENT, 6, 120))
+    children.push(new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [new TableRow({
+        children: [new TableCell({
+          children: [makePara(data.subject, { size: 22, bold: true, after: 0 })],
+          shading: { fill: 'f0faf7', type: ShadingType.CLEAR, color: 'f0faf7' },
+          borders: { top: noBorder, bottom: noBorder, left: { style: BorderStyle.SINGLE, size: 24, color: ACCENT }, right: noBorder },
+          margins: { top: 80, bottom: 80, left: 160, right: 160 },
+        })],
+      })],
+    }))
+    children.push(makePara('', { after: 80 }))
+    children.push(makePara(data.salutation, { size: 22, bold: true, after: 160 }))
+    children.push(makeBodyParagraph(data.body_paragraph_1, 160))
+    children.push(makeBodyParagraph(data.body_paragraph_2, 160))
+    children.push(makeBodyParagraph(data.body_paragraph_3, 320))
+    children.push(makeGreyDivider('cccccc', 4, 200))
+    children.push(makePara(data.closing, { size: 22, after: 480 }))
+    children.push(makePara(data.signature, { size: 22, bold: true, after: 0 }))
+  }
 
   return new Document({
     sections: [{
