@@ -91,8 +91,17 @@ function MiniChatbot({ coverLetterData, onUpdate }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Adjustment failed');
-      onUpdate(data.result);
-      setInput('');
+      if (data.result) {
+        try {
+          const jsonMatch = data.result.match(/\{[\s\S]*\}/);
+          const updated = JSON.parse(jsonMatch ? jsonMatch[0] : data.result);
+          const merged = { ...coverLetterData, ...updated };
+          onUpdate(merged);
+          setInput('');
+        } catch {
+          setError('Failed to parse AI response. Please try again.');
+        }
+      }
     } catch (err) {
       setError(err.message || 'Failed to apply adjustment. Please try again.');
     } finally {
@@ -248,16 +257,9 @@ export default function CoverLetterGenerator({ unlocked, onUnlock, cvText: cv, s
     Object.values(LS).forEach(k => localStorage.removeItem(k));
   };
 
-  const handleAdjustUpdate = (adjustResult) => {
-    try {
-      const jsonMatch = adjustResult.match(/\{[\s\S]*\}/);
-      const adjustedData = JSON.parse(jsonMatch ? jsonMatch[0] : adjustResult);
-      const newData = { ...coverLetterData, ...adjustedData };
-      setCoverLetterData(newData);
-      setScore(calculateAttractivenessScore(getCoverLetterPlainText(newData), jobDescription));
-    } catch (_) {
-      // If JSON parse fails, result is ignored
-    }
+  const handleAdjustUpdate = (mergedData) => {
+    setCoverLetterData(mergedData);
+    setScore(calculateAttractivenessScore(getCoverLetterPlainText(mergedData), jobDescription));
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   };
 

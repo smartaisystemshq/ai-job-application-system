@@ -484,9 +484,14 @@ export function buildSharpStructure(lines) {
   const name = lines.find(l => l.type === 'name')?.text || ''
 
   const contactItems = []
+  const _yearOnly = /^\d{4}$/
+  const _dateRange = /^\d{4}\s*[-–]\s*(\d{4}|heute|present|laufend)$/i
+  const _doubleYear = /^\d{4}\s+\d{4}$/
   for (const line of lines) {
     if (line.type !== 'contact') continue
-    line.text.split('|').map(s => s.trim()).filter(Boolean).forEach(item => contactItems.push(item))
+    line.text.split('|').map(s => s.trim()).filter(Boolean)
+      .filter(item => !_yearOnly.test(item) && !_dateRange.test(item) && !_doubleYear.test(item))
+      .forEach(item => contactItems.push(item))
   }
   const contactLine = contactItems.join(' · ')
 
@@ -522,6 +527,29 @@ export function buildSharpStructure(lines) {
   return { name, contactLine, sections, skills }
 }
 
+function buildSharpSection(title, content, isFirst = false) {
+  const lines = (content || '').split('\n')
+  const contentItems = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const isBullet = line.startsWith('• ')
+    const prevIsBullet = i > 0 && lines[i - 1].startsWith('• ')
+    if (!isBullet && prevIsBullet) {
+      contentItems.push({ text: '', margin: [0, 6, 0, 0] })
+    }
+    if (isBullet) {
+      contentItems.push({ text: line, fontSize: 11, color: '#444444', margin: [6, 0, 0, 1], lineHeight: 1.5 })
+    } else {
+      contentItems.push({ text: line, fontSize: 10, bold: true, color: '#1a1a1a', margin: [0, 0, 0, 2] })
+    }
+  }
+  return [
+    { text: title.toUpperCase(), fontSize: 10, bold: true, color: '#1D9E75', margin: [0, isFirst ? 0 : 12, 0, 3] },
+    { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 350, y2: 0, lineWidth: 1, lineColor: '#1D9E75' }], margin: [0, 0, 0, 5] },
+    contentItems.length ? { stack: contentItems } : { text: '' },
+  ]
+}
+
 function buildSharpPDF(text, sp, photo = null) {
   const lines = parseDocumentLines(text)
   const { name, contactLine, sections, skills } = buildSharpStructure(lines)
@@ -533,7 +561,8 @@ function buildSharpPDF(text, sp, photo = null) {
     sidebarChildren.push({ image: photo, width: 100, fit: [100, 125], margin: [0, 0, 0, 14] })
   }
   if (skills.length > 0) {
-    sidebarChildren.push({ text: 'SKILLS', fontSize: 8, bold: true, color: GREEN, margin: [0, 0, 0, 5] })
+    sidebarChildren.push({ text: 'SKILLS', fontSize: 8, bold: true, color: GREEN, margin: [0, 0, 0, 3] })
+    sidebarChildren.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 110, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, 5] })
     skills.forEach(skill => {
       const colonIdx = skill.indexOf(':')
       if (colonIdx > 0 && colonIdx < 30) {
@@ -553,7 +582,8 @@ function buildSharpPDF(text, sp, photo = null) {
     })
   }
   sections.filter(s => s.sidebar).forEach(section => {
-    sidebarChildren.push({ text: section.title.toUpperCase(), fontSize: 8, bold: true, color: GREEN, margin: [0, 12, 0, 4] })
+    sidebarChildren.push({ text: section.title.toUpperCase(), fontSize: 8, bold: true, color: GREEN, margin: [0, 12, 0, 3] })
+    sidebarChildren.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 110, y2: 0, lineWidth: 0.8, lineColor: GREEN }], margin: [0, 0, 0, 4] })
     sidebarChildren.push({ text: section.content, fontSize: 8.5, color: '#444444', lineHeight: 1.5 })
   })
   if (sidebarChildren.length === 0) sidebarChildren.push({ text: '' })
@@ -561,17 +591,7 @@ function buildSharpPDF(text, sp, photo = null) {
   // Main content stack
   const mainChildren = []
   sections.filter(s => !s.sidebar).forEach((section, i) => {
-    mainChildren.push({
-      text: section.title.toUpperCase(),
-      fontSize: 9,
-      bold: true,
-      color: GREEN,
-      margin: [0, i === 0 ? 0 : 12, 0, 3],
-      decoration: 'underline',
-      decorationColor: GREEN,
-      decorationStyle: 'solid',
-    })
-    mainChildren.push({ text: section.content, fontSize: 11, color: '#333333', lineHeight: 1.55, margin: [0, 2, 0, 0] })
+    buildSharpSection(section.title, section.content, i === 0).forEach(item => mainChildren.push(item))
   })
   if (mainChildren.length === 0) mainChildren.push({ text: '' })
 
@@ -580,7 +600,7 @@ function buildSharpPDF(text, sp, photo = null) {
     pageMargins: [0, 0, 0, 40],
     header: function(currentPage) {
       if (currentPage === 1) return null;
-      return { text: '', margin: [0, 40, 0, 0] };
+      return { canvas: [], margin: [0, 45, 0, 0] };
     },
     content: [
       // Green header — full-width table cell with green fill
@@ -589,8 +609,18 @@ function buildSharpPDF(text, sp, photo = null) {
           widths: ['100%'],
           body: [[{
             stack: [
-              { text: sanitizeTextForPDF((name || '').toUpperCase()), fontSize: 22, bold: true, color: '#FFFFFF', characterSpacing: 0.5, margin: [24, 18, 24, 5] },
-              { text: sanitizeTextForPDF(contactLine || ''), fontSize: 8.5, color: '#FFFFFF', margin: [24, 0, 24, 16], lineHeight: 1.4 },
+              { text: sanitizeTextForPDF((name || '').toUpperCase()), fontSize: 22, bold: true, color: '#FFFFFF', characterSpacing: 0.5, margin: [24, 16, 24, 8] },
+              {
+                table: { widths: ['*'], body: [[{
+                  text: sanitizeTextForPDF(contactLine || ''),
+                  fontSize: 8.5, color: '#FFFFFF',
+                  margin: [24, 6, 24, 6],
+                  fillColor: '#0d7a52',
+                  border: [false, false, false, false],
+                }]] },
+                layout: { defaultBorder: false, paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 0, paddingBottom: () => 0 },
+                margin: [0, 0, 0, 8],
+              },
             ],
             fillColor: GREEN,
             border: [false, false, false, false],
@@ -632,7 +662,7 @@ function buildSharpPDF(text, sp, photo = null) {
           vLineColor: () => GREEN,
           paddingLeft: () => 0,
           paddingRight: () => 0,
-          paddingTop: () => 0,
+          paddingTop: (i) => i === 0 ? 0 : 45,
           paddingBottom: () => 0,
         },
       },

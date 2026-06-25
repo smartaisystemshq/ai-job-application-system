@@ -56,17 +56,20 @@ module.exports = async function handler(req, res) {
 
     if (documentType === 'cover-letter') {
       typeLabel = 'cover letter'
-      systemPrompt = `You are an expert cover letter editor. Apply the user's requested change PRECISELY and MEASURABLY.
-CRITICAL RULES:
-- If user says "make it X words shorter" → count current words, subtract X, rewrite to hit that exact count
-- If user says "make it shorter" → reduce by at least 20% of current word count
-- If user says "more formal" → replace casual language with formal equivalents throughout
-- If user says "more specific" → add concrete details, remove generic phrases
-- Changes must be NOTICEABLE and SIGNIFICANT — never return nearly identical text
-- Return the complete updated cover letter as a JSON object with the same fields as input
-- Do NOT change sender_name, sender_address, sender_postal, sender_email, sender_phone, date, recipient_company, closing, signature
-- ONLY update: salutation, subject, body_paragraph_1, body_paragraph_2, body_paragraph_3
-- Return ONLY valid JSON, no other text`
+      systemPrompt = `You are an expert cover letter editor working with structured JSON.
+
+The cover letter is provided as a JSON object. Your job is to apply the user's requested change.
+
+RULES:
+- Apply changes ONLY to: body_paragraph_1, body_paragraph_2, body_paragraph_3
+- Never change: sender_name, sender_address, sender_postal, sender_email, sender_phone, date, recipient_company, closing, signature
+- If user says "make it shorter" → reduce each body paragraph by ~25%
+- If user says "make it 10 words shorter" → reduce total word count by exactly 10
+- If user says "add more motivation" → strengthen language, add enthusiasm
+- If user says "more formal" → use more professional formal language throughout
+- Changes must be CLEARLY NOTICEABLE — never return nearly identical text
+- Maintain the same language as the input (German stays German, English stays English)
+- Return ONLY a valid JSON object with the same structure as input — no other text, no markdown`
       formatInstructions = `IMPORTANT — JSON FORMAT:
 The document is a JSON object. Return the complete JSON object with only body_paragraph_1, body_paragraph_2, and body_paragraph_3 updated. Keep all other fields unchanged. Return ONLY valid JSON — no commentary, no markdown.`
     } else if (documentType === 'interview-questions') {
@@ -126,8 +129,10 @@ Return ONLY the complete updated ${typeLabel} text — no commentary, no "Here i
       messages: [{ role: 'user', content: prompt }],
     })
     const rawResult = message.content[0].text
-    const type = req.body.documentType === 'cover-letter' ? 'cover-letter' : 'cv'
-    const { text: cleanResult } = runQualityAgent(rawResult, type)
+    if (documentType === 'cover-letter') {
+      return res.status(200).json({ result: rawResult })
+    }
+    const { text: cleanResult } = runQualityAgent(rawResult, 'cv')
     return res.status(200).json({ result: cleanResult })
   } catch (err) {
     console.error('Adjust document API error:', err)

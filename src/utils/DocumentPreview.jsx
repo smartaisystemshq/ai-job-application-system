@@ -238,27 +238,23 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
       minHeight: 850,
     }}>
       {/* GREEN HEADER */}
-      <div style={{
-        background: G,
-        padding: '20px 24px 18px',
-        color: 'white',
-        flexShrink: 0,
-      }}>
+      <div style={{ background: G, color: 'white', flexShrink: 0 }}>
         <div style={{
           fontSize: '24px',
           fontWeight: 700,
           letterSpacing: '0.5px',
-          marginBottom: '5px',
+          marginBottom: '8px',
           textTransform: 'uppercase',
+          padding: '18px 24px 0px',
         }}>{name}</div>
         <div style={{
-          fontSize: '10px',
-          opacity: 0.88,
+          background: 'rgba(10,80,55,0.45)',
+          padding: '5px 24px 7px',
+          fontSize: '8.5px',
+          color: 'rgba(255,255,255,0.9)',
           letterSpacing: '0.2px',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
         }}>{contactLine}</div>
+        <div style={{ height: '8px' }} />
       </div>
 
       {/* BODY */}
@@ -302,7 +298,7 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
           {/* Skills as dot-list */}
           {skills.length > 0 && (
             <div style={{ marginBottom: '14px' }}>
-              <div style={{ fontSize: '9px', fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '6px' }}>Skills</div>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '3px', borderBottom: '0.8px solid ' + G, paddingBottom: '3px' }}>Skills</div>
               {parseSkillsWithCategories(skills).map((entry, i) => (
                 entry.type === 'category'
                   ? <div key={i} style={{ marginBottom: '4px' }}>
@@ -325,7 +321,7 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
           {/* Other sidebar sections (Languages, etc.) */}
           {sections.filter(s => s.sidebar).map((section, i) => (
             <div key={i} style={{ marginBottom: '14px' }}>
-              <div style={{ fontSize: '9px', fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '6px' }}>{section.title}</div>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '3px', borderBottom: '0.8px solid ' + G, paddingBottom: '3px' }}>{section.title}</div>
               <div style={{ fontSize: '9px', color: '#555', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{section.content}</div>
             </div>
           ))}
@@ -341,11 +337,27 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
                 color: G,
                 textTransform: 'uppercase',
                 letterSpacing: '0.8px',
-                borderBottom: `1px solid ${G}`,
+                borderBottom: '1.5px solid #1D9E75',
                 paddingBottom: '3px',
                 marginBottom: '6px',
+                marginTop: i === 0 ? '0' : '12px',
               }}>{section.title}</div>
-              <div style={{ fontSize: '10px', color: '#444', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{section.content}</div>
+              <div>
+                {(section.content || '').split('\n').map((line, j, arr) => {
+                  const isBullet = line.startsWith('• ')
+                  const prevIsBullet = j > 0 && arr[j - 1].startsWith('• ')
+                  return (
+                    <div key={j} style={{
+                      fontSize: '10px',
+                      color: isBullet ? '#444' : '#1a1a1a',
+                      fontWeight: isBullet ? 'normal' : 700,
+                      lineHeight: 1.65,
+                      marginTop: (!isBullet && prevIsBullet) ? '8px' : '0',
+                      marginBottom: '1px',
+                    }}>{line}</div>
+                  )
+                })}
+              </div>
             </div>
           ))}
         </div>
