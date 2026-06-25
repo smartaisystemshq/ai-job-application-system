@@ -42,7 +42,8 @@ const fitAssessmentInstruction = `After writing the optimized CV, add a SEPARATE
 ---JOB_FIT_ASSESSMENT---
 SCORE: [number 1-10]
 FIT: [STRONG/MODERATE/WEAK]
-NOTE: [One sentence in the same language as the job description explaining the main strength or gap]
+NOTE_EN: [One sentence in English — max 20 words — honest assessment of fit]
+NOTE_DE: [Same sentence in German — max 20 words]
 ---END_ASSESSMENT---`
 
 const systemPrompt = `${languageInstruction}
@@ -168,11 +169,13 @@ module.exports = async function handler(req, res) {
       const assessmentText = assessmentMatch[1]
       const scoreMatch = assessmentText.match(/SCORE:\s*(\d+)/)
       const fitMatch = assessmentText.match(/FIT:\s*(STRONG|MODERATE|WEAK)/)
-      const noteMatch = assessmentText.match(/NOTE:\s*(.+)/)
+      const noteEnMatch = assessmentText.match(/NOTE_EN:\s*(.+)/)
+      const noteDeMatch = assessmentText.match(/NOTE_DE:\s*(.+)/)
       fitAssessment = {
         score: scoreMatch ? parseInt(scoreMatch[1]) : null,
         fit: fitMatch ? fitMatch[1] : null,
-        note: noteMatch ? noteMatch[1].trim() : null
+        note_en: noteEnMatch ? noteEnMatch[1].trim() : null,
+        note_de: noteDeMatch ? noteDeMatch[1].trim() : null
       }
     }
 

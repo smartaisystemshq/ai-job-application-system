@@ -176,4 +176,34 @@ function validateStructure(text, type = 'cv') {
   return warnings;
 }
 
-module.exports = { runQualityAgent, validateStructure };
+function validatePDFStructure(docDef) {
+  const issues = [];
+
+  function findCanvasRects(node, path = '') {
+    if (!node || typeof node !== 'object') return;
+    if (node.canvas) {
+      node.canvas.forEach(shape => {
+        if (shape.type === 'rect' && shape.h > 700) {
+          issues.push(`Large canvas rect found at ${path} — height ${shape.h}pt may cause empty page overflow`);
+        }
+        if (shape.type === 'line' && shape.y2 > 700) {
+          issues.push(`Long vertical line found at ${path} — may overflow to empty page`);
+        }
+      });
+    }
+    Object.entries(node).forEach(([key, val]) => {
+      if (Array.isArray(val)) val.forEach((v, i) => findCanvasRects(v, `${path}.${key}[${i}]`));
+      else if (val && typeof val === 'object') findCanvasRects(val, `${path}.${key}`);
+    });
+  }
+
+  findCanvasRects(docDef);
+
+  if (issues.length > 0) {
+    console.warn('[Quality Agent] PDF structure issues:', issues);
+  }
+
+  return { valid: issues.length === 0, issues };
+}
+
+module.exports = { runQualityAgent, validateStructure, validatePDFStructure };

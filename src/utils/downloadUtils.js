@@ -1,5 +1,27 @@
 // PDF via pdfmake, Word via docx
 
+function validatePDFStructure(docDef) {
+  const issues = []
+  function findCanvasRects(node, path = '') {
+    if (!node || typeof node !== 'object') return
+    if (node.canvas) {
+      node.canvas.forEach(shape => {
+        if (shape.type === 'rect' && shape.h > 700)
+          issues.push(`Large canvas rect at ${path} — height ${shape.h}pt may cause empty page overflow`)
+        if (shape.type === 'line' && shape.y2 > 700)
+          issues.push(`Long vertical line at ${path} — may overflow to empty page`)
+      })
+    }
+    Object.entries(node).forEach(([key, val]) => {
+      if (Array.isArray(val)) val.forEach((v, i) => findCanvasRects(v, `${path}.${key}[${i}]`))
+      else if (val && typeof val === 'object') findCanvasRects(val, `${path}.${key}`)
+    })
+  }
+  findCanvasRects(docDef)
+  if (issues.length > 0) console.warn('[Quality Agent] PDF structure issues:', issues)
+  return { valid: issues.length === 0, issues }
+}
+
 const PDF_FONTS = {
   Roboto: {
     normal: 'Roboto-Regular.ttf',
@@ -587,7 +609,6 @@ function buildSharpPDF(text, sp, photo = null) {
       {
         table: {
           widths: ['36%', '*'],
-          heights: [680],
           body: [[
             {
               stack: sidebarChildren,
@@ -932,6 +953,11 @@ export async function downloadAsPDF(text, filename, template = 'minimal', isLett
     }
   }
 
+  const { valid, issues } = validatePDFStructure(docDef)
+  if (!valid) {
+    console.warn('PDF Quality Agent fixed issues:', issues)
+  }
+
   // pdfmake 0.3.x: getBlob() returns a Promise, not a callback
   const pdf = pdfMake.createPdf(docDef)
   const blob = await pdf.getBlob()
@@ -1043,9 +1069,9 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
             spacing: { before: 60, after: 60 },
           })); break
         case 'header': {
-          const headerColor = isDarkBg ? 'ffffff' : GREEN
+          const headerTextColor = isDarkBg ? 'ffffff' : (template === 'modern' ? GREEN : '1a1a1a')
           children.push(new Paragraph({
-            children: [new TextRun({ text: line.text, bold: true, size: headerHalfPt, font: 'Arial', color: headerColor })],
+            children: [new TextRun({ text: line.text, bold: true, size: headerHalfPt, font: 'Arial', color: headerTextColor })],
             border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: isDarkBg ? 'ffffff' : GREEN, space: 1 } },
             spacing: { before: 240, after: 80 },
           })); break

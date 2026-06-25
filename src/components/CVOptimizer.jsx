@@ -480,7 +480,13 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
                       <span style={{ fontSize: 12, fontWeight: 600, color }}>{t[lang][fitKey[fitAssessment.fit]] || fitAssessment.fit}</span>
                       {fitAssessment.score && <span style={{ fontSize: 11, color: 'rgba(226,237,232,0.4)', marginLeft: 'auto' }}>{fitAssessment.score}/10</span>}
                     </div>
-                    {fitAssessment.note && <p style={{ fontSize: 12, color: 'rgba(226,237,232,0.7)', margin: 0, lineHeight: 1.5 }}>{fitAssessment.note}</p>}
+                    {(fitAssessment.note_en || fitAssessment.note_de || fitAssessment.note) && (
+                      <p style={{ fontSize: 12, color: 'rgba(226,237,232,0.7)', margin: 0, lineHeight: 1.5 }}>
+                        {lang === 'DE'
+                          ? (fitAssessment.note_de || fitAssessment.note)
+                          : (fitAssessment.note_en || fitAssessment.note)}
+                      </p>
+                    )}
                   </div>
                 );
               })()}
