@@ -159,34 +159,27 @@ function StandardPage({ lines, template, photo = null, showPlaceholder = false }
         <div style={{ height: 6, background: GREEN, marginLeft: -40, marginRight: -40, marginTop: -32, marginBottom: 20 }} />
       )}
       {showPhotoArea ? (
-        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', overflow: 'hidden', alignItems: 'flex-start', marginBottom: 4 }}>
-          <div style={{ flex: 1, minWidth: 0, paddingRight: photo ? '8px' : '0' }}>
-            {headerLines.map((line, i) => renderLine(line, i))}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', width: '100%', overflow: 'hidden' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {headerLines.map((line, i) => {
+              if (line.type === 'contact' && photo) {
+                return line.text.split('|').map(it => it.trim()).filter(Boolean).map((item, idx) => (
+                  <div key={`${i}-${idx}`} style={{ fontSize: '9px', color: '#555555', lineHeight: 1.4, marginBottom: '2px' }}>{item}</div>
+                ))
+              }
+              return renderLine(line, i)
+            })}
           </div>
           {photo ? (
-            <div style={{
-              width: '72px',
-              height: '92px',
-              flexShrink: 0,
-              overflow: 'hidden',
-              borderRadius: '6px',
-              marginLeft: '12px',
-              border: '1px solid rgba(0,0,0,0.1)',
-            }}>
+            <div style={{ width: '70px', height: '90px', flexShrink: 0, borderRadius: '5px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.08)' }}>
               <img
                 src={photo}
                 alt="CV photo"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'center 10%',
-                  display: 'block',
-                }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 15%', display: 'block' }}
               />
             </div>
           ) : (
-            <div style={{ width: 72, height: 92, flexShrink: 0, marginLeft: '12px', background: '#e8e8e8', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px solid #ddd', borderRadius: 1 }}>
+            <div style={{ width: 72, height: 92, flexShrink: 0, background: '#e8e8e8', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px solid #ddd', borderRadius: 1 }}>
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="1.5">
                 <circle cx="12" cy="8" r="4" />
                 <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />

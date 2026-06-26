@@ -2,9 +2,19 @@ const Anthropic = require('@anthropic-ai/sdk')
 const { checkRateLimit } = require('../src/lib/rateLimit.js')
 const { validateAndSanitize } = require('../src/lib/validation.js')
 const { applySecurityHeaders } = require('../src/lib/securityHeaders.js')
-const { runQualityAgent } = require('../src/lib/qualityAgent.js')
+const { hrReviewOutput } = require('../src/lib/qualityAgent.js')
 
-const systemPrompt = `
+const antiPlaceholderInstruction = `
+CRITICAL — NEVER use placeholder text under any circumstances:
+- Never write [spezifische Kennzahl ergänzen] or any variation
+- Never write [add your specific metric] or any variation
+- Never write [X]%, [insert], [add], [your], or any bracketed placeholder
+- Never write "undefined"
+- If you don't have a specific number or metric, write a strong descriptive statement instead
+- Always use real descriptive language — never leave blanks or placeholders
+`
+
+const systemPrompt = `${antiPlaceholderInstruction}
 You are a world-class cover letter writer who has helped thousands of candidates land interviews at top companies across Germany, Austria and Switzerland.
 
 LANGUAGE RULE — CRITICAL:
@@ -22,7 +32,7 @@ Return a JSON object with these exact fields:
   "sender_postal": "postal code and city",
   "sender_email": "email from CV",
   "sender_phone": "phone from CV",
-  "date": "city, den DD. Month YYYY" (German) or "City, Month DD, YYYY" (English),
+  "date": "city, den DD. Month YYYY" (German) or "City, DD Month YYYY" (English),
   "recipient_company": "company name and address from job description if available",
   "subject": "Betreff: Bewerbung als [position]" (German) or "Re: Application for [position]" (English),
   "salutation": "Sehr geehrte/r [Name]," or "Dear [Name],",
@@ -92,6 +102,17 @@ module.exports = async function handler(req, res) {
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+    const today = new Date()
+    const formattedDateDE = today.toLocaleDateString('de-AT', { day: '2-digit', month: 'long', year: 'numeric' })
+    const formattedDateEN = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+    const dateInstruction = `
+Today's date is: ${formattedDateDE} (German) / ${formattedDateEN} (English).
+Always use this exact date in the "date" field formatted as:
+- German: "[City], den ${formattedDateDE}"
+- English: "[City], ${formattedDateEN}"
+Never use any other date.
+`
+
     let userContent
 
     if (cvPdf) {
@@ -115,7 +136,7 @@ module.exports = async function handler(req, res) {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1500,
-      system: systemPrompt,
+      system: dateInstruction + systemPrompt,
       messages: [{ role: 'user', content: userContent }],
     })
 
@@ -137,7 +158,7 @@ module.exports = async function handler(req, res) {
     }
 
     Object.keys(parsed).forEach(key => {
-      if (typeof parsed[key] === 'string') { parsed[key] = runQualityAgent(parsed[key], 'cover-letter').text }
+      if (typeof parsed[key] === 'string') { parsed[key] = hrReviewOutput(parsed[key], 'cover-letter').text }
     })
 
     return res.status(200).json({ coverLetter: parsed })

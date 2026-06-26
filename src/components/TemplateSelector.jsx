@@ -133,11 +133,11 @@ function TemplatePreviewSharp() {
 }
 
 export const TEMPLATES = [
-  { id: 'minimal',   name: 'Minimal',   description: 'Single column · clean black typography · timeless', Preview: TemplatePreviewMinimal },
-  { id: 'modern',    name: 'Modern',    description: 'Green accents · bold dividers · contemporary',       Preview: TemplatePreviewModern  },
-  { id: 'classic',   name: 'Classic',   description: 'Centred name · serif feel · universally accepted',  Preview: TemplatePreviewClassic },
-  { id: 'executive', name: 'Executive', description: 'Uppercase name · premium spacing · senior roles',   Preview: TemplatePreviewExecutive },
-  { id: 'sharp',     name: 'Sharp',     description: 'Green header · two-column · sidebar skills',         Preview: TemplatePreviewSharp   },
+  { id: 'minimal',   name: 'Minimal',   descKey: 'template_minimal_desc',   Preview: TemplatePreviewMinimal },
+  { id: 'modern',    name: 'Modern',    descKey: 'template_modern_desc',    Preview: TemplatePreviewModern  },
+  { id: 'classic',   name: 'Classic',   descKey: 'template_classic_desc',   Preview: TemplatePreviewClassic },
+  { id: 'executive', name: 'Executive', descKey: 'template_executive_desc', Preview: TemplatePreviewExecutive },
+  { id: 'sharp',     name: 'Sharp',     descKey: 'template_sharp_desc',     Preview: TemplatePreviewSharp   },
 ]
 
 export function TemplateSelector({ selectedTemplate, onSelect, className = '' }) {
@@ -159,7 +159,7 @@ export function TemplateSelector({ selectedTemplate, onSelect, className = '' })
               <tmpl.Preview />
               <div style={{ padding: '8px 2px 0' }}>
                 <div style={{ fontWeight: 700, fontSize: 12, color: isSelected ? 'var(--accent)' : 'var(--text-primary)', marginBottom: 1 }}>{tmpl.name}</div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.4 }}>{tmpl.description}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.4 }}>{t[lang][tmpl.descKey]}</div>
               </div>
             </div>
           )

@@ -210,7 +210,18 @@ function getOptimalFontSize(text) {
 
 function wrapHeaderWithPhoto(headerItems, photo) {
   if (!photo || !headerItems.length) return headerItems
-  return [{ columns: [{ stack: headerItems, width: '*' }, { image: photo, fit: [65, 83], width: 75, alignment: 'right', margin: [8, 0, 0, 0] }], margin: [0, 0, 0, 12] }]
+  return [{
+    columns: [
+      { stack: headerItems, width: '*' },
+      {
+        stack: [{ image: photo, fit: [68, 87], alignment: 'right' }],
+        width: 75,
+        margin: [8, 0, 0, 0],
+      },
+    ],
+    columnGap: 8,
+    margin: [0, 0, 0, 14],
+  }]
 }
 
 // ── Template-specific PDF builders ──────────────────────────────────────────
@@ -232,7 +243,11 @@ function buildMinimalPDF(text, sp, photo = null) {
     }
     if (!headerDone && line.type === 'contact') {
       const citems = (line.text || '').split('|').map(i => i.trim()).filter(Boolean)
-      headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
+      if (photo) {
+        citems.forEach(ci => headerItems.push({ text: ci, fontSize: 9, color: '#555555', margin: [0, 0, 0, 2], lineHeight: 1.3 }))
+      } else {
+        headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
+      }
       continue
     }
     headerDone = true
@@ -287,7 +302,11 @@ function buildModernPDF(text, sp, photo = null) {
     }
     if (!headerDone && line.type === 'contact') {
       const citems = (line.text || '').split('|').map(i => i.trim()).filter(Boolean)
-      headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#666666', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
+      if (photo) {
+        citems.forEach(ci => headerItems.push({ text: ci, fontSize: 9, color: '#666666', margin: [0, 0, 0, 2], lineHeight: 1.3 }))
+      } else {
+        headerItems.push({ columns: citems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#666666', width: 'auto', noWrap: true })), columnGap: 8, margin: [0, 0, 0, 1] })
+      }
       continue
     }
     headerDone = true
@@ -380,10 +399,8 @@ function buildClassicPDF(text, sp, photo = null) {
         { canvas: [{ type: 'line', x1: 0, y1: 0, x2: textColW, y2: 0, lineWidth: 1.5, lineColor: '#333333' }], margin: [0, 2, 0, 1] },
         { canvas: [{ type: 'line', x1: 0, y1: 0, x2: textColW, y2: 0, lineWidth: 0.5, lineColor: '#999999' }], margin: [0, 0, 0, 4] },
       ]
-      if (allContactItems.length) {
-        textStack.push({ columns: allContactItems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#555555', width: 'auto', noWrap: true })), columnGap: 8 })
-      }
-      headerContent = [{ columns: [{ stack: textStack, width: '*' }, { image: photo, fit: [65, 83], alignment: 'right', width: 75, margin: [8, 0, 0, 0] }], margin: [0, 0, 0, 12] }]
+      allContactItems.forEach(ci => textStack.push({ text: ci, fontSize: 9, color: '#555555', margin: [0, 0, 0, 2], lineHeight: 1.3 }))
+      headerContent = [{ columns: [{ stack: textStack, width: '*' }, { stack: [{ image: photo, fit: [68, 87], alignment: 'right' }], width: 75, margin: [8, 0, 0, 0] }], columnGap: 8, margin: [0, 0, 0, 14] }]
     } else {
       headerContent.push({ text: nameLine.text, fontSize: nameSize, bold: true, color: '#111111', alignment: 'center', margin: [0, 0, 0, 2] })
       headerContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 1.5, lineColor: '#333333' }], margin: [0, 0, 0, 1] })
@@ -454,10 +471,8 @@ function buildExecutivePDF(text, sp, photo = null) {
         { text: nameLine.text.toUpperCase(), fontSize: nameSize, bold: true, color: '#111111', characterSpacing: 2, margin: [0, 0, 0, 3] },
         { canvas: [{ type: 'line', x1: 0, y1: 0, x2: textColW, y2: 0, lineWidth: 1.5, lineColor: GREEN }], margin: [0, 0, 0, 7] },
       ]
-      if (allContactItems.length) {
-        textStack.push({ columns: allContactItems.map(ci => ({ text: ci, fontSize: ci.length > 35 ? 7.5 : contactSize, color: '#666666', width: 'auto', noWrap: true })), columnGap: 10 })
-      }
-      headerContent = [{ columns: [{ stack: textStack, width: '*' }, { image: photo, fit: [65, 83], alignment: 'right', width: 75, margin: [8, 0, 0, 0] }], margin: [0, 0, 0, 14] }]
+      allContactItems.forEach(ci => textStack.push({ text: ci, fontSize: 9, color: '#666666', margin: [0, 0, 0, 2], lineHeight: 1.3 }))
+      headerContent = [{ columns: [{ stack: textStack, width: '*' }, { stack: [{ image: photo, fit: [68, 87], alignment: 'right' }], width: 75, margin: [8, 0, 0, 0] }], columnGap: 8, margin: [0, 0, 0, 14] }]
     } else {
       headerContent.push({ text: nameLine.text.toUpperCase(), fontSize: nameSize, bold: true, color: '#111111', letterSpacing: 2, margin: [0, 0, 0, 3] })
       headerContent.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: pw, y2: 0, lineWidth: 1.5, lineColor: GREEN }], margin: [0, 0, 0, 4] })

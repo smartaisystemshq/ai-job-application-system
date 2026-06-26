@@ -3,7 +3,7 @@ const { CV_EXPERT_KNOWLEDGE } = require('../src/lib/expertKnowledge.js')
 const { checkRateLimit } = require('../src/lib/rateLimit.js')
 const { validateAndSanitize } = require('../src/lib/validation.js')
 const { applySecurityHeaders } = require('../src/lib/securityHeaders.js')
-const { runQualityAgent, validateStructure } = require('../src/lib/qualityAgent.js')
+const { hrReviewOutput, validateStructure } = require('../src/lib/qualityAgent.js')
 
 const sectionInstruction = `
 SECTION DETECTION — CRITICAL:
@@ -46,7 +46,20 @@ NOTE_EN: [One sentence in English — max 20 words — honest assessment of fit]
 NOTE_DE: [Same sentence in German — max 20 words]
 ---END_ASSESSMENT---`
 
-const systemPrompt = `${languageInstruction}
+const antiPlaceholderInstruction = `
+CRITICAL — NEVER use placeholder text under any circumstances:
+- Never write [spezifische Kennzahl ergänzen] or any variation
+- Never write [add your specific metric] or any variation
+- Never write [X]%, [insert], [add], [your], or any bracketed placeholder
+- Never write "undefined"
+- If you don't have a specific number or metric, write a strong descriptive statement instead
+- Example WRONG: "Reduzierte Bearbeitungszeit um [spezifische Kennzahl]"
+- Example CORRECT: "Reduzierte Bearbeitungszeit durch strukturierte Ablageorganisation deutlich"
+- Always use real descriptive language — never leave blanks or placeholders
+`
+
+const systemPrompt = `${antiPlaceholderInstruction}
+${languageInstruction}
 
 You are a world-class professional CV writer and career coach with 15+ years of experience helping candidates land jobs at top companies. You have deep expertise in ATS optimization, recruiter psychology, and industry-specific CV standards.
 
@@ -179,7 +192,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const { text: cleanOutput, issues } = runQualityAgent(cvText, 'cv')
+    const { text: cleanOutput, issues } = hrReviewOutput(cvText, 'cv')
     const warnings = validateStructure(cleanOutput, 'cv')
     if (warnings.length > 0) { console.warn('[Quality Agent] CV warnings:', warnings) }
     return res.status(200).json({ result: cleanOutput, fitAssessment, qualityIssues: issues })

@@ -77,6 +77,35 @@ function runQualityAgent(text, type = 'cv') {
   const issues = [];
   let result = text;
 
+  const placeholderPatterns = [
+    /\[spezifische Kennzahl.*?\]/gi,
+    /\[add your specific metric\]/gi,
+    /\[specific metric\]/gi,
+    /\[Kennzahl.*?\]/gi,
+    /\[insert.*?\]/gi,
+    /\[add.*?\]/gi,
+    /\[your.*?\]/gi,
+    /\[füge.*?\]/gi,
+    /\[Name\]/gi,
+    /\[Company\]/gi,
+    /\[Position\]/gi,
+    /\[Datum\]/gi,
+    /\[Date\]/gi,
+    /\[X\]%/gi,
+    /\[X\]/gi,
+    /\[\d+%\]/gi,
+    /\[.*?ergänzen.*?\]/gi,
+    /\[.*?einfügen.*?\]/gi,
+    /undefined/g,
+  ];
+
+  placeholderPatterns.forEach(pattern => {
+    if (pattern.test(result)) {
+      issues.push(`Placeholder removed: ${pattern}`);
+      result = result.replace(pattern, '');
+    }
+  });
+
   result = result
     .replace(/#{1,6}\s+/g, '')
     .replace(/\*\*([^*]+)\*\*/g, '$1')
@@ -84,15 +113,10 @@ function runQualityAgent(text, type = 'cv') {
     .replace(/_{2}([^_]+)_{2}/g, '$1')
     .replace(/`{1,3}[^`]*`{1,3}/g, '')
     .replace(/^\s*[-*+]\s/gm, '• ')
-    .replace(/\[add[^\]]*\]/gi, '')
-    .replace(/\[insert[^\]]*\]/gi, '')
-    .replace(/\[your[^\]]*\]/gi, '')
-    .replace(/\[füge[^\]]*\]/gi, '')
-    .replace(/\[Name\]/g, '')
-    .replace(/\[Company\]/g, '')
-    .replace(/\[Position\]/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .replace(/[ \t]+$/gm, '')
+    .replace(/,\s*,/g, ',')
+    .replace(/\.\s*\./g, '.')
     .trim();
 
   if (/[#*_`]/.test(result)) {
@@ -206,4 +230,60 @@ function validatePDFStructure(docDef) {
   return { valid: issues.length === 0, issues };
 }
 
-module.exports = { runQualityAgent, validateStructure, validatePDFStructure };
+function hrReviewOutput(text, type = 'cv') {
+  if (!text || typeof text !== 'string') return { approved: false, text: '', issues: ['Empty content'] };
+
+  const issues = [];
+  let result = text;
+
+  const { text: cleaned, issues: cleanIssues } = runQualityAgent(text, type);
+  result = cleaned;
+  issues.push(...cleanIssues);
+
+  const hardFailPatterns = [
+    { pattern: /\[.*?\]/g, name: 'Bracket placeholder' },
+    { pattern: /undefined/gi, name: 'Undefined value' },
+    { pattern: /Your Name/gi, name: 'Name placeholder' },
+    { pattern: /Company Name/gi, name: 'Company placeholder' },
+  ];
+
+  hardFailPatterns.forEach(({ pattern, name }) => {
+    if (pattern.test(result)) {
+      result = result.replace(pattern, '');
+      issues.push(`HR Agent removed: ${name}`);
+    }
+  });
+
+  if (type === 'cv') {
+    const lines = result.split('\n').filter(l => l.trim());
+    if (lines.length < 5) {
+      issues.push('WARNING: CV output seems too short');
+    }
+  }
+
+  if (type === 'cover-letter') {
+    const hasGreeting = /Sehr geehrte|Dear/i.test(result);
+    const hasClosing = /freundlichen|regards/i.test(result);
+    if (!hasGreeting) issues.push('WARNING: No salutation found in cover letter');
+    if (!hasClosing) issues.push('WARNING: No closing found in cover letter');
+  }
+
+  const emptyBullets = result.match(/^[•·]\s*$/gm);
+  if (emptyBullets) {
+    result = result.replace(/^[•·]\s*$/gm, '');
+    issues.push('Removed empty bullet points');
+  }
+
+  result = result
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]+$/gm, '')
+    .trim();
+
+  if (issues.length > 0) {
+    console.log(`[HR Agent] ${type} — fixed ${issues.length} issues:`, issues);
+  }
+
+  return { approved: true, text: result, issues };
+}
+
+module.exports = { runQualityAgent, hrReviewOutput, validateStructure, validatePDFStructure };

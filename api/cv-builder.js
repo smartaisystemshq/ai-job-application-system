@@ -1,4 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk')
+const { hrReviewOutput } = require('../src/lib/qualityAgent.js')
 const { checkRateLimit } = require('../src/lib/rateLimit.js')
 const { validateAndSanitize } = require('../src/lib/validation.js')
 const { applySecurityHeaders } = require('../src/lib/securityHeaders.js')
@@ -84,6 +85,7 @@ module.exports = async function handler(req, res) {
 All bullet points MUST be written in ${bulletLang}.
 Every single bullet point must be in ${bulletLang} — no exceptions, no mixing languages.
 CRITICAL: Never write the word "undefined" anywhere. If a field is missing, simply omit it.
+CRITICAL: Never use bracketed placeholders like [add your specific metric], [X]%, [insert], or any similar placeholder text. If no specific number is available, write a strong descriptive outcome statement instead.
 
 You are an elite CV writer. Generate exactly 4 CV bullet points for this work experience entry.
 
@@ -95,7 +97,7 @@ ${jobDescription ? `Job Description language context: ${jobDescription.slice(0, 
 REQUIREMENTS FOR EACH BULLET:
 - Start with the strongest possible action verb
 - Format: [Action verb] + [what/how] + [measurable result or scale]
-- Quantify aggressively: percentages, revenue, headcount, time saved, volume — if no numbers available, write "[add your specific metric]" at the end
+- Quantify aggressively: percentages, revenue, headcount, time saved, volume — if no specific number is available, describe the outcome with strong descriptive language
 - Maximum 18 words per bullet
 - Each bullet must demonstrate impact, not just describe a task
 - Tailor to the target role if one is specified
@@ -181,7 +183,9 @@ Return ONLY the summary text. No heading, no "Here is your summary:", just the p
       temperature: 0,
       messages: [{ role: 'user', content: prompt }],
     })
-    return res.status(200).json({ result: message.content[0].text })
+    const rawOutput = message.content[0].text
+    const { text: reviewedOutput } = hrReviewOutput(rawOutput, 'cv')
+    return res.status(200).json({ result: reviewedOutput })
   } catch (err) {
     console.error('Claude API error:', err)
     if (err.status === 401) return res.status(500).json({ error: 'Invalid API key.' })

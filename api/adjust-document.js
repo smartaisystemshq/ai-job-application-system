@@ -2,7 +2,7 @@ const Anthropic = require('@anthropic-ai/sdk')
 const { checkRateLimit } = require('../src/lib/rateLimit.js')
 const { validateAndSanitize } = require('../src/lib/validation.js')
 const { applySecurityHeaders } = require('../src/lib/securityHeaders.js')
-const { runQualityAgent } = require('../src/lib/qualityAgent.js')
+const { hrReviewOutput } = require('../src/lib/qualityAgent.js')
 
 const defaultSystemPrompt = `You are an expert CV editor. Apply the user's requested change PRECISELY and MEASURABLY throughout the entire CV.
 - Word count changes must be exact
@@ -132,7 +132,7 @@ Return ONLY the complete updated ${typeLabel} text — no commentary, no "Here i
     if (documentType === 'cover-letter') {
       return res.status(200).json({ result: rawResult })
     }
-    const { text: cleanResult } = runQualityAgent(rawResult, 'cv')
+    const { text: cleanResult } = hrReviewOutput(rawResult, 'cv')
     return res.status(200).json({ result: cleanResult })
   } catch (err) {
     console.error('Adjust document API error:', err)
