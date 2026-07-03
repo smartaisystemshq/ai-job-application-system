@@ -216,6 +216,15 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
   const { name, contactLine, sections, skills } = data
   const G = GREEN
 
+  const safe = (val) => {
+    if (val === undefined || val === null) return '';
+    const s = String(val).trim();
+    return s.toLowerCase() === 'undefined' ? '' : s;
+  };
+
+  const safeName = safe(name)
+  const safeContactLine = safe(contactLine)
+
   return (
     <div style={{
       maxWidth: 680,
@@ -232,21 +241,25 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
     }}>
       {/* GREEN HEADER */}
       <div style={{ background: G, color: 'white', flexShrink: 0 }}>
-        <div style={{
-          fontSize: '24px',
-          fontWeight: 700,
-          letterSpacing: '0.5px',
-          marginBottom: '8px',
-          textTransform: 'uppercase',
-          padding: '18px 24px 0px',
-        }}>{name}</div>
-        <div style={{
-          background: 'rgba(10,70,42,0.35)',
-          padding: '5px 24px',
-          fontSize: '8.5px',
-          color: 'rgba(255,255,255,0.9)',
-          letterSpacing: '0.2px',
-        }}>{contactLine}</div>
+        {safeName && (
+          <div style={{
+            fontSize: '24px',
+            fontWeight: 700,
+            letterSpacing: '0.5px',
+            marginBottom: '8px',
+            textTransform: 'uppercase',
+            padding: '18px 24px 0px',
+          }}>{safeName}</div>
+        )}
+        {safeContactLine && (
+          <div style={{
+            background: 'rgba(10,70,42,0.35)',
+            padding: '5px 24px',
+            fontSize: '8.5px',
+            color: 'rgba(255,255,255,0.9)',
+            letterSpacing: '0.2px',
+          }}>{safeContactLine}</div>
+        )}
         <div style={{ height: '8px' }} />
       </div>
 
@@ -289,40 +302,44 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
           )}
 
           {/* Skills as dot-list */}
-          {skills.length > 0 && (
+          {skills.filter(s => safe(s)).length > 0 && (
             <div style={{ marginBottom: '14px' }}>
               <div style={{ fontSize: '9px', fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '3px', borderBottom: '0.8px solid ' + G, paddingBottom: '3px' }}>Skills</div>
-              {parseSkillsWithCategories(skills).map((entry, i) => (
+              {parseSkillsWithCategories(skills.filter(s => safe(s))).map((entry, i) => (
                 entry.type === 'category'
                   ? <div key={i} style={{ marginBottom: '4px' }}>
-                      <div style={{ fontSize: '8px', fontWeight: 700, color: '#333', marginBottom: '2px' }}>{entry.label}</div>
+                      {safe(entry.label) && <div style={{ fontSize: '8px', fontWeight: 700, color: '#333', marginBottom: '2px' }}>{safe(entry.label)}</div>}
                       {entry.items.map((item, j) => (
-                        <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
-                          <span style={{ width: 5, height: 5, borderRadius: '50%', background: G, flexShrink: 0, display: 'inline-block' }} />
-                          <span style={{ fontSize: '8.5px', color: '#444' }}>{item}</span>
-                        </div>
+                        safe(item) ? (
+                          <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                            <span style={{ width: 5, height: 5, borderRadius: '50%', background: G, flexShrink: 0, display: 'inline-block' }} />
+                            <span style={{ fontSize: '8.5px', color: '#444' }}>{safe(item)}</span>
+                          </div>
+                        ) : null
                       ))}
                     </div>
-                  : <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
-                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: G, flexShrink: 0, display: 'inline-block' }} />
-                      <span style={{ fontSize: '8.5px', color: '#444' }}>{entry.skill}</span>
-                    </div>
+                  : safe(entry.skill) ? (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: G, flexShrink: 0, display: 'inline-block' }} />
+                        <span style={{ fontSize: '8.5px', color: '#444' }}>{safe(entry.skill)}</span>
+                      </div>
+                    ) : null
               ))}
             </div>
           )}
 
           {/* Other sidebar sections (Languages, etc.) */}
-          {sections.filter(s => s.sidebar).map((section, i) => (
+          {sections.filter(s => s.sidebar && safe(s.title)).map((section, i) => (
             <div key={i} style={{ marginBottom: '14px' }}>
-              <div style={{ fontSize: '9px', fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '3px', borderBottom: '0.8px solid ' + G, paddingBottom: '3px' }}>{section.title}</div>
-              <div style={{ fontSize: '9px', color: '#555', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{section.content}</div>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: G, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '3px', borderBottom: '0.8px solid ' + G, paddingBottom: '3px' }}>{safe(section.title)}</div>
+              {safe(section.content) && <div style={{ fontSize: '9px', color: '#555', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{safe(section.content)}</div>}
             </div>
           ))}
         </div>
 
         {/* RIGHT CONTENT */}
         <div style={{ flex: 1, padding: '20px 24px 20px 18px', minWidth: 0 }}>
-          {sections.filter(s => !s.sidebar).map((section, i) => (
+          {sections.filter(s => !s.sidebar && safe(s.title)).map((section, i) => (
             <div key={i} style={{ marginBottom: '14px' }}>
               <div style={{
                 fontSize: '10px',
@@ -334,11 +351,13 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
                 paddingBottom: '3px',
                 marginBottom: '6px',
                 marginTop: i === 0 ? '0' : '12px',
-              }}>{section.title}</div>
+              }}>{safe(section.title)}</div>
               <div>
                 {(section.content || '').split('\n').map((line, j, arr) => {
-                  const isBullet = line.startsWith('• ')
-                  const prevIsBullet = j > 0 && arr[j - 1].startsWith('• ')
+                  const safeLine = safe(line)
+                  if (!safeLine) return null
+                  const isBullet = safeLine.startsWith('• ')
+                  const prevIsBullet = j > 0 && safe(arr[j - 1]).startsWith('• ')
                   return (
                     <div key={j} style={{
                       fontSize: '10px',
@@ -347,7 +366,7 @@ function SharpPage({ data, photo = null, showPlaceholder = false }) {
                       lineHeight: 1.65,
                       marginTop: (!isBullet && prevIsBullet) ? '8px' : '0',
                       marginBottom: '1px',
-                    }}>{line}</div>
+                    }}>{safeLine}</div>
                   )
                 })}
               </div>

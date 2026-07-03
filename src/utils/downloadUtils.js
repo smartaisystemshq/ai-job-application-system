@@ -1252,6 +1252,37 @@ export async function downloadAsPDF(text, filename, template = 'minimal', isLett
   }, 200)
 }
 
+// ── Structured parser for non-sharp Word builders ───────────────────────────
+
+function parseDocWordStructure(lines) {
+  const name = lines.find(l => l.type === 'name')?.text || ''
+
+  const contactItems = []
+  for (const line of lines) {
+    if (line.type !== 'contact') continue
+    line.text.split('|').map(s => s.trim()).filter(Boolean).forEach(item => contactItems.push(item))
+  }
+
+  const sections = []
+  let currentSection = null
+
+  for (const line of lines) {
+    if (line.type === 'name' || line.type === 'contact') continue
+    if (line.type === 'header') {
+      currentSection = { title: line.text, content: '' }
+      sections.push(currentSection)
+      continue
+    }
+    if (currentSection && line.type !== 'empty' && line.type !== 'divider') {
+      const prefix = line.type === 'bullet' ? '• ' : ''
+      if (currentSection.content) currentSection.content += '\n'
+      currentSection.content += prefix + line.text
+    }
+  }
+
+  return { name, contactItems, sections }
+}
+
 // ── Public: download as Word (.docx) ────────────────────────────────────────
 
 export async function downloadAsWord(text, filename, template = 'minimal', isLetter = false, photo = null) {
@@ -1269,112 +1300,25 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
 
   const cleanText = stripMarkdown(text)
   const {
-    Document, Packer, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType, ImageRun, HeightRule, LineRuleType,
+    Document, Packer, Paragraph, TextRun, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType, ImageRun, HeightRule,
   } = await import('docx')
 
   const lines = parseDocumentLines(cleanText)
   const GREEN = '1D9E75'
-  const nameHalfPt = 44
-  const contactHalfPt = 18
-  const headerHalfPt = 22
-  const bodyHalfPt = 22
+  const DARK = '1a1a1a'
 
-  function buildParagraphs(linesToProcess, isDarkBg = false) {
-    const children = []
-    const textColor = isDarkBg ? 'ffffff' : '2a2a2a'
-    const headingColor = isDarkBg ? 'ffffff' : '111111'
-    const subColor = isDarkBg ? 'aaaaaa' : '555555'
-    const accentColor = isDarkBg ? '1D9E75' : GREEN
-
-    for (const line of linesToProcess) {
-      switch (line.type) {
-        case 'name': {
-          const nameText = template === 'executive' ? line.text.toUpperCase() : line.text
-          children.push(new Paragraph({
-            children: [new TextRun({ text: nameText, bold: true, size: isDarkBg ? nameHalfPt - 4 : nameHalfPt, font: 'Calibri', color: isDarkBg ? 'ffffff' : '111111' })],
-            spacing: { after: template === 'executive' ? 40 : 60 },
-            border: { top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' } },
-          }))
-          if (template === 'executive' || template === 'modern') {
-            children.push(new Paragraph({
-              children: [new TextRun({ text: '' })],
-              border: { bottom: { style: BorderStyle.SINGLE, size: template === 'executive' ? 8 : 12, color: GREEN, space: 1 } },
-              spacing: { before: 0, after: 60 },
-            }))
-          } else if (template === 'classic') {
-            children.push(new Paragraph({
-              children: [new TextRun({ text: '' })],
-              border: { bottom: { style: BorderStyle.DOUBLE, size: 8, color: '333333', space: 1 } },
-              spacing: { before: 0, after: 40 },
-            }))
-          } else if (isDarkBg) {
-            children.push(new Paragraph({
-              children: [new TextRun({ text: '' })],
-              border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: GREEN, space: 1 } },
-              spacing: { before: 0, after: 40 },
-            }))
-          }
-          break
-        }
-        case 'contact': {
-          const citems = line.text.split('|').map(i => i.trim()).filter(Boolean)
-          if (isDarkBg) {
-            citems.forEach(item => {
-              children.push(new Paragraph({
-                children: [new TextRun({ text: item, size: item.length > 25 ? 13 : 15, color: 'CCCCCC', noProof: true, font: 'Calibri' })],
-                spacing: { after: 40 },
-              }))
-            })
-          } else {
-            const contactRuns = citems.flatMap((ci, idx) => {
-              const r = [new TextRun({ text: ci, size: ci.length > 30 ? 14 : 16, font: 'Calibri', color: subColor, noProof: true })]
-              if (idx < citems.length - 1) r.push(new TextRun({ text: '  |  ', size: 14, font: 'Calibri', color: subColor }))
-              return r
-            })
-            children.push(new Paragraph({
-              children: contactRuns,
-              spacing: { after: 30 },
-              alignment: template === 'classic' ? 'center' : 'left',
-            }))
-          }
-          break
-        }
-        case 'divider':
-          children.push(new Paragraph({
-            children: [new TextRun({ text: '' })],
-            border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: isDarkBg ? '444444' : 'cccccc', space: 1 } },
-            spacing: { before: 60, after: 60 },
-          })); break
-        case 'header': {
-          const headerTextColor = isDarkBg ? 'ffffff' : (template === 'modern' ? GREEN : '1a1a1a')
-          children.push(new Paragraph({
-            children: [new TextRun({ text: line.text, bold: true, size: headerHalfPt, font: 'Arial', color: headerTextColor })],
-            border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: isDarkBg ? 'ffffff' : GREEN, space: 1 } },
-            spacing: { before: 240, after: 80 },
-          })); break
-        }
-        case 'bullet':
-          children.push(new Paragraph({
-            children: [new TextRun({ text: '•  ' + line.text, size: bodyHalfPt, font: 'Arial', color: textColor })],
-            indent: { left: 280 },
-            spacing: { before: 60, after: 120, line: 276, lineRule: LineRuleType ? LineRuleType.AUTO : undefined },
-          })); break
-        case 'body':
-          children.push(new Paragraph({
-            children: [new TextRun({ text: line.text, size: bodyHalfPt, font: 'Arial', color: textColor })],
-            spacing: { before: 60, after: 120, line: 276, lineRule: LineRuleType ? LineRuleType.AUTO : undefined },
-          })); break
-        case 'empty':
-          children.push(new Paragraph({ children: [new TextRun({ text: '' })], spacing: { after: 80 } })); break
-      }
-    }
-    return children
+  const safe = (v) => {
+    if (v === undefined || v === null) return ''
+    const s = String(v).trim()
+    return s.toLowerCase() === 'undefined' ? '' : s
   }
 
-  // Convert photo data URL to Uint8Array for ImageRun
+  const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
+
+  // ── Photo conversion ──────────────────────────────────────────────────────
   let photoBytes = null
   let photoType = 'jpg'
-  if (photo && !isLetter) {
+  if (photo) {
     try {
       const mimeMatch = photo.match(/^data:image\/(jpeg|jpg|png);base64,/)
       photoType = (mimeMatch && mimeMatch[1] === 'png') ? 'png' : 'jpg'
@@ -1389,32 +1333,29 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
   let sections
 
   if (template === 'sharp') {
+    // ── Sharp: two-column, green header, dark sidebar ──────────────────────
     const { name: sName, contactLine: sContact, sections: sSections, skills: sSkills } = buildSharpStructure(lines)
-    const GREEN_WORD = '1D9E75'
-    const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
 
-    // Green header row spanning both columns
     const headerRow = new TableRow({
       children: [new TableCell({
         columnSpan: 2,
         children: [
           new Paragraph({
-            children: [new TextRun({ text: (sName || '').toUpperCase(), bold: true, size: 40, color: 'FFFFFF', font: 'Calibri' })],
+            children: [new TextRun({ text: safe(sName).toUpperCase() || ' ', bold: true, size: 40, color: 'FFFFFF', font: 'Calibri' })],
             spacing: { before: 200, after: 100 },
             indent: { left: 280 },
           }),
           new Paragraph({
-            children: [new TextRun({ text: sContact || '', size: 18, color: 'E8F5F0', font: 'Calibri' })],
+            children: [new TextRun({ text: safe(sContact) || ' ', size: 18, color: 'E8F5F0', font: 'Calibri' })],
             spacing: { before: 0, after: 200 },
             indent: { left: 280 },
           }),
         ],
-        shading: { fill: GREEN_WORD, type: ShadingType.CLEAR, color: GREEN_WORD },
+        shading: { fill: GREEN, type: ShadingType.CLEAR, color: GREEN },
         borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
       })],
     })
 
-    // Sidebar children
     const sidebarChildren = []
     if (photoBytes) {
       sidebarChildren.push(new Paragraph({
@@ -1422,46 +1363,60 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
         spacing: { before: 0, after: 160 },
       }))
     }
-    if (sSkills.length > 0) {
+    const safeSkills = sSkills.filter(s => safe(s))
+    if (safeSkills.length > 0) {
       sidebarChildren.push(new Paragraph({
-        children: [new TextRun({ text: 'SKILLS', bold: true, size: 18, color: GREEN_WORD, font: 'Calibri' })],
+        children: [new TextRun({ text: 'SKILLS', bold: true, size: 18, color: GREEN, font: 'Calibri' })],
         spacing: { before: 0, after: 80 },
       }))
-      sSkills.forEach(skill => {
+      safeSkills.forEach(skill => {
         sidebarChildren.push(new Paragraph({
-          children: [new TextRun({ text: '· ' + skill, size: 22, color: '444444', font: 'Calibri' })],
+          children: [new TextRun({ text: '· ' + safe(skill), size: 22, color: '444444', font: 'Calibri' })],
           spacing: { before: 0, after: 100, line: 276 },
         }))
       })
     }
     sSections.filter(s => s.sidebar).forEach(section => {
+      const sTitle = safe(section.title)
+      const sContent = safe(section.content)
+      if (!sTitle) return
       sidebarChildren.push(new Paragraph({
-        children: [new TextRun({ text: section.title.toUpperCase(), bold: true, size: 18, color: GREEN_WORD, font: 'Calibri' })],
+        children: [new TextRun({ text: sTitle.toUpperCase(), bold: true, size: 18, color: GREEN, font: 'Calibri' })],
         spacing: { before: 160, after: 80 },
       }))
-      section.content.split('\n').forEach(ln => {
-        sidebarChildren.push(new Paragraph({
-          children: [new TextRun({ text: ln, size: 22, color: '444444', font: 'Calibri' })],
-          spacing: { before: 0, after: 100, line: 276 },
-        }))
-      })
+      if (sContent) {
+        sContent.split('\n').forEach(ln => {
+          const sl = safe(ln)
+          if (!sl) return
+          sidebarChildren.push(new Paragraph({
+            children: [new TextRun({ text: sl, size: 22, color: '444444', font: 'Calibri' })],
+            spacing: { before: 0, after: 100, line: 276 },
+          }))
+        })
+      }
     })
     if (sidebarChildren.length === 0) sidebarChildren.push(new Paragraph({ children: [] }))
 
-    // Main content children
     const mainChildren = []
     sSections.filter(s => !s.sidebar).forEach((section, i) => {
+      const sTitle = safe(section.title)
+      const sContent = safe(section.content)
+      if (!sTitle) return
       mainChildren.push(new Paragraph({
-        children: [new TextRun({ text: section.title.toUpperCase(), bold: true, size: 18, color: GREEN_WORD, font: 'Calibri' })],
+        children: [new TextRun({ text: sTitle.toUpperCase(), bold: true, size: 18, color: GREEN, font: 'Calibri' })],
         spacing: { before: i === 0 ? 0 : 240, after: 80 },
-        border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: GREEN_WORD } },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: GREEN } },
       }))
-      section.content.split('\n').forEach(ln => {
-        mainChildren.push(new Paragraph({
-          children: [new TextRun({ text: ln, size: 22, color: '333333', font: 'Calibri' })],
-          spacing: { before: 0, after: 100, line: 276 },
-        }))
-      })
+      if (sContent) {
+        sContent.split('\n').forEach(ln => {
+          const sl = safe(ln)
+          if (!sl) return
+          mainChildren.push(new Paragraph({
+            children: [new TextRun({ text: sl, size: 22, color: '333333', font: 'Calibri' })],
+            spacing: { before: 0, after: 100, line: 276 },
+          }))
+        })
+      }
     })
     if (mainChildren.length === 0) mainChildren.push(new Paragraph({ children: [] }))
 
@@ -1469,7 +1424,7 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
       width: { size: 36, type: WidthType.PERCENTAGE },
       children: sidebarChildren,
       margins: { top: 280, bottom: 280, left: 280, right: 280 },
-      borders: { top: noBorder, bottom: noBorder, left: noBorder, right: { style: BorderStyle.SINGLE, size: 16, color: GREEN_WORD } },
+      borders: { top: noBorder, bottom: noBorder, left: noBorder, right: { style: BorderStyle.SINGLE, size: 16, color: GREEN } },
     })
     const mainCell = new TableCell({
       width: { size: 64, type: WidthType.PERCENTAGE },
@@ -1482,53 +1437,245 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
       height: { value: 12500, rule: HeightRule.AT_LEAST },
     })
 
-    const table = new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      rows: [headerRow, bodyRow],
-    })
-
-    sections = [{ properties: { page: { margin: { top: 720, right: 1134, bottom: 720, left: 0 } } }, children: [table] }]
-  } else {
-    let children
-    if (photoBytes) {
-      // Split into header (name/contact) and body lines
-      const headerLines = []
-      const bodyLines = []
-      let hDone = false
-      for (const line of lines) {
-        if (!hDone && (line.type === 'name' || line.type === 'contact')) { headerLines.push(line) }
-        else { hDone = true; bodyLines.push(line) }
-      }
-      const headerParas = buildParagraphs(headerLines)
-      const photoImageRun = new ImageRun({ data: photoBytes, transformation: { width: 65, height: 83 }, type: photoType })
-      const photoPara = new Paragraph({ children: [photoImageRun], spacing: { after: 0 } })
-      const headerTable = new Table({
-        width: { size: 100, type: WidthType.PERCENTAGE },
-        rows: [new TableRow({
-          children: [
-            new TableCell({
-              width: { size: 80, type: WidthType.PERCENTAGE },
-              children: headerParas.length ? headerParas : [new Paragraph({ children: [] })],
-              borders: { top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' } },
-              margins: { top: 0, bottom: 0, left: 0, right: 200 },
-            }),
-            new TableCell({
-              width: { size: 20, type: WidthType.PERCENTAGE },
-              children: [photoPara],
-              borders: { top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' } },
-              margins: { top: 0, bottom: 0, left: 0, right: 0 },
-            }),
-          ],
-        })],
-      })
-      children = [headerTable, ...buildParagraphs(bodyLines)]
-    } else {
-      children = buildParagraphs(lines)
-    }
     sections = [{
-      properties: { page: { margin: { top: 850, right: 1000, bottom: 850, left: 1000 } } },
-      children,
+      properties: { page: { margin: { top: 720, right: 1134, bottom: 720, left: 0 } } },
+      children: [new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [headerRow, bodyRow] })],
     }]
+
+  } else {
+    // ── Per-template builders: Minimal, Modern, Classic, Executive ────────
+    const { name: pName, contactItems: pContact, sections: pSections } = parseDocWordStructure(lines)
+    const safeContactItems = pContact.map(c => safe(c)).filter(Boolean)
+
+    function contactRuns(opts = {}) {
+      const runs = []
+      safeContactItems.forEach((item, i) => {
+        runs.push(new TextRun({ text: item, size: opts.size || 18, color: opts.color || '555555', font: 'Arial' }))
+        if (i < safeContactItems.length - 1) {
+          runs.push(new TextRun({ text: '   |   ', size: opts.size || 18, color: opts.sepColor || '888888', font: 'Arial' }))
+        }
+      })
+      return runs
+    }
+
+    function photoCell(width = 20) {
+      return new TableCell({
+        width: { size: width, type: WidthType.PERCENTAGE },
+        children: [new Paragraph({ children: [new ImageRun({ data: photoBytes, transformation: { width: 65, height: 83 }, type: photoType })], spacing: { after: 0 } })],
+        borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+        margins: { top: 0, bottom: 0, left: 0, right: 0 },
+      })
+    }
+
+    function renderSections(children, sectionList, opts = {}) {
+      sectionList.forEach(section => {
+        const sTitle = safe(section.title)
+        const sContent = safe(section.content)
+        if (!sTitle || !sContent) return
+        children.push(new Paragraph({
+          children: [new TextRun({ text: sTitle.toUpperCase(), bold: true, size: 22, font: 'Arial', color: opts.titleColor || '1a1a1a', underline: opts.underline ? {} : undefined })],
+          border: opts.border || undefined,
+          spacing: { before: opts.spaceBefore || 240, after: 100 },
+        }))
+        sContent.split('\n').filter(Boolean).forEach(line => {
+          const cl = safe(line)
+          if (!cl) return
+          children.push(new Paragraph({
+            children: [new TextRun({ text: cl, size: 22, color: '333333', font: 'Arial' })],
+            indent: cl.startsWith('•') ? { left: 220 } : undefined,
+            spacing: { after: 80, line: 320 },
+          }))
+        })
+      })
+    }
+
+    const children = []
+    const safeName = safe(pName)
+
+    if (template === 'modern') {
+      // ── Modern: dark header bar, green section headings ──────────────────
+      const headerNamePara = new Paragraph({
+        children: [new TextRun({ text: safeName, bold: true, size: 36, color: 'FFFFFF', font: 'Arial' })],
+        spacing: { after: 80 },
+      })
+      const headerContactPara = new Paragraph({
+        children: contactRuns({ size: 17, color: 'CCCCCC', sepColor: '666666' }),
+        spacing: { after: 60 },
+      })
+      const headerCellContent = [headerNamePara, headerContactPara]
+
+      if (photoBytes) {
+        children.push(new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 80, type: WidthType.PERCENTAGE },
+                children: headerCellContent,
+                shading: { fill: DARK, type: ShadingType.CLEAR, color: DARK },
+                borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                margins: { top: 240, bottom: 240, left: 560, right: 200 },
+              }),
+              new TableCell({
+                width: { size: 20, type: WidthType.PERCENTAGE },
+                children: [new Paragraph({ children: [new ImageRun({ data: photoBytes, transformation: { width: 65, height: 83 }, type: photoType })], spacing: { after: 0 } })],
+                shading: { fill: DARK, type: ShadingType.CLEAR, color: DARK },
+                borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                margins: { top: 240, bottom: 240, right: 400, left: 0 },
+              }),
+            ],
+          })],
+        }))
+      } else {
+        children.push(new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [new TableRow({
+            children: [new TableCell({
+              children: headerCellContent,
+              shading: { fill: DARK, type: ShadingType.CLEAR, color: DARK },
+              borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+              margins: { top: 240, bottom: 240, left: 560, right: 400 },
+            })],
+          })],
+        }))
+      }
+      children.push(new Paragraph({ spacing: { after: 200 } }))
+      renderSections(children, pSections, {
+        titleColor: GREEN,
+        border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: GREEN } },
+        spaceBefore: 280,
+      })
+      sections = [{ properties: { page: { margin: { top: 0, right: 900, bottom: 900, left: 900 } } }, children }]
+
+    } else if (template === 'classic') {
+      // ── Classic: centered name, underlined section headers ───────────────
+      if (photoBytes) {
+        const textStack = [
+          new Paragraph({
+            children: [new TextRun({ text: safeName, bold: true, size: 40, font: 'Arial', color: '1a1a1a' })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 60 },
+          }),
+          new Paragraph({
+            children: contactRuns(),
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 0 },
+          }),
+        ]
+        children.push(new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 80, type: WidthType.PERCENTAGE },
+                children: textStack,
+                borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                margins: { top: 0, bottom: 0, left: 0, right: 200 },
+              }),
+              photoCell(),
+            ],
+          })],
+        }))
+      } else {
+        if (safeName) children.push(new Paragraph({
+          children: [new TextRun({ text: safeName, bold: true, size: 40, font: 'Arial' })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 60 },
+        }))
+        if (safeContactItems.length) children.push(new Paragraph({
+          children: contactRuns(),
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 120 },
+        }))
+      }
+      children.push(new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'cccccc' } }, spacing: { after: 200 } }))
+      renderSections(children, pSections, { underline: true })
+      sections = [{ properties: { page: { margin: { top: 900, right: 900, bottom: 900, left: 900 } } }, children }]
+
+    } else if (template === 'executive') {
+      // ── Executive: uppercase name, thick green line ──────────────────────
+      if (photoBytes) {
+        children.push(new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 80, type: WidthType.PERCENTAGE },
+                children: [
+                  new Paragraph({
+                    children: [new TextRun({ text: safeName.toUpperCase(), bold: true, size: 44, font: 'Arial', color: '1a1a1a' })],
+                    spacing: { after: 80 },
+                  }),
+                  new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 16, color: GREEN } }, spacing: { after: 120 } }),
+                  new Paragraph({ children: contactRuns({ color: '666666', sepColor: '888888' }), spacing: { after: 0 } }),
+                ],
+                borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                margins: { top: 0, bottom: 0, left: 0, right: 200 },
+              }),
+              photoCell(),
+            ],
+          })],
+        }))
+      } else {
+        if (safeName) children.push(new Paragraph({
+          children: [new TextRun({ text: safeName.toUpperCase(), bold: true, size: 44, font: 'Arial' })],
+          spacing: { after: 80 },
+        }))
+        children.push(new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 16, color: GREEN } }, spacing: { after: 120 } }))
+        if (safeContactItems.length) children.push(new Paragraph({
+          children: contactRuns({ color: '666666', sepColor: '888888' }),
+          spacing: { after: 120 },
+        }))
+      }
+      children.push(new Paragraph({ spacing: { after: 160 } }))
+      renderSections(children, pSections, {
+        border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: GREEN } },
+        spaceBefore: 280,
+      })
+      sections = [{ properties: { page: { margin: { top: 900, right: 900, bottom: 900, left: 900 } } }, children }]
+
+    } else {
+      // ── Minimal (default): single column, grey dividers ──────────────────
+      if (photoBytes) {
+        const headerParas = []
+        if (safeName) headerParas.push(new Paragraph({
+          children: [new TextRun({ text: safeName, bold: true, size: 40, font: 'Arial', color: '1a1a1a' })],
+          spacing: { after: 60 },
+        }))
+        if (safeContactItems.length) headerParas.push(new Paragraph({
+          children: contactRuns(),
+          spacing: { after: 0 },
+        }))
+        children.push(new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 80, type: WidthType.PERCENTAGE },
+                children: headerParas.length ? headerParas : [new Paragraph({ children: [] })],
+                borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                margins: { top: 0, bottom: 0, left: 0, right: 200 },
+              }),
+              photoCell(),
+            ],
+          })],
+        }))
+      } else {
+        if (safeName) children.push(new Paragraph({
+          children: [new TextRun({ text: safeName, bold: true, size: 40, font: 'Arial', color: '1a1a1a' })],
+          spacing: { after: 60 },
+        }))
+        if (safeContactItems.length) children.push(new Paragraph({
+          children: contactRuns(),
+          spacing: { after: 120 },
+        }))
+      }
+      children.push(new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'cccccc' } }, spacing: { after: 200 } }))
+      renderSections(children, pSections, {
+        border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: 'cccccc' } },
+      })
+      sections = [{ properties: { page: { margin: { top: 900, right: 900, bottom: 900, left: 900 } } }, children }]
+    }
   }
 
   const doc = new Document({ sections })
