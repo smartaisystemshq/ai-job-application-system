@@ -11,6 +11,7 @@ import InterviewPrep from './components/InterviewPrep';
 import CVBuilder from './components/CVBuilder';
 import FAQ from './components/FAQ';
 import Legal from './components/Legal';
+import NotFound from './components/NotFound';
 import { PAGES } from './constants';
 import { isUnlocked } from './utils/accessControl';
 
@@ -95,6 +96,7 @@ export default function App() {
             {activePage === PAGES.CV_BUILDER    && <CVBuilder unlocked={unlocked} onUnlock={handleUnlock} />}
             {activePage === PAGES.FAQ           && <FAQ />}
             {activePage === PAGES.LEGAL         && <Legal />}
+            {!Object.values(PAGES).includes(activePage) && <NotFound />}
           </div>
         </main>
 

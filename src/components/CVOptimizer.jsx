@@ -464,6 +464,9 @@ export default function CVOptimizer({ unlocked, onUnlock, cvText: cv, setCvText:
               <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
                 {t[lang].cv_review_note}
               </p>
+              <p style={{ marginTop: 4, fontSize: 11, color: 'rgba(226,237,232,0.35)', fontStyle: 'italic', marginBottom: 0 }}>
+                {t[lang].ai_disclosure_output}
+              </p>
 
               {score !== null && <ScoreCard score={score} />}
 

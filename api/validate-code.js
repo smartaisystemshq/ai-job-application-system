@@ -99,6 +99,9 @@ module.exports = function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
+  const bodyStr = JSON.stringify(req.body || {})
+  if (bodyStr.length > 100000) return res.status(413).json({ error: 'Request too large.' })
+
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
     || req.headers['x-real-ip']
     || 'unknown'

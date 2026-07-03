@@ -1081,6 +1081,10 @@ export default function CVBuilder({ unlocked, onUnlock }) {
 
         <DocumentPreview text={displayCvText} template={selectedTemplate} photo={photoBase64} />
 
+        <p style={{ marginTop: 8, fontSize: 11, color: 'rgba(226,237,232,0.35)', fontStyle: 'italic', marginBottom: 0 }}>
+          {t[lang].ai_disclosure_output}
+        </p>
+
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
           <button className="btn btn-secondary" onClick={() => setStep(7)}>{t[lang].builder_back_summary}</button>
           <button className="btn btn-ghost" onClick={startOver} style={{ marginLeft: 'auto', color: 'var(--danger)' }}>

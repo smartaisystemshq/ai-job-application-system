@@ -358,6 +358,9 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
               <p style={{ marginTop: 16, fontSize: 12, color: 'var(--text-muted)' }}>
                 {t[lang].interview_practice_note}
               </p>
+              <p style={{ marginTop: 4, fontSize: 11, color: 'rgba(226,237,232,0.35)', fontStyle: 'italic', marginBottom: 0 }}>
+                {t[lang].ai_disclosure_output}
+              </p>
 
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24, marginBottom: 8 }}>
                 <button
