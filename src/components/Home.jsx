@@ -76,7 +76,7 @@ export default function Home({ onNavigate, onUnlock }) {
         </div>
 
         {/* Headline */}
-        <h1 style={{
+        <h1 className="home-hero-headline" style={{
           fontSize: 52, fontWeight: 700, lineHeight: 1.12,
           letterSpacing: '-1.5px', marginBottom: 20, color: '#e2ede8',
         }}>
@@ -153,10 +153,11 @@ export default function Home({ onNavigate, onUnlock }) {
       {/* ── Section 7: Stats ── */}
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 40px 72px', textAlign: 'center' }}>
         <SectionLabel text={t[lang].home_stats_label} />
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32, flexWrap: 'wrap' }}>
+        <div className="home-stats-row" style={{ display: 'flex', justifyContent: 'center', marginBottom: 32, flexWrap: 'wrap' }}>
           {STATS.map(({ n, label }, i) => (
             <div
               key={n}
+              className="home-stat-item"
               style={{
                 padding: '22px 40px',
                 borderRight: i < STATS.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',

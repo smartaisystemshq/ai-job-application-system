@@ -116,7 +116,7 @@ export default function Paywall({ onUnlock, onClose }) {
           transform: translateY(-1px);
         }
       `}</style>
-      <div style={{
+      <div className="paywall-overlay" style={{
         position: 'fixed',
         inset: 0,
         background: 'rgba(0,0,0,0.85)',
@@ -128,7 +128,7 @@ export default function Paywall({ onUnlock, onClose }) {
         justifyContent: 'center',
         padding: '20px',
       }}>
-        <div style={{
+        <div className="paywall-modal" style={{
           background: 'rgba(6,13,10,0.97)',
           border: '1px solid rgba(29,158,117,0.15)',
           borderRadius: 16,
@@ -191,11 +191,11 @@ export default function Paywall({ onUnlock, onClose }) {
           {/* What you get */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 9, letterSpacing: '2px', color: 'rgba(29,158,117,0.55)', textTransform: 'uppercase', marginBottom: 12 }}>{t[lang].paywall_what_you_get}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div className="paywall-features-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {FEATURES.map((f, i) => (
                 <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                   <span style={{ color: '#1D9E75', fontSize: 13, flexShrink: 0, marginTop: 1 }}>✓</span>
-                  <span style={{ fontSize: 12, color: 'rgba(226,237,232,0.7)', lineHeight: 1.4 }}>{f}</span>
+                  <span className="paywall-feature-text" style={{ fontSize: 12, color: 'rgba(226,237,232,0.7)', lineHeight: 1.4 }}>{f}</span>
                 </div>
               ))}
             </div>
@@ -221,8 +221,9 @@ export default function Paywall({ onUnlock, onClose }) {
             ) : (
               <>
                 <p style={{ fontSize: 12, color: 'rgba(226,237,232,0.45)', marginBottom: 8, marginTop: 0 }}>{t[lang].paywall_code_label}</p>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="paywall-code-row" style={{ display: 'flex', gap: 8 }}>
                   <input
+                    className="paywall-code-input"
                     placeholder={t[lang].paywall_code_placeholder}
                     value={code}
                     onChange={e => setCode(e.target.value)}
@@ -242,6 +243,7 @@ export default function Paywall({ onUnlock, onClose }) {
                     onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; }}
                   />
                   <button
+                    className="paywall-code-btn"
                     onClick={handleUnlock}
                     disabled={!code.trim()}
                     style={{

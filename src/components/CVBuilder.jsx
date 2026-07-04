@@ -58,7 +58,7 @@ function StepProgressBar({ step }) {
           transition: 'width 0.4s ease',
         }} />
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+      <div className="cvb-progress-desktop" style={{ display: 'flex', justifyContent: 'space-between' }}>
         {STEP_NAMES.map((label, i) => {
           const n = i + 1;
           const done = n < step;
@@ -91,6 +91,14 @@ function StepProgressBar({ step }) {
             </div>
           );
         })}
+      </div>
+
+      {/* Mobile-only: current step number + name */}
+      <div className="cvb-progress-mobile">
+        <span className="cvb-progress-mobile-circle">{step}</span>
+        <span className="cvb-progress-mobile-label">
+          {t[lang].builder_step_label} {step} {t[lang].builder_step_of} 7 — {STEP_NAMES[step - 1]}
+        </span>
       </div>
     </div>
   );

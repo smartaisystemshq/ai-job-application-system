@@ -235,7 +235,7 @@ export default function Dashboard() {
       {/* Section E: Add Application */}
       <div className="dash-section" style={{ paddingBottom: 32, textAlign: 'right' }}>
         <button
-          className="tool-generate-btn"
+          className="tool-generate-btn dash-add-btn"
           style={{ width: 'auto', padding: '12px 24px', fontSize: 14, display: 'inline-flex' }}
           onClick={openAdd}
         >

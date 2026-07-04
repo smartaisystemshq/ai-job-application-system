@@ -16,7 +16,13 @@ const NAV_TABS = [
 
 export default function TopNav({ activePage, onNavigate, unlocked, onUnlock }) {
   const [showPaywall, setShowPaywall] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { lang, setLang } = useLang();
+
+  const handleNavigate = (id) => {
+    onNavigate(id);
+    setMenuOpen(false);
+  };
 
   return (
     <>
@@ -24,10 +30,10 @@ export default function TopNav({ activePage, onNavigate, unlocked, onUnlock }) {
         {/* Left — Brand */}
         <div
           className="topnav-brand"
-          onClick={() => onNavigate(PAGES.HOME)}
+          onClick={() => handleNavigate(PAGES.HOME)}
           role="button"
           tabIndex={0}
-          onKeyDown={e => e.key === 'Enter' && onNavigate(PAGES.HOME)}
+          onKeyDown={e => e.key === 'Enter' && handleNavigate(PAGES.HOME)}
         >
           <div className="topnav-logo">
             <img src="/logo.png" alt="Smart AI Systems" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8 }} />
@@ -39,7 +45,7 @@ export default function TopNav({ activePage, onNavigate, unlocked, onUnlock }) {
           </span>
         </div>
 
-        {/* Center — Tab navigation */}
+        {/* Center — Tab navigation (desktop) */}
         <div className="topnav-tabs">
           {NAV_TABS.map(({ id, labelKey }) => (
             <button
@@ -52,7 +58,7 @@ export default function TopNav({ activePage, onNavigate, unlocked, onUnlock }) {
           ))}
         </div>
 
-        {/* Right — Controls */}
+        {/* Right — Controls (desktop) */}
         <div className="topnav-controls">
           <div className="topnav-lang-toggle">
             {['EN', 'DE'].map(l => (
@@ -81,7 +87,71 @@ export default function TopNav({ activePage, onNavigate, unlocked, onUnlock }) {
             </div>
           )}
         </div>
+
+        {/* Hamburger button (mobile) */}
+        <button
+          className="hamburger-btn"
+          onClick={() => setMenuOpen(o => !o)}
+          aria-label="Toggle menu"
+          aria-expanded={menuOpen}
+        >
+          <span /><span /><span />
+        </button>
       </nav>
+
+      {/* Mobile slide-in menu */}
+      {menuOpen && (
+        <>
+          <div className="mobile-menu-overlay" onClick={() => setMenuOpen(false)} />
+          <div className="mobile-menu">
+            <div className="mobile-menu-header">
+              <span className="mobile-menu-title">Menu</span>
+              <button className="mobile-menu-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">✕</button>
+            </div>
+
+            <div className="mobile-menu-tabs">
+              {NAV_TABS.map(({ id, labelKey }) => (
+                <button
+                  key={id}
+                  onClick={() => handleNavigate(id)}
+                  className={`mobile-menu-tab${activePage === id ? ' active' : ''}`}
+                >
+                  {t[lang][labelKey]}
+                </button>
+              ))}
+            </div>
+
+            <div className="mobile-menu-divider" />
+
+            <div className="mobile-menu-lang">
+              {['EN', 'DE'].map(l => (
+                <button
+                  key={l}
+                  className={`topnav-lang-btn${lang === l ? ' active' : ''}`}
+                  onClick={() => setLang(l)}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+
+            {!unlocked ? (
+              <button
+                className="topnav-unlock-btn mobile-menu-unlock"
+                onClick={() => { setShowPaywall(true); setMenuOpen(false); }}
+              >
+                <span className="topnav-status-dot" />
+                {t[lang].nav_unlock}
+              </button>
+            ) : (
+              <div className="topnav-unlocked-badge mobile-menu-unlock">
+                <span className="topnav-status-dot" />
+                {t[lang].nav_unlocked}
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {showPaywall && (
         <Paywall

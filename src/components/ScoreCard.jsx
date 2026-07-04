@@ -183,6 +183,7 @@ export default function ScoreCard({ score }) {
 
   return (
     <div
+      className="score-card"
       style={{
         background: 'linear-gradient(135deg, rgba(29,158,117,0.06) 0%, rgba(29,158,117,0.02) 100%)',
         border: '1px solid rgba(29,158,117,0.25)',

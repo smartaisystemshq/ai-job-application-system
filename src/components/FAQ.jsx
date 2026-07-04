@@ -205,6 +205,7 @@ export default function FAQ() {
           href="https://systemsbyniklas.gumroad.com/l/zilhaq"
           target="_blank"
           rel="noopener noreferrer"
+          className="faq-gumroad-btn"
           style={{
             display: 'inline-block',
             padding: '16px 38px',

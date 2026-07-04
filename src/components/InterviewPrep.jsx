@@ -339,7 +339,7 @@ export default function InterviewPrep({ unlocked, onUnlock }) {
         <div className="tool-section" style={{ padding: '0 40px 80px', marginTop: 40 }}>
           <div ref={resultRef}>
             <LockedContent unlocked={unlocked} onUnlock={onUnlock}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, padding: '12px 16px', background: 'rgba(29,158,117,0.06)', border: '1px solid rgba(29,158,117,0.2)', borderRadius: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 20, padding: '12px 16px', background: 'rgba(29,158,117,0.06)', border: '1px solid rgba(29,158,117,0.2)', borderRadius: 12 }}>
                 <h2 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ color: 'var(--accent)' }}>◈</span>
                   {questions.length} {t[lang].interview_result_label}

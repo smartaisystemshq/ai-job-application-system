@@ -271,6 +271,131 @@ body {
   .topnav-unlock-btn { padding: 5px 10px; font-size: 11px; }
 }
 
+/* ─── Top Navigation: hamburger menu (mobile) ─── */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+}
+.hamburger-btn span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: #e2ede8;
+}
+
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 250;
+  animation: fadeIn 0.15s ease;
+}
+
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(78vw, 300px);
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border);
+  z-index: 260;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  overflow-y: auto;
+  animation: mobileMenuSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes mobileMenuSlideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.mobile-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.mobile-menu-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(226,237,232,0.4);
+}
+.mobile-menu-close {
+  background: none;
+  border: none;
+  color: rgba(226,237,232,0.6);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  font-family: inherit;
+}
+.mobile-menu-close:hover { color: #e2ede8; background: rgba(255,255,255,0.05); }
+
+.mobile-menu-tabs { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+.mobile-menu-tab {
+  text-align: left;
+  min-height: 44px;
+  padding: 12px 14px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: rgba(226,237,232,0.7);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.mobile-menu-tab:hover { background: rgba(255,255,255,0.04); }
+.mobile-menu-tab.active {
+  color: #1D9E75;
+  background: rgba(29,158,117,0.12);
+  border-color: rgba(29,158,117,0.3);
+  font-weight: 600;
+}
+
+.mobile-menu-divider { height: 1px; background: var(--border); margin: 4px 0 16px; }
+
+.mobile-menu-lang { display: flex; gap: 8px; margin-bottom: 16px; }
+.mobile-menu-lang .topnav-lang-btn {
+  flex: 1;
+  min-height: 40px;
+  padding: 8px;
+  font-size: 13px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.mobile-menu-unlock { width: 100%; justify-content: center; min-height: 44px; }
+
+@media (max-width: 768px) {
+  .topnav-tabs, .topnav-controls { display: none; }
+  .hamburger-btn { display: flex; }
+}
+@media (min-width: 769px) {
+  .hamburger-btn { display: none; }
+  .mobile-menu-overlay, .mobile-menu { display: none; }
+}
+
 /* ─── Buttons ─── */
 .btn {
   display: inline-flex;
@@ -1561,4 +1686,90 @@ tbody td { padding: 13px 16px; vertical-align: middle; color: var(--text-primary
   border-color: rgba(29,158,117,0.25);
   background: rgba(29,158,117,0.04);
   transform: translateY(-2px);
+}
+
+/* ─── Additional mobile responsiveness (Home, Paywall, Dashboard, FAQ, ScoreCard, CV Builder progress) ─── */
+.cvb-progress-mobile {
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+.cvb-progress-mobile-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(29,158,117,0.15);
+  border: 2px solid #1D9E75;
+  color: #1D9E75;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.cvb-progress-mobile-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2ede8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  /* Global inputs: prevent iOS zoom on focus */
+  .input, .textarea, .select, .mini-chatbot-input, input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* CV Builder progress: show simplified current-step summary instead of all 7 steps in a row */
+  .cvb-progress-desktop { display: none !important; }
+  .cvb-progress-mobile { display: flex; }
+
+  /* Interview question cards: reduce padding */
+  .question-item { padding: 14px 16px; }
+
+  /* Home: hero headline */
+  .home-hero-headline { font-size: 26px !important; }
+
+  /* Home: stats 2x2 grid instead of 4-in-a-row */
+  .home-stats-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    justify-items: center;
+  }
+  .home-stat-item { border-right: none !important; padding: 16px !important; }
+  .home-stat-item:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.06) !important; }
+  .home-stat-item:nth-child(n+3) { border-top: 1px solid rgba(255,255,255,0.06); }
+
+  /* Home: full-width CTA buttons */
+  .home-cta-primary, .home-cta-secondary, .home-final-cta { width: 100%; }
+
+  /* Dashboard: full-width add button */
+  .dash-add-btn { width: 100% !important; justify-content: center !important; }
+
+  /* FAQ: full-width Gumroad CTA, single-column social cards */
+  .faq-gumroad-btn { display: block !important; width: 100% !important; }
+  .faq-social-card { width: 100%; max-width: 280px; }
+
+  /* Score card: stack vertically, centered */
+  .score-card { flex-direction: column !important; text-align: center !important; justify-content: center !important; }
+
+  /* Paywall: full-screen bottom-sheet modal */
+  .paywall-overlay { align-items: flex-end !important; padding: 0 !important; }
+  .paywall-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 92vh !important;
+    padding: 24px 20px !important;
+  }
+  .paywall-feature-text { font-size: 11px !important; }
+  .paywall-code-input { font-size: 16px !important; }
+}
+
+@media (max-width: 420px) {
+  .paywall-code-row { flex-direction: column; }
+  .paywall-code-btn { width: 100%; }
 }
