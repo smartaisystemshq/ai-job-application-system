@@ -37,8 +37,13 @@ function FooterContent({ onNavigate }) {
   );
 }
 
+function getInitialPage() {
+  const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+  return path === '' ? PAGES.HOME : 'not-found';
+}
+
 export default function App() {
-  const [activePage, setActivePage] = useState(PAGES.HOME);
+  const [activePage, setActivePage] = useState(getInitialPage);
   const [pageKey, setPageKey] = useState(0);
   const [unlocked, setUnlocked] = useState(() => isUnlocked());
   const handleUnlock = () => setUnlocked(true);
@@ -96,7 +101,7 @@ export default function App() {
             {activePage === PAGES.CV_BUILDER    && <CVBuilder unlocked={unlocked} onUnlock={handleUnlock} />}
             {activePage === PAGES.FAQ           && <FAQ />}
             {activePage === PAGES.LEGAL         && <Legal />}
-            {!Object.values(PAGES).includes(activePage) && <NotFound />}
+            {!Object.values(PAGES).includes(activePage) && <NotFound onNavigate={navigate} />}
           </div>
         </main>
 

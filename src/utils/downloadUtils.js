@@ -111,7 +111,10 @@ function sanitizeTextForPDF(text) {
     return (c >= 0x09 && c <= 0x0A) || c === 0x0D ||
            (c >= 0x20 && c <= 0x7E) ||
            (c >= 0xA0 && c <= 0xFF) ||
-           (c >= 0x0100 && c <= 0x024F);
+           (c >= 0x0100 && c <= 0x024F) ||
+           // General Punctuation: bullet (•), en/em dash (– —), curly quotes, ellipsis (…) —
+           // all present in the embedded Roboto font, needed for bullets and typographic dashes
+           (c >= 0x2000 && c <= 0x2044);
   }).join('').trim();
 }
 

@@ -255,7 +255,7 @@ function buildCVText({ personal, experience, projects, education, skills, summar
     lines.push('');
   }
 
-  const validExp = experience.filter(e => e.jobTitle?.trim() || e.company?.trim() || e.bullets?.trim());
+  const validExp = experience.filter(e => e.jobTitle?.trim() || e.company?.trim() || e.bullets?.trim() || e.description?.trim());
   if (validExp.length > 0) {
     lines.push('─'.repeat(58));
     lines.push('');
@@ -265,8 +265,11 @@ function buildCVText({ personal, experience, projects, education, skills, summar
       const dates = [exp.startDate, exp.isCurrent ? 'Present' : exp.endDate].filter(Boolean).join(' – ');
       const header = [exp.jobTitle, exp.company, dates].filter(s => s?.trim()).join(' | ');
       if (header) lines.push(header);
-      if (exp.bullets) {
-        exp.bullets.split('\n').filter(l => l.trim()).forEach(l => lines.push(l.trim()));
+      // Fall back to the raw description if the user never ran "Generate bullets with AI",
+      // so content isn't silently dropped from the final CV
+      const content = exp.bullets?.trim() ? exp.bullets : exp.description
+      if (content) {
+        content.split('\n').filter(l => l.trim()).forEach(l => lines.push(l.trim()));
       }
       lines.push('');
     });

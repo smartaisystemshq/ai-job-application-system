@@ -310,7 +310,7 @@ export default function Dashboard() {
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && closeModal()}>
           <div className="modal">
             <div className="modal-header">
-              <h2>{editingId ? t[lang].dash_edit + ' ' + t[lang].dash_add_application : t[lang].dash_add_application}</h2>
+              <h2>{editingId ? t[lang].dash_edit_application : t[lang].dash_add_application}</h2>
               <button className="btn btn-ghost btn-sm" onClick={closeModal} style={{ fontSize: 18, padding: '4px 8px' }}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>

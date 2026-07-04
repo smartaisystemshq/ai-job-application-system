@@ -51,7 +51,7 @@ export default function Paywall({ onUnlock, onClose }) {
 
       setError(
         data.attemptsRemaining !== undefined
-          ? `${t[lang].paywall_invalid} (${data.attemptsRemaining} ${t[lang].paywall_attempts_left})`
+          ? `${t[lang].paywall_invalid} ${t[lang].paywall_attempts_left.replace('{n}', data.attemptsRemaining)}`
           : t[lang].paywall_invalid
       );
     } catch {
