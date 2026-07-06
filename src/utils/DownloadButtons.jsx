@@ -20,19 +20,34 @@ export default function DownloadButtons({ text, filename = 'document', template 
     // the file in a tab instead. window.open must fire synchronously inside
     // the click handler — opening it here, before the async PDF build, keeps
     // it inside the user-gesture window so Safari doesn't block it as a popup.
-    const newTab = isMobile() ? window.open('', '_blank') : null
+    // Must pass 'about:blank' explicitly — Safari on iOS silently blocks
+    // window.open('') (empty string) even from a direct click handler.
+    if (isMobile()) {
+      const newTab = window.open('about:blank', '_blank')
+      if (!newTab) {
+        setError('Please allow pop-ups for this site, then try again.')
+        return
+      }
+      setPdfLoading(true)
+      setError('')
+      try {
+        const blob = await generatePDFBlob(text, template, isLetter, photo)
+        openBlobInTab(newTab, blob)
+      } catch (err) {
+        console.error('PDF error:', err)
+        newTab.close()
+        setError('PDF generation failed. Please try again.')
+      } finally {
+        setPdfLoading(false)
+      }
+      return
+    }
     setPdfLoading(true)
     setError('')
     try {
-      if (newTab) {
-        const blob = await generatePDFBlob(text, template, isLetter, photo)
-        openBlobInTab(newTab, blob)
-      } else {
-        await downloadAsPDF(text, filename, template, isLetter, photo)
-      }
+      await downloadAsPDF(text, filename, template, isLetter, photo)
     } catch (err) {
       console.error('PDF error:', err)
-      if (newTab) newTab.close()
       setError('PDF generation failed. Please try again.')
     } finally {
       setPdfLoading(false)
@@ -40,19 +55,32 @@ export default function DownloadButtons({ text, filename = 'document', template 
   }
 
   const handleWord = async () => {
-    const newTab = isMobile() ? window.open('', '_blank') : null
+    if (isMobile()) {
+      const newTab = window.open('about:blank', '_blank')
+      if (!newTab) {
+        setError('Please allow pop-ups for this site, then try again.')
+        return
+      }
+      setWordLoading(true)
+      setError('')
+      try {
+        const blob = await generateWordBlob(text, template, isLetter, photo)
+        openBlobInTab(newTab, blob)
+      } catch (err) {
+        console.error('Word error:', err)
+        newTab.close()
+        setError('Word generation failed. Please try again.')
+      } finally {
+        setWordLoading(false)
+      }
+      return
+    }
     setWordLoading(true)
     setError('')
     try {
-      if (newTab) {
-        const blob = await generateWordBlob(text, template, isLetter, photo)
-        openBlobInTab(newTab, blob)
-      } else {
-        await downloadAsWord(text, filename, template, isLetter, photo)
-      }
+      await downloadAsWord(text, filename, template, isLetter, photo)
     } catch (err) {
       console.error('Word error:', err)
-      if (newTab) newTab.close()
       setError('Word generation failed. Please try again.')
     } finally {
       setWordLoading(false)
