@@ -1,5 +1,9 @@
 // PDF via pdfmake, Word via docx
 
+export function isMobile() {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+}
+
 function validatePDFStructure(docDef) {
   const issues = []
   function findCanvasRects(node, path = '') {
@@ -1219,7 +1223,7 @@ export async function buildCoverLetterWord(data, template = 'minimal') {
 
 // ── Public: download as PDF ──────────────────────────────────────────────────
 
-export async function downloadAsPDF(text, filename, template = 'minimal', isLetter = false, photo = null) {
+async function buildPDFBlob(text, template, isLetter, photo) {
   const pdfMake = await loadPdfMake()
   let docDef
   if (isLetter) {
@@ -1242,6 +1246,15 @@ export async function downloadAsPDF(text, filename, template = 'minimal', isLett
   const pdf = pdfMake.createPdf(docDef)
   const blob = await pdf.getBlob()
   if (!blob) throw new Error('PDF generation returned empty blob')
+  return blob
+}
+
+export async function generatePDFBlob(text, template = 'minimal', isLetter = false, photo = null) {
+  return buildPDFBlob(text, template, isLetter, photo)
+}
+
+export async function downloadAsPDF(text, filename, template = 'minimal', isLetter = false, photo = null) {
+  const blob = await buildPDFBlob(text, template, isLetter, photo)
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -1288,17 +1301,11 @@ function parseDocWordStructure(lines) {
 
 // ── Public: download as Word (.docx) ────────────────────────────────────────
 
-export async function downloadAsWord(text, filename, template = 'minimal', isLetter = false, photo = null) {
+async function buildWordBlob(text, template, isLetter, photo) {
   if (isLetter) {
     const { Packer } = await import('docx')
     const doc = await buildCoverLetterWord(text, template || 'minimal')
-    const blob = await Packer.toBlob(doc)
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = filename + '.docx'; a.style.display = 'none'
-    document.body.appendChild(a); a.click()
-    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url) }, 200)
-    return
+    return Packer.toBlob(doc)
   }
 
   const cleanText = stripMarkdown(text)
@@ -1682,7 +1689,15 @@ export async function downloadAsWord(text, filename, template = 'minimal', isLet
   }
 
   const doc = new Document({ sections })
-  const blob = await Packer.toBlob(doc)
+  return Packer.toBlob(doc)
+}
+
+export async function generateWordBlob(text, template = 'minimal', isLetter = false, photo = null) {
+  return buildWordBlob(text, template, isLetter, photo)
+}
+
+export async function downloadAsWord(text, filename, template = 'minimal', isLetter = false, photo = null) {
+  const blob = await buildWordBlob(text, template, isLetter, photo)
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
