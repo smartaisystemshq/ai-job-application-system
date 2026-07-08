@@ -4,6 +4,14 @@ export function isMobile() {
   return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 }
 
+// Web Share API (Level 2, with files) — the only reliable way to hand a
+// non-renderable file type (e.g. .docx) to iOS Safari. Navigating a tab to
+// a blob: URL only works for types the browser can render inline (PDF);
+// for everything else it silently does nothing.
+export function supportsFileShare() {
+  return typeof navigator.share === 'function' && typeof navigator.canShare === 'function'
+}
+
 function validatePDFStructure(docDef) {
   const issues = []
   function findCanvasRects(node, path = '') {
