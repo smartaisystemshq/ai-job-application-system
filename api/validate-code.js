@@ -71,7 +71,34 @@ function recordFailedAttempt(ip) {
 
 // Valid codes are configured exclusively via VALID_ACCESS_CODES in Vercel Environment Variables.
 
-module.exports = function handler(req, res) {
+const GUMROAD_MAX_USES = 5 // allow a customer to reuse their key across a few devices/re-logins
+
+async function verifyGumroadLicense(licenseKey) {
+  try {
+    const params = new URLSearchParams({
+      product_id: process.env.GUMROAD_PRODUCT_ID || '',
+      license_key: licenseKey,
+      increment_uses_count: 'true'
+    })
+
+    const response = await fetch('https://api.gumroad.com/v2/licenses/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params
+    })
+
+    if (!response.ok) return false
+
+    const data = await response.json()
+    if (!data.success) return false
+
+    return data.uses <= GUMROAD_MAX_USES
+  } catch {
+    return false
+  }
+}
+
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -104,7 +131,7 @@ module.exports = function handler(req, res) {
 
   const { code } = req.body || {}
 
-  if (!code || typeof code !== 'string' || !/^[A-Z0-9\-]{8,20}$/i.test(code)) {
+  if (!code || typeof code !== 'string' || !/^[A-Z0-9\-]{8,40}$/i.test(code)) {
     recordFailedAttempt(ip)
     if (checkHoneypot(ip)) {
       return res.status(403).json({ valid: false, error: 'Access denied.' })
@@ -119,7 +146,11 @@ module.exports = function handler(req, res) {
 
   const codeUpper = code.trim().toUpperCase()
 
-  const isValid = validCodes.includes(codeUpper)
+  let isValid = validCodes.includes(codeUpper)
+
+  if (!isValid) {
+    isValid = await verifyGumroadLicense(codeUpper)
+  }
 
   if (!isValid) {
     recordFailedAttempt(ip)
