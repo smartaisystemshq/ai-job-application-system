@@ -139,12 +139,19 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ valid: false, error: 'Invalid code format.' })
   }
 
-  const validCodes = (process.env.VALID_ACCESS_CODES || '')
+  const rawEnvValue = process.env.VALID_ACCESS_CODES || ''
+
+  const validCodes = rawEnvValue
     .split(',')
     .map(c => c.trim().toUpperCase())
     .filter(Boolean)
 
   const codeUpper = code.trim().toUpperCase()
+
+  // TEMP DEBUG — remove once master code rejection issue is diagnosed
+  console.log('[DEBUG validate-code] VALID_ACCESS_CODES length=' + rawEnvValue.length + ' first20=' + JSON.stringify(rawEnvValue.slice(0, 20)))
+  console.log('[DEBUG validate-code] Parsed ' + validCodes.length + ' codes')
+  console.log('[DEBUG validate-code] Submitted code raw (len=' + code.length + '): [' + code + ']')
 
   let isValid = validCodes.includes(codeUpper)
 
